@@ -2,7 +2,7 @@ import { convexTest } from "convex-test";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import schema from "./schema";
 import { modules } from "./test.setup";
-import { sign, statusPayload, webhookPayload } from "./whatsapp/fixtures";
+import { sign, statusPayload, webhookPayload } from "./whatsapp/webhook.fixtures";
 
 const SECRET = "app-secret";
 

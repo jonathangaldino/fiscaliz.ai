@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { toGraphPayload } from "../bot/channels/whatsapp";
 import { isValidSignature, parseWebhook } from "./webhook";
-import { sign, statusPayload, webhookPayload } from "./fixtures";
+import { sign, statusPayload, webhookPayload } from "./webhook.fixtures";
 
 describe("isValidSignature", () => {
   it("accepts the HMAC of the raw body", async () => {
