@@ -1,5 +1,6 @@
 import { internal } from "../../_generated/api";
 import type { ActionCtx } from "../../_generated/server";
+import { sendWhatsApp } from "./whatsapp";
 import type { IncomingMessage, OutgoingMessage } from "../types";
 
 /**
@@ -20,6 +21,7 @@ export async function send(
       });
       return;
     case "whatsapp":
-      throw new Error("WhatsApp channel not implemented yet");
+      await sendWhatsApp(message.externalId, replies);
+      return;
   }
 }

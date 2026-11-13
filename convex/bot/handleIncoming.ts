@@ -20,6 +20,10 @@ const MAX_ATTEMPTS = 3;
 export const handleIncoming = internalAction({
   args: { message: incomingMessageValidator },
   handler: async (ctx, { message }) => {
+    if (message.unsupported) {
+      await send(ctx, message, [messages.unsupported()]);
+      return;
+    }
     const externalIdHash = await hashCitizenId(
       message.channel,
       message.externalId,

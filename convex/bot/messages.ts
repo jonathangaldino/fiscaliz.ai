@@ -49,6 +49,11 @@ export const notUrban = () =>
     "Eu só consigo registrar problemas urbanos de Apucarana, como buraco na rua, poste apagado ou entulho na calçada.",
   );
 
+export const unsupported = () =>
+  text(
+    "Por enquanto eu entendo mensagens de texto e localização. Pode me contar o problema por escrito?",
+  );
+
 export const tryAgain = () =>
   text(
     "Desculpe, não consegui processar sua mensagem agora. Pode mandar de novo em alguns instantes?",
