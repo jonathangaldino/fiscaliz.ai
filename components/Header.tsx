@@ -9,6 +9,14 @@ export function Header() {
           Ocorrências urbanas de Apucarana, PR
         </span>
       </Link>
+      <nav className="flex gap-4 text-sm">
+        <Link href="/" className="hover:underline">
+          Mapa
+        </Link>
+        <Link href="/simular" className="hover:underline">
+          Simular relato
+        </Link>
+      </nav>
     </header>
   );
 }
