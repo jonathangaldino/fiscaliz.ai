@@ -3,7 +3,12 @@
  * consistent and reviewers can read the whole conversation at once.
  */
 import { CATEGORIES, type AgencyInfo } from "../lib/categories";
-import type { CompleteDraft, OutgoingMessage } from "./types";
+import type {
+  CompleteDraft,
+  EmergencyTarget,
+  OutgoingMessage,
+  OutOfScopeTarget,
+} from "./types";
 
 const dateTime = new Intl.DateTimeFormat("pt-BR", {
   dateStyle: "short",
@@ -71,4 +76,45 @@ export function registered(
 
 export function occurrenceLink(appUrl: string, occurrenceId: string): string {
   return `${appUrl.replace(/\/$/, "")}/ocorrencias/${occurrenceId}`;
+}
+
+const EMERGENCY_CHANNELS: Record<EmergencyTarget, string> = {
+  police: "Polícia Militar: 190",
+  samu: "SAMU: 192",
+  firefighters: "Corpo de Bombeiros: 193",
+  civil_defense: "Defesa Civil: 199",
+};
+
+/** Emergencies go straight to the emergency numbers; nothing is registered. */
+export function emergency(target: EmergencyTarget | null): OutgoingMessage {
+  const main = target ? EMERGENCY_CHANNELS[target] : null;
+  const all = Object.values(EMERGENCY_CHANNELS).join(" · ");
+  return text(
+    [
+      "⚠️ Isso parece uma emergência. Ligue agora:",
+      main ? `*${main}*` : null,
+      "",
+      `Outros canais: ${all}.`,
+      "Este canal não aciona socorro e não registrou sua mensagem.",
+    ]
+      .filter((line) => line !== null)
+      .join("\n"),
+  );
+}
+
+const UTILITY_CHANNELS: Record<OutOfScopeTarget, string> = {
+  sanepar:
+    "Água e esgoto são com a Sanepar: 0800 200 0115 (24 horas) ou o aplicativo Sanepar Mobile.",
+  copel:
+    "Rede elétrica é com a Copel: 0800 51 00 116 ou o aplicativo da Copel. Lâmpada de poste queimada é com a Prefeitura: pode me mandar que eu registro.",
+};
+
+/** Utility problems are not the city's; point to the right channel. */
+export function outOfScope(target: OutOfScopeTarget | null): OutgoingMessage {
+  const channel = target
+    ? UTILITY_CHANNELS[target]
+    : `${UTILITY_CHANNELS.sanepar}\n${UTILITY_CHANNELS.copel}`;
+  return text(
+    `Esse problema não é da Prefeitura, é de concessionária. ${channel}\nNão registrei sua mensagem.`,
+  );
 }
