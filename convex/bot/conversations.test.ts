@@ -1,0 +1,182 @@
+import { convexTest } from "convex-test";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { api, internal } from "../_generated/api";
+import type { Id } from "../_generated/dataModel";
+import schema from "../schema";
+import { modules } from "../test.setup";
+import type { Extraction } from "./types";
+
+const SESSION = "6f1c1a8e-3b7a-4c5e-9d1f-2a3b4c5d6e7f";
+const NOW = Date.parse("2026-11-20T15:00:00-03:00");
+
+const problem: Extraction = {
+  kind: "urban",
+  emergencyTarget: null,
+  outOfScopeTarget: null,
+  category: "street_lighting",
+  description: "O poste da frente de casa está apagado faz uma semana",
+  address: null,
+  occurredAt: null,
+  publicSummary: "Poste apagado há uma semana.",
+};
+
+const pin = {
+  lat: -23.5486,
+  lng: -51.4652,
+  address: "Avenida Minas Gerais, 500",
+  precise: true,
+};
+
+async function setup() {
+  const t = convexTest(schema, modules);
+  await t.mutation(internal.seed.run, {});
+  const citizenId = await t.mutation(internal.bot.conversations.ensureCitizen, {
+    channel: "simulator",
+    externalIdHash: "hash-1",
+  });
+  return { t, citizenId };
+}
+
+type T = Awaited<ReturnType<typeof setup>>["t"];
+
+async function step(
+  t: T,
+  citizenId: Id<"citizens">,
+  input: {
+    extraction?: Extraction | null;
+    location?: typeof pin | null;
+    decision?: "yes" | "no" | null;
+  },
+) {
+  const { version } = await t.query(internal.bot.conversations.load, { citizenId });
+  return t.mutation(internal.bot.conversations.applyStep, {
+    citizenId,
+    channel: "simulator",
+    expectedVersion: version,
+    receivedAt: NOW,
+    extraction: input.extraction ?? null,
+    location: input.location ?? null,
+    decision: input.decision ?? null,
+  });
+}
+
+const reportCount = (t: T) =>
+  t.run(async (ctx) => (await ctx.db.query("reports").collect()).length);
+
+describe("applyStep", () => {
+  it("collects, confirms and registers a report end to end", async () => {
+    const { t, citizenId } = await setup();
+    const before = (await t.query(api.occurrences.listOpen, {})).length;
+
+    const first = await step(t, citizenId, { extraction: problem });
+    expect(first.ok && first.messages[0].text).toMatch(/Onde fica/);
+
+    const second = await step(t, citizenId, { location: pin });
+    expect(second.ok && second.messages[0].text).toMatch(/Confere o relato/);
+
+    const third = await step(t, citizenId, { decision: "yes" });
+    if (!third.ok) throw new Error("expected ok");
+    expect(third.messages[0].text).toMatch(/Relato registrado/);
+    expect(third.messages[0].text).toMatch(/Idepplan/);
+    expect(third.messages[0].text).toMatch(
+      /https:\/\/fiscaliza\.test\/ocorrencias\//,
+    );
+
+    const open = await t.query(api.occurrences.listOpen, {});
+    expect(open).toHaveLength(before + 1);
+    const created = open.find((o) => o.source === "simulator");
+    expect(created).toMatchObject({
+      category: "street_lighting",
+      agencySlug: "idepplan",
+      appeal: 1,
+      summary: "Poste apagado há uma semana.",
+    });
+
+    expect(await reportCount(t)).toBe(1);
+    const { state } = await t.query(internal.bot.conversations.load, { citizenId });
+    expect(state).toBeNull();
+  });
+
+  it("goes back to collecting on NÃO without registering", async () => {
+    const { t, citizenId } = await setup();
+    await step(t, citizenId, { extraction: problem, location: pin });
+    const result = await step(t, citizenId, { decision: "no" });
+    expect(result.ok && result.messages[0].text).toMatch(/corrigido/);
+    const { state } = await t.query(internal.bot.conversations.load, { citizenId });
+    expect(state?.phase).toBe("collecting");
+    expect(await reportCount(t)).toBe(0);
+  });
+
+  it("registers only once when two confirmations arrive together", async () => {
+    const { t, citizenId } = await setup();
+    await step(t, citizenId, { extraction: problem, location: pin });
+    const { version } = await t.query(internal.bot.conversations.load, { citizenId });
+
+    const confirm = () =>
+      t.mutation(internal.bot.conversations.applyStep, {
+        citizenId,
+        channel: "simulator",
+        expectedVersion: version,
+        receivedAt: NOW,
+        extraction: null,
+        location: null,
+        decision: "yes",
+      });
+    const results = await Promise.all([confirm(), confirm()]);
+
+    expect(results.filter((r) => r.ok)).toHaveLength(1);
+    expect(results.filter((r) => !r.ok)).toEqual([{ ok: false, reason: "stale" }]);
+    expect(await reportCount(t)).toBe(1);
+  });
+});
+
+describe("handleIncoming", () => {
+  beforeEach(() => {
+    vi.useFakeTimers();
+    vi.stubEnv("ANTHROPIC_API_KEY", "");
+  });
+  afterEach(() => {
+    vi.unstubAllEnvs();
+    vi.useRealTimers();
+  });
+
+  it("asks to try again and stores nothing when the AI fails", async () => {
+    const t = convexTest(schema, modules);
+    await t.mutation(api.simulator.send, {
+      sessionId: SESSION,
+      text: "tem um buraco na minha rua",
+    });
+    await t.finishAllScheduledFunctions(vi.runAllTimers);
+
+    const chat = await t.query(api.simulator.messages, { sessionId: SESSION });
+    expect(chat.map((m) => m.author)).toEqual(["citizen", "bot"]);
+    expect(chat[1].text).toMatch(/mandar de novo/);
+
+    const stored = await t.run(async (ctx) => ({
+      conversations: (await ctx.db.query("conversations").collect()).length,
+      reports: (await ctx.db.query("reports").collect()).length,
+    }));
+    expect(stored).toEqual({ conversations: 0, reports: 0 });
+  });
+
+  it("handles a pin without calling the AI", async () => {
+    const t = convexTest(schema, modules);
+    await t.mutation(api.simulator.send, {
+      sessionId: SESSION,
+      location: { lat: pin.lat, lng: pin.lng },
+    });
+    await t.finishAllScheduledFunctions(vi.runAllTimers);
+
+    const chat = await t.query(api.simulator.messages, { sessionId: SESSION });
+    expect(chat[1].text).toMatch(/Qual é o problema/);
+  });
+});
+
+describe("simulator.send", () => {
+  it("rejects an invalid session id", async () => {
+    const t = convexTest(schema, modules);
+    await expect(
+      t.mutation(api.simulator.send, { sessionId: "nope", text: "oi" }),
+    ).rejects.toThrow();
+  });
+});
