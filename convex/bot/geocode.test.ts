@@ -16,6 +16,7 @@ const result = (locationType: string, types = ["street_address"]) => ({
       formatted_address: "Av. Curitiba, 100 - Centro, Apucarana - PR, 86800-000, Brasil",
       geometry: { location: { lat: -23.55, lng: -51.46 }, location_type: locationType },
       types,
+      address_components: [{ long_name: "Avenida Curitiba" }, { long_name: "Centro" }],
     },
   ],
 });
@@ -52,6 +53,23 @@ describe("geocodeAddress", () => {
   it("returns null when only the city matched", async () => {
     mockGoogle(result("APPROXIMATE", ["locality", "political"]));
     expect(await geocodeAddress("rua que não existe")).toBeNull();
+  });
+
+  it("rejects a partial match on another street", async () => {
+    const body = result("GEOMETRIC_CENTER", ["route"]);
+    Object.assign(body.results[0], {
+      partial_match: true,
+      address_components: [{ long_name: "Rua Italiano" }, { long_name: "Lot. Sao Sebastiao" }],
+    });
+    mockGoogle(body);
+    expect(await geocodeAddress("R ítalo fontanini 40")).toBeNull();
+  });
+
+  it("keeps a partial match on the same street, but not as precise", async () => {
+    const body = result("ROOFTOP");
+    Object.assign(body.results[0], { partial_match: true });
+    mockGoogle(body);
+    expect(await geocodeAddress("Av. Curitiba, 40, centro")).toMatchObject({ precise: false });
   });
 
   it("returns null when nothing matched", async () => {
