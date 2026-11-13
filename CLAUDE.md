@@ -12,4 +12,5 @@
 - [RULES.md](./RULES.md): regras do Hack Brasil 2026 (prazo, repositório, dados reais).
 - [GLOSSARY.md](./GLOSSARY.md): vocabulário do domínio.
 - [COMPETENCIAS.md](./COMPETENCIAS.md): fonte única de categorias e órgãos.
+- [docs/arquitetura.md](./docs/arquitetura.md): arquitetura detalhada da V1.
 - [docs/adr/](./docs/adr/): decisões registradas.
