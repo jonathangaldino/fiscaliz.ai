@@ -1,13 +1,14 @@
 import { internal } from "../_generated/api";
-import { internalAction } from "../_generated/server";
+import type { Id } from "../_generated/dataModel";
+import { internalAction, type ActionCtx } from "../_generated/server";
 import { hashCitizenId } from "../lib/citizenHash";
 import { incomingMessageValidator } from "../validators";
 import { send } from "./channels";
-import { extract } from "./extract";
+import { extract, isSameOccurrence } from "./extract";
 import { geocodeAddress, reverseGeocode } from "./geocode";
 import * as messages from "./messages";
 import { parseDecision } from "./stateMachine";
-import type { Extraction, ResolvedLocation } from "./types";
+import type { Draft, Extraction, ResolvedLocation } from "./types";
 
 const MAX_ATTEMPTS = 3;
 
@@ -42,6 +43,7 @@ export const handleIncoming = internalAction({
       let extraction: Extraction | null = null;
       let location: ResolvedLocation | null = null;
       let addressNotFound = false;
+      let matchId: Id<"occurrences"> | null = null;
       try {
         const isPureDecision = state?.phase === "confirming" && decision;
         if (message.text && !isPureDecision) {
@@ -56,6 +58,9 @@ export const handleIncoming = internalAction({
         } else if (extraction?.kind === "urban" && extraction.address) {
           location = await geocodeAddress(extraction.address);
           addressNotFound = location === null;
+        }
+        if (state?.phase === "confirming" && decision === "yes" && !extraction) {
+          matchId = await findSameOccurrence(ctx, state.draft);
         }
       } catch (error) {
         console.error("External service failed", error);
@@ -72,6 +77,7 @@ export const handleIncoming = internalAction({
         location,
         decision,
         addressNotFound,
+        matchId,
       });
       if (result.ok) {
         await send(ctx, message, result.messages);
@@ -96,4 +102,34 @@ async function resolvePin(pin: {
     address = `Local marcado no mapa (${pin.lat.toFixed(5)}, ${pin.lng.toFixed(5)})`;
   }
   return { ...pin, address, precise: true };
+}
+
+/** Open occurrences nearby with the same category, then the AI decides. */
+async function findSameOccurrence(
+  ctx: ActionCtx,
+  draft: Draft,
+): Promise<Id<"occurrences"> | null> {
+  if (
+    !draft.category ||
+    draft.lat === undefined ||
+    draft.lng === undefined ||
+    !draft.summary
+  ) {
+    return null;
+  }
+  const candidates = await ctx.runQuery(internal.bot.dedup.candidates, {
+    category: draft.category,
+    lat: draft.lat,
+    lng: draft.lng,
+    precise: draft.precise ?? false,
+  });
+  const sameAs = await isSameOccurrence({
+    report: {
+      summary: draft.summary,
+      description: draft.description ?? "",
+      address: draft.address ?? "",
+    },
+    candidates,
+  });
+  return (candidates.find((c) => c.id === sameAs)?.id ?? null);
 }

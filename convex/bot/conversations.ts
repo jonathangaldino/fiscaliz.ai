@@ -76,6 +76,8 @@ export const applyStep = internalMutation({
     ),
     decision: v.union(v.literal("yes"), v.literal("no"), v.null()),
     addressNotFound: v.optional(v.boolean()),
+    // Occurrence the AI judged to be the same problem (only on SIM).
+    matchId: v.optional(v.union(v.id("occurrences"), v.null())),
   },
   returns: v.union(
     v.object({ ok: v.literal(true), messages: v.array(outgoingMessageValidator) }),
@@ -115,6 +117,7 @@ export const applyStep = internalMutation({
         draft: step.draft,
         source: args.channel,
         now,
+        matchId: args.matchId ?? null,
       });
       // The conversation ends here.
       if (conversation) await ctx.db.delete(conversation._id);
@@ -122,12 +125,13 @@ export const applyStep = internalMutation({
         process.env.PUBLIC_APP_URL ?? "",
         result.occurrenceId,
       );
-      return {
-        ok: true as const,
-        messages: [
-          messages.registered(link, agencyForCategory(step.draft.category)),
-        ],
-      };
+      const reply =
+        result.kind === "created"
+          ? messages.registered(link, agencyForCategory(step.draft.category))
+          : result.kind === "appealed"
+            ? messages.appealAdded(link, result.appeal)
+            : messages.alreadyReported(link);
+      return { ok: true as const, messages: [reply] };
     }
 
     if (step.counter) {

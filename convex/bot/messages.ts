@@ -89,6 +89,18 @@ export function registered(
   );
 }
 
+export function appealAdded(link: string, appeal: number): OutgoingMessage {
+  return text(
+    `Esse problema já tinha sido relatado. Seu apelo foi somado: agora são ${appeal} pessoas pedindo a solução. 🙌\nAcompanhe no mapa: ${link}`,
+  );
+}
+
+export function alreadyReported(link: string): OutgoingMessage {
+  return text(
+    `Você já relatou esse problema, e seu apelo já está contado. Obrigado!\nAcompanhe no mapa: ${link}`,
+  );
+}
+
 export function occurrenceLink(appUrl: string, occurrenceId: string): string {
   return `${appUrl.replace(/\/$/, "")}/ocorrencias/${occurrenceId}`;
 }
