@@ -77,6 +77,8 @@ export type StepInput = {
   extraction: Extraction | null;
   location: ResolvedLocation | null;
   decision: "yes" | "no" | null;
+  /** The citizen wrote an address, but the geocoder found nothing specific. */
+  addressNotFound: boolean;
   /** Reports the citizen confirmed today (Brasília). */
   reportsToday: number;
 };

@@ -31,6 +31,16 @@ export const askLocation = () =>
     "Onde fica? Mande a localização pelo clipe 📎 (no simulador, clique no mapa) ou escreva o endereço com rua e número.",
   );
 
+export const outsideCity = () =>
+  text(
+    "Esse local fica fora de Apucarana. Eu só registro problemas dentro do município. Pode mandar outro local?",
+  );
+
+export const addressNotFound = () =>
+  text(
+    "Não encontrei esse endereço em Apucarana. Pode mandar a localização pelo clipe 📎 (no simulador, clique no mapa) ou escrever a rua com número e bairro?",
+  );
+
 export const askCorrection = () =>
   text("Sem problemas. O que precisa ser corrigido?");
 
@@ -53,8 +63,13 @@ export function summary(draft: CompleteDraft): OutgoingMessage {
       `• Local: ${draft.address}`,
       `• Quando: ${dateTime.format(draft.occurredAt)}`,
       "",
+      draft.precise
+        ? null
+        : "📍 Encontrei só a rua, sem o número exato. Se puder, mande a localização pelo clipe para marcar o ponto certo.",
       "Posso registrar?",
-    ].join("\n"),
+    ]
+      .filter((line) => line !== null)
+      .join("\n"),
     buttons: [
       { id: "yes", title: "SIM" },
       { id: "no", title: "NÃO" },

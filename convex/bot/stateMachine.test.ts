@@ -46,6 +46,7 @@ const input = (overrides: Partial<StepInput> = {}): StepInput => ({
   extraction: null,
   location: null,
   decision: null,
+  addressNotFound: false,
   reportsToday: 0,
   ...overrides,
 });
@@ -303,5 +304,54 @@ describe("nextStep: daily limit", () => {
       }),
     );
     expect(step).toMatchObject({ counter: { kind: "emergency" } });
+  });
+});
+
+describe("nextStep: location", () => {
+  const arapongas: ResolvedLocation = {
+    lat: -23.4153,
+    lng: -51.4244,
+    address: "Centro, Arapongas - PR",
+    precise: true,
+  };
+
+  it("refuses a location outside Apucarana and keeps the problem", () => {
+    const step = nextStep(null, input({ extraction: urban(), location: arapongas }));
+    expect(step).toMatchObject({
+      type: "reply",
+      state: { phase: "collecting", draft: { category: "pavement" } },
+    });
+    if (step.type !== "reply") throw new Error("expected reply");
+    expect(step.state?.draft.lat).toBeUndefined();
+    expect(step.messages[0].text).toMatch(/fora de Apucarana/);
+  });
+
+  it("asks again when the address was not found", () => {
+    const step = nextStep(null, input({ extraction: urban(), addressNotFound: true }));
+    if (step.type !== "reply") throw new Error("expected reply");
+    expect(step.messages[0].text).toMatch(/Não encontrei esse endereço/);
+  });
+
+  it("keeps a previous pin when a later address is not found", () => {
+    const step = nextStep(
+      { phase: "collecting", draft: { lat: pin.lat, lng: pin.lng, address: pin.address, precise: true } },
+      input({ extraction: urban(), addressNotFound: true }),
+    );
+    expect(step).toMatchObject({ state: { phase: "confirming" } });
+  });
+
+  it("suggests a pin when the address is approximate", () => {
+    const step = nextStep(
+      null,
+      input({ extraction: urban(), location: { ...pin, precise: false } }),
+    );
+    if (step.type !== "reply") throw new Error("expected reply");
+    expect(step.messages[0].text).toMatch(/mande a localização/);
+  });
+
+  it("does not suggest a pin when the location is precise", () => {
+    const step = nextStep(null, input({ extraction: urban(), location: pin }));
+    if (step.type !== "reply") throw new Error("expected reply");
+    expect(step.messages[0].text).not.toMatch(/sem o número exato/);
   });
 });

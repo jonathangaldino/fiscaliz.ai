@@ -3,6 +3,7 @@
  * Extraction; this code decides what happens next. No I/O here.
  */
 import { CATEGORIES } from "../lib/categories";
+import { isInsideApucarana } from "../lib/geo";
 import * as messages from "./messages";
 import type {
   CompleteDraft,
@@ -99,6 +100,7 @@ const reply = (
  *    Neither becomes a report; only an anonymous counter is stored.
  * 3. invalid → polite refusal (handled in nextStep, keeps the draft)
  * 4. daily limit reached → refuse, end the conversation
+ * 5. location outside Apucarana → ask for another one (in nextStep)
  */
 export const DAILY_REPORT_LIMIT = 5;
 
@@ -167,7 +169,16 @@ export function nextStep(state: ConversationState | null, input: StepInput): Ste
     );
   }
 
+  if (location && !isInsideApucarana(location)) {
+    const draft = mergeDraft(previous, extraction, null, receivedAt);
+    return reply({ phase: "collecting", draft }, messages.outsideCity());
+  }
+
   const draft = mergeDraft(previous, extraction, location, receivedAt);
+
+  if (input.addressNotFound && draft.lat === undefined) {
+    return reply({ phase: "collecting", draft }, messages.addressNotFound());
+  }
 
   if (isComplete(draft)) {
     return reply({ phase: "confirming", draft }, messages.summary(draft));

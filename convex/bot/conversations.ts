@@ -75,6 +75,7 @@ export const applyStep = internalMutation({
       v.null(),
     ),
     decision: v.union(v.literal("yes"), v.literal("no"), v.null()),
+    addressNotFound: v.optional(v.boolean()),
   },
   returns: v.union(
     v.object({ ok: v.literal(true), messages: v.array(outgoingMessageValidator) }),
@@ -105,6 +106,7 @@ export const applyStep = internalMutation({
       extraction: extractionSchema.nullable().parse(args.extraction),
       location: args.location as ResolvedLocation | null,
       decision: args.decision,
+      addressNotFound: args.addressNotFound ?? false,
     });
 
     if (step.type === "register") {
