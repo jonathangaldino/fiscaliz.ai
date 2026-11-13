@@ -18,6 +18,7 @@ import type * as bot_channels_index from "../bot/channels/index.js";
 import type * as bot_channels_simulator from "../bot/channels/simulator.js";
 import type * as bot_conversations from "../bot/conversations.js";
 import type * as bot_extract from "../bot/extract.js";
+import type * as bot_geocode from "../bot/geocode.js";
 import type * as bot_handleIncoming from "../bot/handleIncoming.js";
 import type * as bot_messages from "../bot/messages.js";
 import type * as bot_register from "../bot/register.js";
@@ -48,6 +49,7 @@ declare const fullApi: ApiFromModules<{
   "bot/channels/simulator": typeof bot_channels_simulator;
   "bot/conversations": typeof bot_conversations;
   "bot/extract": typeof bot_extract;
+  "bot/geocode": typeof bot_geocode;
   "bot/handleIncoming": typeof bot_handleIncoming;
   "bot/messages": typeof bot_messages;
   "bot/register": typeof bot_register;
