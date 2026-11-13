@@ -1,3 +1,4 @@
+import Link from "next/link";
 import type { PublicOccurrence } from "@/convex/occurrences";
 import { AGENCIES, CATEGORIES, type AgencySlug } from "@/convex/lib/categories";
 import { formatAppeal, formatDate } from "@/lib/format";
@@ -56,6 +57,14 @@ export function OccurrenceList({ occurrences, selectedId, onSelect }: Props) {
                 </span>
               </span>
             </button>
+            {selected && (
+              <Link
+                href={`/ocorrencias/${o._id}`}
+                className="block px-9 pb-3 text-xs font-medium text-blue-600 underline"
+              >
+                Ver detalhes da ocorrência
+              </Link>
+            )}
           </li>
         );
       })}

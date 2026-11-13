@@ -63,3 +63,14 @@ export const listOpen = query({
     return docs.map(toPublicOccurrence);
   },
 });
+
+export const get = query({
+  args: { id: v.string() },
+  returns: v.union(publicOccurrenceValidator, v.null()),
+  handler: async (ctx, { id }) => {
+    const occurrenceId = ctx.db.normalizeId("occurrences", id);
+    if (!occurrenceId) return null;
+    const doc = await ctx.db.get(occurrenceId);
+    return doc ? toPublicOccurrence(doc) : null;
+  },
+});
