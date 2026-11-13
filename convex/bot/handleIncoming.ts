@@ -4,9 +4,10 @@ import { hashCitizenId } from "../lib/citizenHash";
 import { incomingMessageValidator } from "../validators";
 import { send } from "./channels";
 import { extract } from "./extract";
+import { geocodeAddress, reverseGeocode } from "./geocode";
 import * as messages from "./messages";
 import { parseDecision } from "./stateMachine";
-import type { Extraction, IncomingMessage, ResolvedLocation } from "./types";
+import type { Extraction, ResolvedLocation } from "./types";
 
 const MAX_ATTEMPTS = 3;
 
@@ -40,6 +41,7 @@ export const handleIncoming = internalAction({
 
       let extraction: Extraction | null = null;
       let location: ResolvedLocation | null = null;
+      let addressNotFound = false;
       try {
         const isPureDecision = state?.phase === "confirming" && decision;
         if (message.text && !isPureDecision) {
@@ -49,7 +51,12 @@ export const handleIncoming = internalAction({
             receivedAt: message.receivedAt,
           });
         }
-        location = await resolveLocation(message);
+        if (message.location) {
+          location = await resolvePin(message.location);
+        } else if (extraction?.kind === "urban" && extraction.address) {
+          location = await geocodeAddress(extraction.address);
+          addressNotFound = location === null;
+        }
       } catch (error) {
         console.error("External service failed", error);
         await send(ctx, message, [messages.tryAgain()]);
@@ -64,6 +71,7 @@ export const handleIncoming = internalAction({
         extraction,
         location,
         decision,
+        addressNotFound,
       });
       if (result.ok) {
         await send(ctx, message, result.messages);
@@ -75,17 +83,17 @@ export const handleIncoming = internalAction({
   },
 });
 
-async function resolveLocation(
-  message: IncomingMessage,
-): Promise<ResolvedLocation | null> {
-  if (message.location) {
-    const { lat, lng } = message.location;
-    return {
-      lat,
-      lng,
-      address: `Local marcado no mapa (${lat.toFixed(5)}, ${lng.toFixed(5)})`,
-      precise: true,
-    };
+async function resolvePin(pin: {
+  lat: number;
+  lng: number;
+}): Promise<ResolvedLocation> {
+  let address: string;
+  try {
+    address = await reverseGeocode(pin.lat, pin.lng);
+  } catch (error) {
+    // The pin alone is enough to register; the address is only for display.
+    console.warn("Reverse geocoding failed", error);
+    address = `Local marcado no mapa (${pin.lat.toFixed(5)}, ${pin.lng.toFixed(5)})`;
   }
-  return null;
+  return { ...pin, address, precise: true };
 }
