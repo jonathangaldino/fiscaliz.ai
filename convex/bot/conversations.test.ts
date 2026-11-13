@@ -21,9 +21,9 @@ const problem: Extraction = {
 };
 
 const pin = {
-  lat: -23.5486,
-  lng: -51.4652,
-  address: "Avenida Minas Gerais, 500",
+  lat: -23.5580,
+  lng: -51.4500,
+  address: "Rua Exemplo, 500",
   precise: true,
 };
 
@@ -258,5 +258,143 @@ describe("limits and expiry", () => {
     } finally {
       vi.useRealTimers();
     }
+  });
+});
+
+describe("de-duplication and appeal", () => {
+  async function confirm(
+    t: T,
+    citizenId: Id<"citizens">,
+    extraction: Extraction,
+    location: typeof pin,
+    pickMatch: boolean,
+  ) {
+    await step(t, citizenId, { extraction, location });
+    const candidates = await t.query(internal.bot.dedup.candidates, {
+      category: extraction.category!,
+      lat: location.lat,
+      lng: location.lng,
+      precise: location.precise,
+    });
+    // Stands in for the AI: picks the nearest candidate when asked to.
+    const matchId = pickMatch ? (candidates[0]?.id ?? null) : null;
+    const { version } = await t.query(internal.bot.conversations.load, { citizenId });
+    const result = await t.mutation(internal.bot.conversations.applyStep, {
+      citizenId,
+      channel: "simulator",
+      expectedVersion: version,
+      receivedAt: NOW,
+      extraction: null,
+      location: null,
+      decision: "yes",
+      matchId,
+    });
+    return { result, candidates };
+  }
+
+  const newCitizen = (t: T, hash: string) =>
+    t.mutation(internal.bot.conversations.ensureCitizen, {
+      channel: "simulator",
+      externalIdHash: hash,
+    });
+
+  const simulatorOccurrences = async (t: T) =>
+    (await t.query(api.occurrences.listOpen, {})).filter((o) => o.source === "simulator");
+
+  it("adds appeal when a second citizen reports the same problem", async () => {
+    const { t, citizenId } = await setup();
+    await confirm(t, citizenId, problem, pin, true);
+
+    const other = await newCitizen(t, "hash-2");
+    const nearby = { ...pin, lat: pin.lat + 0.0001 }; // ~11 m away
+    const { result, candidates } = await confirm(t, other, problem, nearby, true);
+
+    expect(candidates).toHaveLength(1);
+    expect(result.ok && result.messages[0].text).toMatch(/agora são 2 pessoas/);
+    const list = await simulatorOccurrences(t);
+    expect(list).toHaveLength(1);
+    expect(list[0].appeal).toBe(2);
+    expect(await reportCount(t)).toBe(2);
+  });
+
+  it("does not add appeal when the same citizen reports again", async () => {
+    const { t, citizenId } = await setup();
+    await confirm(t, citizenId, problem, pin, true);
+    const { result } = await confirm(t, citizenId, problem, pin, true);
+
+    expect(result.ok && result.messages[0].text).toMatch(/Você já relatou/);
+    const list = await simulatorOccurrences(t);
+    expect(list).toHaveLength(1);
+    expect(list[0].appeal).toBe(1);
+    expect(await reportCount(t)).toBe(1);
+  });
+
+  it("opens a new occurrence for a different category at the same spot", async () => {
+    const { t, citizenId } = await setup();
+    await confirm(t, citizenId, problem, pin, true);
+    const other = await newCitizen(t, "hash-2");
+    const drainage: Extraction = {
+      ...problem,
+      category: "drainage",
+      publicSummary: "Bueiro entupido.",
+    };
+    const { candidates } = await confirm(t, other, drainage, pin, true);
+
+    expect(candidates).toHaveLength(0);
+    expect(await simulatorOccurrences(t)).toHaveLength(2);
+  });
+
+  it("opens a new occurrence outside the radius", async () => {
+    const { t, citizenId } = await setup();
+    await confirm(t, citizenId, problem, pin, true);
+    const other = await newCitizen(t, "hash-2");
+    const far = { ...pin, lat: pin.lat + 0.001 }; // ~110 m, beyond 50 m
+    const { candidates } = await confirm(t, other, problem, far, true);
+
+    expect(candidates).toHaveLength(0);
+    expect(await simulatorOccurrences(t)).toHaveLength(2);
+  });
+
+  it("uses the wider radius when only the street is known", async () => {
+    const { t, citizenId } = await setup();
+    await confirm(t, citizenId, problem, pin, true);
+    const other = await newCitizen(t, "hash-2");
+    const street = { ...pin, lat: pin.lat + 0.001, precise: false }; // ~110 m
+    const { candidates } = await confirm(t, other, problem, street, true);
+    expect(candidates).toHaveLength(1);
+  });
+
+  it("opens a new occurrence when the AI says it is a different problem", async () => {
+    const { t, citizenId } = await setup();
+    await confirm(t, citizenId, problem, pin, true);
+    const other = await newCitizen(t, "hash-2");
+    await confirm(t, other, problem, pin, false);
+    expect(await simulatorOccurrences(t)).toHaveLength(2);
+  });
+
+  it("re-validates the match: a resolved occurrence gets no appeal", async () => {
+    const { t, citizenId } = await setup();
+    await confirm(t, citizenId, problem, pin, true);
+    const [first] = await simulatorOccurrences(t);
+
+    const other = await newCitizen(t, "hash-2");
+    await step(t, other, { extraction: problem, location: pin });
+    await t.run((ctx) => ctx.db.patch(first._id, { status: "resolved" }));
+    const { version } = await t.query(internal.bot.conversations.load, { citizenId: other });
+    const result = await t.mutation(internal.bot.conversations.applyStep, {
+      citizenId: other,
+      channel: "simulator",
+      expectedVersion: version,
+      receivedAt: NOW,
+      extraction: null,
+      location: null,
+      decision: "yes",
+      matchId: first._id,
+    });
+
+    expect(result.ok && result.messages[0].text).toMatch(/Relato registrado/);
+    const open = await simulatorOccurrences(t);
+    expect(open).toHaveLength(1);
+    expect(open[0]._id).not.toBe(first._id);
   });
 });
