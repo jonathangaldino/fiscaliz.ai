@@ -101,3 +101,13 @@ describe("toGraphPayload", () => {
     });
   });
 });
+
+describe("parseWebhook: audio", () => {
+  it("keeps the media id of voice notes for transcription", () => {
+    const [message] = parseWebhook(
+      webhookPayload({ type: "audio", audio: { id: "media-1", mime_type: "audio/ogg" } }),
+    );
+    expect(message.audioMediaId).toBe("media-1");
+    expect(message.unsupported).toBeUndefined();
+  });
+});
