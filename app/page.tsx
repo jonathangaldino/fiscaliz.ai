@@ -1,7 +1,11 @@
+import { Dashboard } from "@/components/Dashboard";
+import { Header } from "@/components/Header";
+
 export default function Home() {
   return (
-    <main className="flex flex-1 items-center justify-center">
-      <h1 className="text-2xl font-semibold">Fiscaliza.i</h1>
-    </main>
+    <>
+      <Header />
+      <Dashboard />
+    </>
   );
 }
