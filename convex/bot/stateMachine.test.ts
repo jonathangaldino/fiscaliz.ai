@@ -198,3 +198,85 @@ describe("nextStep: confirming", () => {
     expect(step.type).toBe("reply");
   });
 });
+
+describe("nextStep: priority rules", () => {
+  const emergency = empty({ kind: "emergency", emergencyTarget: "firefighters" });
+  const sanepar = empty({ kind: "out_of_scope", outOfScopeTarget: "sanepar" });
+
+  it.each([
+    ["no conversation", null],
+    ["collecting", { phase: "collecting", draft: { category: "pavement" } }],
+    ["confirming", confirming],
+  ] as const)("redirects an emergency while %s and ends the conversation", (_, state) => {
+    const step = nextStep(state as ConversationState | null, input({ extraction: emergency }));
+    expect(step).toMatchObject({
+      type: "reply",
+      state: null,
+      counter: { kind: "emergency", target: "firefighters" },
+    });
+    if (step.type === "reply") expect(step.messages[0].text).toMatch(/193/);
+  });
+
+  it("checks emergency before a pending confirmation", () => {
+    const step = nextStep(confirming, input({ extraction: emergency, decision: "yes" }));
+    expect(step.type).toBe("reply");
+  });
+
+  it("checks emergency even when a location comes along", () => {
+    const step = nextStep(null, input({ extraction: emergency, location: pin }));
+    expect(step).toMatchObject({ state: null, counter: { kind: "emergency" } });
+  });
+
+  it.each([
+    ["police", "190"],
+    ["samu", "192"],
+    ["firefighters", "193"],
+    ["civil_defense", "199"],
+  ] as const)("sends %s to %s", (target, number) => {
+    const step = nextStep(
+      null,
+      input({ extraction: empty({ kind: "emergency", emergencyTarget: target }) }),
+    );
+    if (step.type !== "reply") throw new Error("expected reply");
+    expect(step.messages[0].text).toContain(`: ${number}*`);
+  });
+
+  it("lists every emergency number when the target is unknown", () => {
+    const step = nextStep(null, input({ extraction: empty({ kind: "emergency" }) }));
+    if (step.type !== "reply") throw new Error("expected reply");
+    expect(step.counter).toEqual({ kind: "emergency", target: "unknown" });
+    for (const number of ["190", "192", "193", "199"]) {
+      expect(step.messages[0].text).toContain(number);
+    }
+  });
+
+  it("points water problems to Sanepar and ends the conversation", () => {
+    const step = nextStep(
+      { phase: "collecting", draft: {} },
+      input({ extraction: sanepar }),
+    );
+    expect(step).toMatchObject({
+      state: null,
+      counter: { kind: "out_of_scope", target: "sanepar" },
+    });
+    if (step.type === "reply") expect(step.messages[0].text).toMatch(/0800 200 0115/);
+  });
+
+  it("points power grid problems to Copel", () => {
+    const step = nextStep(
+      null,
+      input({ extraction: empty({ kind: "out_of_scope", outOfScopeTarget: "copel" }) }),
+    );
+    if (step.type !== "reply") throw new Error("expected reply");
+    expect(step.messages[0].text).toMatch(/Copel: 0800 51 00 116/);
+  });
+
+  it("keeps street lighting as an urban problem routed to Idepplan", () => {
+    const step = nextStep(
+      null,
+      input({ extraction: urban({ category: "street_lighting" }), location: pin }),
+    );
+    expect(step).toMatchObject({ state: { phase: "confirming" } });
+    expect(step.type === "reply" && step.counter).toBeFalsy();
+  });
+});

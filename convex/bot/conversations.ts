@@ -118,6 +118,14 @@ export const applyStep = internalMutation({
       };
     }
 
+    if (step.counter) {
+      await ctx.db.insert("anonymousCounters", {
+        kind: step.counter.kind,
+        target: step.counter.target,
+        createdAt: now,
+      });
+    }
+
     if (step.state === null) {
       if (conversation) await ctx.db.delete(conversation._id);
     } else if (conversation) {

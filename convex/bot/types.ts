@@ -79,8 +79,18 @@ export type StepInput = {
   decision: "yes" | "no" | null;
 };
 
+export type AnonymousCounter =
+  | { kind: "emergency"; target: EmergencyTarget | "unknown" }
+  | { kind: "out_of_scope"; target: OutOfScopeTarget | "unknown" };
+
 export type Step =
   /** Keep talking: save the new state (or drop it, when null) and reply. */
-  | { type: "reply"; state: ConversationState | null; messages: OutgoingMessage[] }
+  | {
+      type: "reply";
+      state: ConversationState | null;
+      messages: OutgoingMessage[];
+      /** Anonymous record to store (ADR 0001). */
+      counter?: AnonymousCounter;
+    }
   /** The citizen confirmed: register the report. */
   | { type: "register"; draft: CompleteDraft };

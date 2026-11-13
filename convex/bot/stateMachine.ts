@@ -92,8 +92,43 @@ const reply = (
   ...out: OutgoingMessage[]
 ): Step => ({ type: "reply", state, messages: out });
 
+/**
+ * Rules checked before any transition, in any state, in this order:
+ * 1. emergency  → redirect to 190/192/193/199, end the conversation
+ * 2. out_of_scope → point to Sanepar/Copel, end the conversation
+ * Neither becomes a report; only an anonymous counter is stored.
+ */
+function priorityRules(extraction: Extraction | null): Step | null {
+  if (extraction?.kind === "emergency") {
+    return {
+      type: "reply",
+      state: null,
+      messages: [messages.emergency(extraction.emergencyTarget)],
+      counter: {
+        kind: "emergency",
+        target: extraction.emergencyTarget ?? "unknown",
+      },
+    };
+  }
+  if (extraction?.kind === "out_of_scope") {
+    return {
+      type: "reply",
+      state: null,
+      messages: [messages.outOfScope(extraction.outOfScopeTarget)],
+      counter: {
+        kind: "out_of_scope",
+        target: extraction.outOfScopeTarget ?? "unknown",
+      },
+    };
+  }
+  return null;
+}
+
 export function nextStep(state: ConversationState | null, input: StepInput): Step {
   const { extraction, location, decision, receivedAt } = input;
+
+  const priority = priorityRules(extraction);
+  if (priority) return priority;
 
   // Confirmation answers only count while a summary is on screen.
   if (state?.phase === "confirming" && isComplete(state.draft)) {
