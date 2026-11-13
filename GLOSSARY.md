@@ -42,3 +42,21 @@ _Avoid_: Tipo, tag, assunto
 **Órgão responsável**:
 Secretaria ou autarquia municipal a quem cabe resolver as ocorrências de uma categoria.
 _Avoid_: Departamento, setor, responsável (sozinho)
+
+## Nomes no código
+
+O código é só em inglês. Cada termo acima tem um único nome no código:
+
+| Termo | Código |
+|---|---|
+| Cidadão | `citizen` |
+| Relato | `report` |
+| Ocorrência | `occurrence` |
+| Apelo | `appeal` |
+| Verificação | `verification` |
+| Aberta / Verificando / Resolvida | `open` / `verifying` / `resolved` |
+| Fora de escopo | `out_of_scope` |
+| Emergência | `emergency` |
+| Categoria | `category` |
+| Órgão responsável | `agency` |
+| Conversa | `conversation` |
