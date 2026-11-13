@@ -1,0 +1,218 @@
+import type { CategoryKey } from "./lib/categories";
+
+/**
+ * Synthetic occurrences for the demo (rule 9 of the Hack Brasil rules):
+ * real street names of Apucarana, made-up problems, no personal data.
+ * Coordinates are approximate and only need to fall inside the municipality.
+ */
+export type SeedOccurrence = {
+  category: CategoryKey;
+  address: string;
+  lat: number;
+  lng: number;
+  summary: string;
+  appeal: number;
+  /** How many days ago it was opened. */
+  daysAgo: number;
+};
+
+export const SEED_OCCURRENCES: SeedOccurrence[] = [
+  {
+    category: "pavement",
+    address: "Avenida Curitiba, Centro",
+    lat: -23.5512,
+    lng: -51.4625,
+    summary: "Buraco grande na faixa da direita, perto do cruzamento.",
+    appeal: 14,
+    daysAgo: 6,
+  },
+  {
+    category: "pavement",
+    address: "Rua Ponta Grossa, Centro",
+    lat: -23.5531,
+    lng: -51.4597,
+    summary: "Asfalto afundado em frente à faixa de pedestres.",
+    appeal: 7,
+    daysAgo: 3,
+  },
+  {
+    category: "street_lighting",
+    address: "Avenida Minas Gerais, Centro",
+    lat: -23.5486,
+    lng: -51.4652,
+    summary: "Três postes seguidos apagados à noite.",
+    appeal: 9,
+    daysAgo: 4,
+  },
+  {
+    category: "street_lighting",
+    address: "Rua Osvaldo Cruz, Centro",
+    lat: -23.5497,
+    lng: -51.4578,
+    summary: "Luminária quebrada, pendurada no poste.",
+    appeal: 3,
+    daysAgo: 1,
+  },
+  {
+    category: "traffic_light",
+    address: "Avenida Central do Paraná, Centro",
+    lat: -23.5545,
+    lng: -51.4641,
+    summary: "Semáforo piscando amarelo o dia todo.",
+    appeal: 11,
+    daysAgo: 2,
+  },
+  {
+    category: "traffic_signs",
+    address: "Rua Rio Branco, Centro",
+    lat: -23.5523,
+    lng: -51.4569,
+    summary: "Placa de pare caída na calçada.",
+    appeal: 4,
+    daysAgo: 5,
+  },
+  {
+    category: "drainage",
+    address: "Avenida Santos Dumont, Vila Nova",
+    lat: -23.5572,
+    lng: -51.4689,
+    summary: "Boca de lobo entupida; a rua alaga quando chove.",
+    appeal: 12,
+    daysAgo: 8,
+  },
+  {
+    category: "drainage",
+    address: "Rua Munhoz da Rocha, Centro",
+    lat: -23.5469,
+    lng: -51.4611,
+    summary: "Bueiro sem tampa no meio da rua.",
+    appeal: 6,
+    daysAgo: 2,
+  },
+  {
+    category: "urban_cleaning",
+    address: "Rua Nagib Daher, Jardim Ponta Grossa",
+    lat: -23.5598,
+    lng: -51.4553,
+    summary: "Terreno baldio com mato alto e entulho.",
+    appeal: 5,
+    daysAgo: 10,
+  },
+  {
+    category: "urban_cleaning",
+    address: "Avenida Aviação, Vila Shimabokuro",
+    lat: -23.5441,
+    lng: -51.4723,
+    summary: "Entulho de obra descartado na via.",
+    appeal: 2,
+    daysAgo: 1,
+  },
+  {
+    category: "public_spaces",
+    address: "Praça Rui Barbosa, Centro",
+    lat: -23.5507,
+    lng: -51.4606,
+    summary: "Bancos quebrados e calçada da praça solta.",
+    appeal: 8,
+    daysAgo: 12,
+  },
+  {
+    category: "public_spaces",
+    address: "Parque Ecológico Jaboti",
+    lat: -23.5625,
+    lng: -51.4632,
+    summary: "Trecho da pista de caminhada com piso quebrado.",
+    appeal: 10,
+    daysAgo: 7,
+  },
+  {
+    category: "tree_assessment",
+    address: "Rua Clotário Portugal, Centro",
+    lat: -23.5489,
+    lng: -51.4594,
+    summary: "Árvore com tronco oco, precisa de avaliação.",
+    appeal: 3,
+    daysAgo: 9,
+  },
+  {
+    category: "tree_removal",
+    address: "Rua Dom Romeu Alberti, Jardim Apucarana",
+    lat: -23.5651,
+    lng: -51.4581,
+    summary: "Galhos de poda acumulados na calçada há uma semana.",
+    appeal: 4,
+    daysAgo: 6,
+  },
+  {
+    category: "public_transport",
+    address: "Terminal Urbano, Centro",
+    lat: -23.5531,
+    lng: -51.4617,
+    summary: "Cobertura do ponto de ônibus com goteiras.",
+    appeal: 6,
+    daysAgo: 4,
+  },
+  {
+    category: "risk_area",
+    address: "Vale do Rio Pirapó, Jardim Diamantina",
+    lat: -23.5712,
+    lng: -51.4745,
+    summary: "Erosão avançando na margem da rua.",
+    appeal: 5,
+    daysAgo: 15,
+  },
+  {
+    category: "environmental",
+    address: "Avenida Minas Gerais, Vila Regina",
+    lat: -23.5451,
+    lng: -51.4687,
+    summary: "Queimada recorrente em terreno no fim da avenida.",
+    appeal: 3,
+    daysAgo: 3,
+  },
+  {
+    category: "construction",
+    address: "Rua Ponta Grossa, Vila Agari",
+    lat: -23.5566,
+    lng: -51.4538,
+    summary: "Obra pública parada com tapume ocupando a calçada.",
+    appeal: 2,
+    daysAgo: 20,
+  },
+  {
+    category: "cemeteries",
+    address: "Cemitério Cristo Rei",
+    lat: -23.5409,
+    lng: -51.4563,
+    summary: "Muro lateral do cemitério com rachaduras.",
+    appeal: 1,
+    daysAgo: 11,
+  },
+  {
+    category: "rural_roads",
+    address: "Estrada rural do Distrito de Pirapó",
+    lat: -23.6851,
+    lng: -51.4612,
+    summary: "Estrada de terra com valetas que impedem a passagem.",
+    appeal: 4,
+    daysAgo: 13,
+  },
+  {
+    category: "rural_area",
+    address: "Distrito de São Pedro",
+    lat: -23.6312,
+    lng: -51.4021,
+    summary: "Mata-burro quebrado na entrada da comunidade.",
+    appeal: 2,
+    daysAgo: 5,
+  },
+  {
+    category: "other",
+    address: "Rua Rio Branco, Vila Nova",
+    lat: -23.5559,
+    lng: -51.4561,
+    summary: "Lixeira pública arrancada.",
+    appeal: 1,
+    daysAgo: 2,
+  },
+];
