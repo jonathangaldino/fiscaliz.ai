@@ -210,3 +210,53 @@ describe("anonymous counters", () => {
     expect(fields).toMatchObject({ kind: "emergency", target: "samu" });
   });
 });
+
+describe("limits and expiry", () => {
+  async function registerOne(t: T, citizenId: Id<"citizens">) {
+    await step(t, citizenId, { extraction: problem, location: pin });
+    return step(t, citizenId, { decision: "yes" });
+  }
+
+  it("accepts 5 reports a day and refuses the 6th", async () => {
+    const { t, citizenId } = await setup();
+    for (let i = 0; i < 5; i++) {
+      const result = await registerOne(t, citizenId);
+      expect(result.ok && result.messages[0].text).toMatch(/Relato registrado/);
+    }
+    const sixth = await step(t, citizenId, { extraction: problem, location: pin });
+    expect(sixth.ok && sixth.messages[0].text).toMatch(/limite diário/);
+    expect(await reportCount(t)).toBe(5);
+  });
+
+  it("counts the limit per citizen", async () => {
+    const { t, citizenId } = await setup();
+    for (let i = 0; i < 5; i++) await registerOne(t, citizenId);
+    const other = await t.mutation(internal.bot.conversations.ensureCitizen, {
+      channel: "simulator",
+      externalIdHash: "hash-2",
+    });
+    const result = await registerOne(t, other);
+    expect(result.ok && result.messages[0].text).toMatch(/Relato registrado/);
+  });
+
+  it("expires conversations idle for 30 minutes without registering", async () => {
+    vi.useFakeTimers();
+    try {
+      vi.setSystemTime(NOW);
+      const { t, citizenId } = await setup();
+      await step(t, citizenId, { extraction: problem, location: pin });
+
+      vi.setSystemTime(NOW + 29 * 60 * 1000);
+      expect(await t.mutation(internal.bot.conversations.expire, {})).toBe(0);
+
+      vi.setSystemTime(NOW + 31 * 60 * 1000);
+      expect(await t.mutation(internal.bot.conversations.expire, {})).toBe(1);
+
+      const { state } = await t.query(internal.bot.conversations.load, { citizenId });
+      expect(state).toBeNull();
+      expect(await reportCount(t)).toBe(0);
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+});
