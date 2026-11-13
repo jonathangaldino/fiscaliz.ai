@@ -50,8 +50,9 @@ function useSessionId(): string | null {
   );
 }
 
+// Renders links and WhatsApp-style *bold*.
 function Linkified({ text }: { text: string }) {
-  const parts = text.split(/(https?:\/\/\S+|\/ocorrencias\/\S+)/g);
+  const parts = text.split(/(https?:\/\/\S+|\/ocorrencias\/\S+|\*[^*\n]+\*)/g);
   return (
     <>
       {parts.map((part, index) =>
@@ -65,6 +66,8 @@ function Linkified({ text }: { text: string }) {
           >
             {part}
           </a>
+        ) : /^\*[^*]+\*$/.test(part) ? (
+          <strong key={index}>{part.slice(1, -1)}</strong>
         ) : (
           <span key={index}>{part}</span>
         ),
