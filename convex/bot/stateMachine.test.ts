@@ -46,6 +46,7 @@ const input = (overrides: Partial<StepInput> = {}): StepInput => ({
   extraction: null,
   location: null,
   decision: null,
+  reportsToday: 0,
   ...overrides,
 });
 
@@ -278,5 +279,29 @@ describe("nextStep: priority rules", () => {
     );
     expect(step).toMatchObject({ state: { phase: "confirming" } });
     expect(step.type === "reply" && step.counter).toBeFalsy();
+  });
+});
+
+describe("nextStep: daily limit", () => {
+  it("lets the 5th report through", () => {
+    const step = nextStep(confirming, input({ decision: "yes", reportsToday: 4 }));
+    expect(step.type).toBe("register");
+  });
+
+  it("refuses once 5 reports were confirmed today", () => {
+    const step = nextStep(confirming, input({ decision: "yes", reportsToday: 5 }));
+    expect(step).toMatchObject({ type: "reply", state: null });
+    if (step.type === "reply") expect(step.messages[0].text).toMatch(/limite diário/);
+  });
+
+  it("still redirects emergencies after the limit", () => {
+    const step = nextStep(
+      null,
+      input({
+        extraction: empty({ kind: "emergency", emergencyTarget: "samu" }),
+        reportsToday: 5,
+      }),
+    );
+    expect(step).toMatchObject({ counter: { kind: "emergency" } });
   });
 });

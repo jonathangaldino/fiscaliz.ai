@@ -118,3 +118,8 @@ export function outOfScope(target: OutOfScopeTarget | null): OutgoingMessage {
     `Esse problema não é da Prefeitura, é de concessionária. ${channel}\nNão registrei sua mensagem.`,
   );
 }
+
+export const dailyLimit = (limit: number) =>
+  text(
+    `Você já registrou ${limit} relatos hoje, o limite diário. Amanhã você pode mandar novos relatos. Obrigado por ajudar a cidade!`,
+  );

@@ -96,9 +96,16 @@ const reply = (
  * Rules checked before any transition, in any state, in this order:
  * 1. emergency  → redirect to 190/192/193/199, end the conversation
  * 2. out_of_scope → point to Sanepar/Copel, end the conversation
- * Neither becomes a report; only an anonymous counter is stored.
+ *    Neither becomes a report; only an anonymous counter is stored.
+ * 3. invalid → polite refusal (handled in nextStep, keeps the draft)
+ * 4. daily limit reached → refuse, end the conversation
  */
-function priorityRules(extraction: Extraction | null): Step | null {
+export const DAILY_REPORT_LIMIT = 5;
+
+function priorityRules(
+  extraction: Extraction | null,
+  reportsToday: number,
+): Step | null {
   if (extraction?.kind === "emergency") {
     return {
       type: "reply",
@@ -121,13 +128,20 @@ function priorityRules(extraction: Extraction | null): Step | null {
       },
     };
   }
+  if (reportsToday >= DAILY_REPORT_LIMIT) {
+    return {
+      type: "reply",
+      state: null,
+      messages: [messages.dailyLimit(DAILY_REPORT_LIMIT)],
+    };
+  }
   return null;
 }
 
 export function nextStep(state: ConversationState | null, input: StepInput): Step {
-  const { extraction, location, decision, receivedAt } = input;
+  const { extraction, location, decision, receivedAt, reportsToday } = input;
 
-  const priority = priorityRules(extraction);
+  const priority = priorityRules(extraction, reportsToday);
   if (priority) return priority;
 
   // Confirmation answers only count while a summary is on screen.

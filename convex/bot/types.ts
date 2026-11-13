@@ -77,6 +77,8 @@ export type StepInput = {
   extraction: Extraction | null;
   location: ResolvedLocation | null;
   decision: "yes" | "no" | null;
+  /** Reports the citizen confirmed today (Brasília). */
+  reportsToday: number;
 };
 
 export type AnonymousCounter =

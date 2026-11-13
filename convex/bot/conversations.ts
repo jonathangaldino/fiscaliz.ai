@@ -5,6 +5,7 @@
 import { v } from "convex/values";
 import { internalMutation, internalQuery } from "../_generated/server";
 import { agencyForCategory } from "../lib/categories";
+import { startOfDayInBrasilia } from "../lib/time";
 import {
   channelValidator,
   conversationStateValidator,
@@ -12,7 +13,7 @@ import {
 } from "../validators";
 import * as messages from "./messages";
 import { registerReport } from "./register";
-import { nextStep } from "./stateMachine";
+import { DAILY_REPORT_LIMIT, nextStep } from "./stateMachine";
 import { extractionSchema, type ResolvedLocation } from "./types";
 
 export const ensureCitizen = internalMutation({
@@ -90,7 +91,16 @@ export const applyStep = internalMutation({
     }
 
     const now = Date.now();
+    const todaysReports = await ctx.db
+      .query("reports")
+      .withIndex("by_citizen_createdAt", (q) =>
+        q
+          .eq("citizenId", args.citizenId)
+          .gte("createdAt", startOfDayInBrasilia(now)),
+      )
+      .take(DAILY_REPORT_LIMIT);
     const step = nextStep(conversation?.state ?? null, {
+      reportsToday: todaysReports.length,
       receivedAt: args.receivedAt,
       extraction: extractionSchema.nullable().parse(args.extraction),
       location: args.location as ResolvedLocation | null,
@@ -143,5 +153,22 @@ export const applyStep = internalMutation({
       });
     }
     return { ok: true as const, messages: step.messages };
+  },
+});
+
+export const CONVERSATION_TTL_MS = 30 * 60 * 1000;
+
+/** Deletes idle conversations. An expired conversation never becomes a report. */
+export const expire = internalMutation({
+  args: {},
+  returns: v.number(),
+  handler: async (ctx) => {
+    const cutoff = Date.now() - CONVERSATION_TTL_MS;
+    const stale = await ctx.db
+      .query("conversations")
+      .withIndex("by_updatedAt", (q) => q.lt("updatedAt", cutoff))
+      .take(500);
+    for (const conversation of stale) await ctx.db.delete(conversation._id);
+    return stale.length;
   },
 });
