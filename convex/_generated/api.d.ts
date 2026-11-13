@@ -13,8 +13,12 @@ import type {
   FilterApi,
   FunctionReference,
 } from "convex/server";
+import type * as agencies from "../agencies.js";
 import type * as lib_categories from "../lib/categories.js";
 import type * as lib_geo from "../lib/geo.js";
+import type * as occurrences from "../occurrences.js";
+import type * as seed from "../seed.js";
+import type * as seedData from "../seedData.js";
 import type * as validators from "../validators.js";
 
 /**
@@ -26,8 +30,12 @@ import type * as validators from "../validators.js";
  * ```
  */
 declare const fullApi: ApiFromModules<{
+  agencies: typeof agencies;
   "lib/categories": typeof lib_categories;
   "lib/geo": typeof lib_geo;
+  occurrences: typeof occurrences;
+  seed: typeof seed;
+  seedData: typeof seedData;
   validators: typeof validators;
 }>;
 export declare const api: FilterApi<
