@@ -25,3 +25,17 @@ export const list = query({
     }));
   },
 });
+
+export const getBySlug = query({
+  args: { slug: v.string() },
+  returns: v.union(publicAgencyValidator, v.null()),
+  handler: async (ctx, { slug }) => {
+    const doc = await ctx.db
+      .query("agencies")
+      .withIndex("by_slug", (q) => q.eq("slug", slug))
+      .unique();
+    if (!doc) return null;
+    const { _id, name, phone, email, url } = doc;
+    return { _id, slug: doc.slug, name, phone, email, url };
+  },
+});

@@ -74,3 +74,35 @@ export const get = query({
     return doc ? toPublicOccurrence(doc) : null;
   },
 });
+
+/** An agency's queue: open occurrences, highest appeal first, plus counters. */
+export const listByAgency = query({
+  args: { slug: v.string() },
+  returns: v.union(
+    v.null(),
+    v.object({
+      occurrences: v.array(publicOccurrenceValidator),
+      openCount: v.number(),
+      totalAppeal: v.number(),
+    }),
+  ),
+  handler: async (ctx, { slug }) => {
+    const agency = await ctx.db
+      .query("agencies")
+      .withIndex("by_slug", (q) => q.eq("slug", slug))
+      .unique();
+    if (!agency) return null;
+    const open = await ctx.db
+      .query("occurrences")
+      .withIndex("by_agency_status", (q) =>
+        q.eq("agencyId", agency._id).eq("status", "open"),
+      )
+      .take(MAP_LIMIT);
+    open.sort((a, b) => b.appeal - a.appeal);
+    return {
+      occurrences: open.map(toPublicOccurrence),
+      openCount: open.length,
+      totalAppeal: open.reduce((sum, o) => sum + o.appeal, 0),
+    };
+  },
+});
