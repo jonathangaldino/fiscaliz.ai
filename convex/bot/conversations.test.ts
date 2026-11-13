@@ -180,3 +180,33 @@ describe("simulator.send", () => {
     ).rejects.toThrow();
   });
 });
+
+describe("anonymous counters", () => {
+  it("stores only kind, target and time for an emergency", async () => {
+    const { t, citizenId } = await setup();
+    await step(t, citizenId, { extraction: problem });
+    const result = await step(t, citizenId, {
+      extraction: {
+        ...problem,
+        kind: "emergency",
+        emergencyTarget: "samu",
+        category: null,
+        publicSummary: null,
+      },
+    });
+    expect(result.ok && result.messages[0].text).toMatch(/192/);
+
+    const stored = await t.run(async (ctx) => ({
+      counters: await ctx.db.query("anonymousCounters").collect(),
+      conversations: await ctx.db.query("conversations").collect(),
+      reports: await ctx.db.query("reports").collect(),
+    }));
+    expect(stored.conversations).toHaveLength(0);
+    expect(stored.reports).toHaveLength(0);
+    expect(stored.counters).toHaveLength(1);
+    const { _id, _creationTime, ...fields } = stored.counters[0];
+    expect(_id && _creationTime).toBeTruthy();
+    expect(Object.keys(fields).sort()).toEqual(["createdAt", "kind", "target"]);
+    expect(fields).toMatchObject({ kind: "emergency", target: "samu" });
+  });
+});
