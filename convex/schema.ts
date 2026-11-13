@@ -70,6 +70,12 @@ export default defineSchema({
     .index("by_citizen", ["citizenId"])
     .index("by_updatedAt", ["updatedAt"]),
 
+  // Idempotency: Meta re-sends a webhook when it does not get a 200 in time.
+  processedMessages: defineTable({
+    channel: channelValidator,
+    messageId: v.string(),
+  }).index("by_channel_message", ["channel", "messageId"]),
+
   // Chat log of the web simulator. sessionId is a random id kept in the browser.
   simulatorMessages: defineTable({
     sessionId: v.string(),

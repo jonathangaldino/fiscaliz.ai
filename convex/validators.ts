@@ -65,4 +65,6 @@ export const incomingMessageValidator = v.object({
   text: v.optional(v.string()),
   location: v.optional(v.object({ lat: v.number(), lng: v.number() })),
   button: v.optional(v.union(v.literal("yes"), v.literal("no"))),
+  // Media types the bot does not handle (image, sticker, video...).
+  unsupported: v.optional(v.boolean()),
 });
