@@ -5,6 +5,7 @@ import Link from "next/link";
 import { api } from "@/convex/_generated/api";
 import { AGENCIES, CATEGORIES, type AgencySlug } from "@/convex/lib/categories";
 import { formatAppeal, formatDateTime } from "@/lib/format";
+import { AgencyContact } from "./AgencyContact";
 
 const STATUS_LABEL = {
   open: "Aberta",
@@ -53,12 +54,34 @@ export function OccurrenceDetail({ id }: { id: string }) {
           <dt className="text-zinc-500">Aberta em</dt>
           <dd className="font-medium">{formatDateTime(occurrence.openedAt)}</dd>
         </div>
+        {occurrence.verificationStartedAt && (
+          <div>
+            <dt className="text-zinc-500">Verificação iniciada em</dt>
+            <dd className="font-medium">
+              {formatDateTime(occurrence.verificationStartedAt)}
+            </dd>
+          </div>
+        )}
+        {occurrence.resolvedAt && (
+          <div>
+            <dt className="text-zinc-500">Resolvida em</dt>
+            <dd className="font-medium">{formatDateTime(occurrence.resolvedAt)}</dd>
+          </div>
+        )}
       </dl>
 
       <section className="rounded-lg border border-zinc-200 p-4 text-sm dark:border-zinc-800">
         <h2 className="mb-2 font-semibold">Órgão responsável</h2>
         {agency ? (
-          <p>{agency.name}</p>
+          <>
+            <AgencyContact agency={agency} />
+            <Link
+              href={`/orgaos/${agency.slug}`}
+              className="mt-3 inline-block text-sm text-blue-600 underline"
+            >
+              Ver fila do órgão
+            </Link>
+          </>
         ) : (
           <p className="text-zinc-500">
             Sem órgão definido para esta categoria.
@@ -66,7 +89,10 @@ export function OccurrenceDetail({ id }: { id: string }) {
         )}
       </section>
 
-      <Link href="/" className="inline-block text-sm text-blue-600 underline">
+      <Link
+        href={`/?categoria=${occurrence.category}`}
+        className="inline-block text-sm text-blue-600 underline"
+      >
         Ver no mapa
       </Link>
     </article>
