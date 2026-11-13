@@ -9,8 +9,8 @@ O Fiscaliza.i automatiza a triagem e o roteamento de demandas urbanas de Apucara
 
 ## Demo
 
-- **Painel:** _link da demo após o deploy_
-- **Simulador do WhatsApp:** _link da demo após o deploy_ `/simular`
+- **Painel:** https://fiscalizai-five.vercel.app
+- **Simulador do WhatsApp:** https://fiscalizai-five.vercel.app/simular
 
 ### Testar pelo simulador
 

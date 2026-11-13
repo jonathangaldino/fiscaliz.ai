@@ -1,7 +1,7 @@
 "use client";
 
 import "maplibre-gl/dist/maplibre-gl.css";
-import type { GeoJSONSource } from "maplibre-gl";
+import { setWorkerUrl, type GeoJSONSource } from "maplibre-gl";
 import { useEffect, useMemo, useRef } from "react";
 import Map, {
   Layer,
@@ -13,6 +13,12 @@ import Map, {
 import type { PublicOccurrence } from "@/convex/occurrences";
 import { CATEGORIES, CATEGORY_KEYS } from "@/convex/lib/categories";
 import { APUCARANA_CENTER } from "@/convex/lib/geo";
+
+// MapLibre looks for its worker next to its own file, which the bundler moves;
+// emit the worker as an asset and point MapLibre at it.
+setWorkerUrl(
+  new URL("maplibre-gl/dist/maplibre-gl-worker.mjs", import.meta.url).href,
+);
 
 // Vector tiles from OpenFreeMap: free, no API key.
 const MAP_STYLE = "https://tiles.openfreemap.org/styles/liberty";
