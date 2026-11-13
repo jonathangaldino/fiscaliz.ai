@@ -78,4 +78,12 @@ export default defineSchema({
     buttons: v.optional(v.array(buttonValidator)),
     createdAt: v.number(),
   }).index("by_session", ["sessionId"]),
+
+  // Emergencies and out-of-scope requests are never reports (ADR 0001):
+  // only the kind, target and time. No phone, text or location.
+  anonymousCounters: defineTable({
+    kind: v.union(v.literal("emergency"), v.literal("out_of_scope")),
+    target: v.string(),
+    createdAt: v.number(),
+  }).index("by_kind", ["kind"]),
 });
