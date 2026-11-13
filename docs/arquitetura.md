@@ -288,6 +288,7 @@ Como isso é garantido:
 | `WHATSAPP_VERIFY_TOKEN` | Verificação do webhook |
 | `CITIZEN_HASH_SECRET` | HMAC do telefone / sessão |
 | `PUBLIC_APP_URL` | Monta os links enviados ao cidadão |
+| `WHATSAPP_GRAPH_VERSION` | Opcional; versão da Graph API (padrão `v23.0`) |
 
 **Vercel**: `NEXT_PUBLIC_CONVEX_URL` e `CONVEX_DEPLOY_KEY`.
 
@@ -296,7 +297,7 @@ Como isso é garantido:
 - **Unitários (Vitest)**: `nextStep` (uma linha da tabela de transições = um caso), `haversine`, point-in-polygon, mapeamento categoria → órgão.
 - **Integração (`convex-test`)**: `registerReport` (apelo conta pessoas, não mensagens), limite diário, idempotência por `messageId`, expiração. A IA é substituída por respostas fixas.
 - **Eval (`evals/`)**: ~30 mensagens reais de estilo (emergência, árvore sobre fiação, vazamento da Sanepar, spam, buraco com e sem número) rodando contra o Claude de verdade. Mede acerto de `kind` e `category`. Roda sob demanda, não no CI, porque custa dinheiro.
-- **CI (GitHub Actions)**: `tsc --noEmit`, lint e Vitest em todo PR.
+- **CI (GitHub Actions)**: confere se `convex/_generated` está atualizado (`npm run codegen`, que roda sem deployment), `tsc --noEmit`, lint e Vitest em todo PR.
 
 ## Deploy
 
