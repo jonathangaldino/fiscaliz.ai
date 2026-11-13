@@ -2,16 +2,47 @@
 
 import { useQuery } from "convex/react";
 import dynamic from "next/dynamic";
-import { useState } from "react";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
+import { useMemo, useState } from "react";
 import { api } from "@/convex/_generated/api";
+import { isAgencySlug, isCategoryKey } from "@/convex/lib/categories";
+import { Filters } from "./Filters";
 import { OccurrenceList } from "./OccurrenceList";
 
 // MapLibre needs the browser (WebGL); never render it on the server.
 const OccurrenceMap = dynamic(() => import("./OccurrenceMap"), { ssr: false });
 
 export function Dashboard() {
-  const occurrences = useQuery(api.occurrences.listOpen);
+  const all = useQuery(api.occurrences.listOpen);
   const [selectedId, setSelectedId] = useState<string | null>(null);
+
+  // Filters live in the URL so the view can be shared as a link.
+  const router = useRouter();
+  const pathname = usePathname();
+  const params = useSearchParams();
+  const rawCategory = params.get("categoria");
+  const rawAgency = params.get("orgao");
+  const category = rawCategory && isCategoryKey(rawCategory) ? rawCategory : null;
+  const agency = rawAgency && isAgencySlug(rawAgency) ? rawAgency : null;
+
+  const occurrences = useMemo(
+    () =>
+      all?.filter(
+        (o) =>
+          (!category || o.category === category) &&
+          (!agency || o.agencySlug === agency),
+      ),
+    [all, category, agency],
+  );
+
+  function setFilters(next: { category: string | null; agency: string | null }) {
+    const search = new URLSearchParams();
+    if (next.category) search.set("categoria", next.category);
+    if (next.agency) search.set("orgao", next.agency);
+    const query = search.toString();
+    router.replace(query ? `${pathname}?${query}` : pathname, { scroll: false });
+    setSelectedId(null);
+  }
 
   return (
     <div className="flex min-h-0 flex-1 flex-col md:flex-row">
@@ -31,6 +62,7 @@ export function Dashboard() {
             </span>
           )}
         </h2>
+        <Filters category={category} agency={agency} onChange={setFilters} />
         <div className="min-h-0 flex-1 overflow-y-auto">
           {occurrences === undefined ? (
             <p className="p-4 text-sm text-zinc-500">Carregando…</p>
