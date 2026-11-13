@@ -46,6 +46,7 @@ type WebhookMessage = {
     button_reply?: { id: string; title: string };
   };
   button?: { payload?: string; text?: string };
+  audio?: { id: string };
 };
 
 type WebhookPayload = {
@@ -110,6 +111,10 @@ function toIncoming(message: WebhookMessage): ParsedMessage {
     }
     case "button":
       return { ...base, text: message.button?.text ?? message.button?.payload };
+    case "audio":
+      return message.audio
+        ? { ...base, audioMediaId: message.audio.id }
+        : { ...base, unsupported: true };
     default:
       return { ...base, unsupported: true };
   }

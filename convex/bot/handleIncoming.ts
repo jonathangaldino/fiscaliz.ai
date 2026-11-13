@@ -8,6 +8,7 @@ import { extract, isSameOccurrence } from "./extract";
 import { geocodeAddress, reverseGeocode } from "./geocode";
 import * as messages from "./messages";
 import { parseDecision } from "./stateMachine";
+import { transcribeWhatsAppAudio } from "./transcribe";
 import type { Draft, Extraction, ResolvedLocation } from "./types";
 
 const MAX_ATTEMPTS = 3;
@@ -37,12 +38,24 @@ export const handleIncoming = internalAction({
       },
     );
 
+    // Audio becomes text before anything else, so it follows the same flow.
+    let text = message.text;
+    if (message.audioMediaId) {
+      try {
+        text = await transcribeWhatsAppAudio(message.audioMediaId);
+      } catch (error) {
+        console.error("Audio transcription failed", error);
+        await send(ctx, message, [messages.audioFailed()]);
+        return;
+      }
+    }
+
     for (let attempt = 0; attempt < MAX_ATTEMPTS; attempt++) {
       const { state, version } = await ctx.runQuery(
         internal.bot.conversations.load,
         { citizenId },
       );
-      const decision = parseDecision(message.text, message.button);
+      const decision = parseDecision(text, message.button);
 
       let extraction: Extraction | null = null;
       let location: ResolvedLocation | null = null;
@@ -50,10 +63,10 @@ export const handleIncoming = internalAction({
       let matchId: Id<"occurrences"> | null = null;
       try {
         const isPureDecision = state?.phase === "confirming" && decision;
-        if (message.text && !isPureDecision) {
+        if (text && !isPureDecision) {
           extraction = await extract({
             draft: state?.draft ?? {},
-            text: message.text,
+            text,
             receivedAt: message.receivedAt,
           });
         }

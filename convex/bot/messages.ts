@@ -51,7 +51,12 @@ export const notUrban = () =>
 
 export const unsupported = () =>
   text(
-    "Por enquanto eu entendo mensagens de texto e localização. Pode me contar o problema por escrito?",
+    "Eu entendo mensagens de texto, áudio e localização. Pode me contar o problema por um desses meios?",
+  );
+
+export const audioFailed = () =>
+  text(
+    "Não consegui entender o áudio. Pode mandar de novo ou escrever a mensagem?",
   );
 
 export const tryAgain = () =>

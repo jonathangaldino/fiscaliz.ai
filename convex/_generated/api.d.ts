@@ -25,6 +25,7 @@ import type * as bot_handleIncoming from "../bot/handleIncoming.js";
 import type * as bot_messages from "../bot/messages.js";
 import type * as bot_register from "../bot/register.js";
 import type * as bot_stateMachine from "../bot/stateMachine.js";
+import type * as bot_transcribe from "../bot/transcribe.js";
 import type * as bot_types from "../bot/types.js";
 import type * as crons from "../crons.js";
 import type * as http from "../http.js";
@@ -61,6 +62,7 @@ declare const fullApi: ApiFromModules<{
   "bot/messages": typeof bot_messages;
   "bot/register": typeof bot_register;
   "bot/stateMachine": typeof bot_stateMachine;
+  "bot/transcribe": typeof bot_transcribe;
   "bot/types": typeof bot_types;
   crons: typeof crons;
   http: typeof http;
