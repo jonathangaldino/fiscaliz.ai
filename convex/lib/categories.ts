@@ -25,10 +25,12 @@ export type AgencyInfo = {
   url: string;
 };
 
-// Each value comes from the agency's own page on the city website; sources and
-// access date are in COMPETENCIAS.md. Agencies housed in the city hall building
-// answer on its main line, plus an extension when the page lists one. All values
-// are public institutional data; personal mobiles listed on those pages are left out.
+// Values come from official city website pages; sources and access date are in
+// COMPETENCIAS.md. Mostly the agency's own page: agencies housed in the city hall
+// building answer on its main line, plus an extension when the page lists one.
+// Idepplan's phone is the street-lighting toll-free line instead, since street
+// lighting is its only category. All values are public institutional data;
+// personal mobiles listed on those pages are left out.
 const CITY_HALL_PHONE = "(43) 3422-4000";
 const AGENCY_PAGES = "https://www.apucarana.pr.gov.br/site/orgaos-da-administracao";
 
@@ -43,7 +45,7 @@ export const AGENCIES: Record<AgencySlug, AgencyInfo> = {
   idepplan: {
     slug: "idepplan",
     name: "Idepplan",
-    phone: `${CITY_HALL_PHONE} (ramais 411 e 413)`,
+    phone: "0800-100-6868",
     email: "idepplan@apucarana.pr.gov.br",
     url: `${AGENCY_PAGES}/instituto-de-pesquisa-e-planejamento/`,
   },
