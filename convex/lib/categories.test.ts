@@ -4,6 +4,7 @@ import {
   CATEGORIES,
   CATEGORY_KEYS,
   agencyForCategory,
+  dialablePhone,
 } from "./categories";
 
 describe("categories", () => {
@@ -37,7 +38,25 @@ describe("categories", () => {
   it("keeps agency contacts institutional", () => {
     for (const agency of Object.values(AGENCIES)) {
       expect(agency.email).toMatch(/@apucarana\.pr\.gov\.br$/);
-      expect(agency.url).toMatch(/^https:\/\/www\.apucarana\.pr\.gov\.br\//);
+      expect(agency.url).toMatch(
+        /^https:\/\/www\.apucarana\.pr\.gov\.br\/site\/orgaos-da-administracao\/[a-z-]+\/$/,
+      );
+      // Landlines only: a 9-digit mobile would be a person's number.
+      expect(dialablePhone(agency.phone)).toMatch(/^\d{10}$/);
     }
+  });
+
+  it("gives each agency its own e-mail and page", () => {
+    const agencies = Object.values(AGENCIES);
+    expect(new Set(agencies.map((a) => a.email)).size).toBe(agencies.length);
+    expect(new Set(agencies.map((a) => a.url)).size).toBe(agencies.length);
+  });
+
+  it.each([
+    ["(43) 3427-8431", "4334278431"],
+    ["(43) 3422-4000 (ramais 411 e 413)", "4334224000"],
+    ["(43) 3422-4000 (Ramal 585)", "4334224000"],
+  ])("dials %s as %s", (phone, digits) => {
+    expect(dialablePhone(phone)).toBe(digits);
   });
 });
