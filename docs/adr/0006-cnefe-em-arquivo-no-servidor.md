@@ -36,7 +36,7 @@ O formato da tabela testada era um documento por rua, com `ibgeCode`, `name` e a
 - Pacote das funções maior. O limite é de 230 MB por deployment, então isso não preocupa.
 - Cadastrar ou atualizar uma cidade exige gerar o módulo, commit e deploy.
 
-## Consequences
+## Consequências
 
 - O CSV original fica versionado em `data/cnefe/`, e o módulo gerado também, porque o deploy e o CI precisam dele. Depois de rodar `build`, roda-se `npm run codegen`, já que o módulo aparece em `convex/_generated/api.d.ts`.
 - O primeiro geocoding em cada isolate novo paga ~200 ms para carregar o módulo. Ainda é mais rápido que uma chamada ao Google.

@@ -95,6 +95,7 @@ Para o WhatsApp, cadastre `https://<deployment>.convex.site/whatsapp` como webho
 | `npm run typecheck` / `npm run lint` | Tipos e lint, como no CI |
 | `npm run codegen` | Regenera `convex/_generated` sem precisar de deployment |
 | `npm run eval` | Eval da triagem contra o Claude de verdade (custa; fora do CI) |
+| `npm run bench:streets` | Benchmark do match de nomes de rua com erro de digitação ([ADR 0007](./docs/adr/0007-damerau-levenshtein-no-nome-da-rua.md)) |
 | `node scripts/cnefe.mjs download\|build ["Cidade, UF"]` | Baixa o CNEFE do IBGE e gera o módulo de ruas usado no geocoding ([docs/dados-ibge.md](./docs/dados-ibge.md)) |
 
 ## Privacidade

@@ -1,6 +1,6 @@
 # Arquitetura do Fiscaliza.i
 
-Este documento detalha como a V1 é construída. As decisões e seus porquês estão nas ADRs ([0001](./adr/0001-emergencias-e-fora-de-escopo-so-contador-anonimo.md), [0002](./adr/0002-whatsapp-cloud-api-oficial.md), [0003](./adr/0003-arquitetura-v1.md), [0004](./adr/0004-por-que-nao-langgraph.md), [0005](./adr/0005-geocodificacao-pelo-cnefe-do-ibge.md), [0006](./adr/0006-cnefe-em-arquivo-no-servidor.md)). O vocabulário segue o [GLOSSARY](../GLOSSARY.md); os nomes no código seguem a tabela "Nomes no código" de lá.
+Este documento detalha como a V1 é construída. As decisões e seus porquês estão nas ADRs ([0001](./adr/0001-emergencias-e-fora-de-escopo-so-contador-anonimo.md), [0002](./adr/0002-whatsapp-cloud-api-oficial.md), [0003](./adr/0003-arquitetura-v1.md), [0004](./adr/0004-por-que-nao-langgraph.md), [0005](./adr/0005-geocodificacao-pelo-cnefe-do-ibge.md), [0006](./adr/0006-cnefe-em-arquivo-no-servidor.md), [0007](./adr/0007-damerau-levenshtein-no-nome-da-rua.md)). O vocabulário segue o [GLOSSARY](../GLOSSARY.md); os nomes no código seguem a tabela "Nomes no código" de lá.
 
 ## Sumário
 
@@ -206,7 +206,7 @@ Regras de prompt:
 
 - **Pin**: usado direto. Uma geocodificação reversa (Google) gera o endereço exibido no painel.
 - **Endereço em texto ou áudio**: primeiro o CNEFE do IBGE, depois o Google ([ADR 0005](./adr/0005-geocodificacao-pelo-cnefe-do-ibge.md), [ADR 0006](./adr/0006-cnefe-em-arquivo-no-servidor.md)).
-  - **CNEFE**: as ruas e os números de Apucarana ficam em `convex/cnefe/4101408.ts`, gerado do CSV do IBGE em `data/cnefe/` (veja [dados-ibge.md](./dados-ibge.md)). Quando uma única rua contém todas as palavras do nome que o cidadão escreveu, o ponto é o do número no IBGE ou fica entre os números vizinhos do mesmo lado da rua. É preciso quando o número existe, ou quando os vizinhos estão a até 200 m um do outro.
+  - **CNEFE**: as ruas e os números de Apucarana ficam em `convex/cnefe/4101408.ts`, gerado do CSV do IBGE em `data/cnefe/` (veja [dados-ibge.md](./dados-ibge.md)). Quando uma única rua contém todas as palavras do nome que o cidadão escreveu (sem match exato, com tolerância a erro de digitação pela distância de Damerau-Levenshtein, [ADR 0007](./adr/0007-damerau-levenshtein-no-nome-da-rua.md)), o ponto é o do número no IBGE ou fica entre os números vizinhos do mesmo lado da rua. É preciso quando o número existe, ou quando os vizinhos estão a até 200 m um do outro.
   - **Google Geocoding**, quando o CNEFE não acha a rua, com `components=locality:Apucarana|administrative_area:PR|country:BR`. `location_type` `ROOFTOP` ou `RANGE_INTERPOLATED` significa que o número foi encontrado: raio de de-duplicação de 50 m. `GEOMETRIC_CENTER` ou `APPROXIMATE` significa só a rua: raio de 150 m. Um `partial_match` só é aceito se tiver todas as palavras do nome, e nunca como preciso.
 - **Limite do município**: o ponto precisa cair dentro do polígono de Apucarana (malha do IBGE, código 4101408, em `apucarana.geo.json`). Teste de point-in-polygon em `geo.ts`.
 

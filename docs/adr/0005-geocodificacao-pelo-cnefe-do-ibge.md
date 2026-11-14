@@ -64,6 +64,6 @@ Consideramos e descartamos:
 - O endereço exibido vem do nome do IBGE com iniciais maiúsculas e sem acento ("Rua Italo Ado Fontanini, 40") e sem bairro. O Google dava acento e bairro.
 - O CNEFE é uma foto de 2022 e só é refeito no próximo censo. Rua nova cai no Google.
 - Nome ambíguo ("Curitiba" é Rua e Avenida) ou texto com o bairro junto ("Ítalo Fontanini, Vila São Carlos") não casa com nenhuma rua e vai para o Google.
-- O match é por palavra exata. Erro de digitação ("Osvaldo" por "Oswaldo") também vai para o Google. Se isso aparecer com frequência, entra distância de edição.
+- Erro de digitação no nome ("Osvaldo" por "Oswaldo") é tolerado pela distância de Damerau-Levenshtein, só quando não há match exato ([ADR 0007](./0007-damerau-levenshtein-no-nome-da-rua.md)).
 - Os dados vêm do IBGE e precisam citar a fonte ([dados-ibge.md](../dados-ibge.md)).
 - O CSV original fica em `data/cnefe/`, e `scripts/cnefe.mjs` baixa e regenera. Para outras cidades, veja o ADR 0006.
