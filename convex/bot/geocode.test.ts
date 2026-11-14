@@ -1,6 +1,17 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { geocodeAddress, reverseGeocode, shortAddress } from "./geocode";
 
+vi.mock("../cnefe/4101408", () => ({
+  STREETS: [
+    {
+      name: "RUA ITALO ADO FONTANINI",
+      numbers: [30, 68],
+      lats: [-23.558936, -23.559084],
+      lngs: [-51.468147, -51.467367],
+    },
+  ],
+}));
+
 function mockGoogle(body: unknown, status = 200) {
   const fetchMock = vi.fn<(url: string | URL) => Promise<Response>>(
     async () => new Response(JSON.stringify(body), { status }),
@@ -55,6 +66,17 @@ describe("geocodeAddress", () => {
     expect(await geocodeAddress("rua que não existe")).toBeNull();
   });
 
+  it("resolves an incomplete street name from the IBGE without calling Google", async () => {
+    const fetchMock = mockGoogle(result("ROOFTOP"));
+    expect(await geocodeAddress("R ítalo fontanini 68")).toEqual({
+      lat: -23.559084,
+      lng: -51.467367,
+      address: "Rua Italo Ado Fontanini, 68",
+      precise: true,
+    });
+    expect(fetchMock).not.toHaveBeenCalled();
+  });
+
   it("rejects a partial match on another street", async () => {
     const body = result("GEOMETRIC_CENTER", ["route"]);
     Object.assign(body.results[0], {
@@ -62,7 +84,7 @@ describe("geocodeAddress", () => {
       address_components: [{ long_name: "Rua Italiano" }, { long_name: "Lot. Sao Sebastiao" }],
     });
     mockGoogle(body);
-    expect(await geocodeAddress("R ítalo fontanini 40")).toBeNull();
+    expect(await geocodeAddress("R itália 40")).toBeNull();
   });
 
   it("keeps a partial match on the same street, but not as precise", async () => {

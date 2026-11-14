@@ -10,7 +10,8 @@
     "typecheck": "next typegen && tsc --noEmit",
     "test": "vitest run",
     "codegen": "convex codegen --system-udfs --typecheck disable",
-    "eval": "tsx evals/run.ts"
+    "eval": "tsx evals/run.ts",
+    "bench:streets": "tsx scripts/bench/street-match.ts"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^1.8.0",
