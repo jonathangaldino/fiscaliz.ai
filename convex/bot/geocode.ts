@@ -3,8 +3,10 @@
  * as the fallback. Runs inside actions only. Restricted to Apucarana, PR.
  */
 import { STREETS } from "../cnefe/4101408";
-import { displayName, houseNumber, locate, mentions, pickStreet } from "../lib/streets";
+import { displayName, houseNumber, indexStreets, locate, mentions, pickStreet } from "../lib/streets";
 import type { ResolvedLocation } from "./types";
+
+const STREET_INDEX = indexStreets(STREETS);
 
 const ENDPOINT = "https://maps.googleapis.com/maps/api/geocode/json";
 
@@ -58,7 +60,7 @@ export async function geocodeAddress(
   address: string,
 ): Promise<ResolvedLocation | null> {
   // The IBGE knows "Ítalo Ado Fontanini" from "ítalo fontanini"; Google does not.
-  const street = pickStreet(address, STREETS);
+  const street = pickStreet(address, STREET_INDEX);
   if (street) {
     const number = houseNumber(address, street.name);
     const name = displayName(street.name);

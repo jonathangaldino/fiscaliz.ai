@@ -33,15 +33,70 @@ export function mentions(text: string, address: string): boolean {
   return nameWords(address).every((word) => found.has(word));
 }
 
+export type IndexedStreet = Street & { words: string[]; wordSet: Set<string> };
+
+/** Splits every street name once, at load, so a lookup does not re-normalize 1,500 names. */
+export function indexStreets(streets: Street[]): IndexedStreet[] {
+  return streets.map((street) => {
+    const list = [...new Set(words(street.name).filter(Boolean))];
+    return { ...street, words: list, wordSet: new Set(list) };
+  });
+}
+
+export type Distance = (a: string, b: string, max: number) => number;
+
 /**
- * The only candidate holding every name word the citizen wrote.
- * "R ítalo fontanini 40" → "RUA ITALO ADO FONTANINI". Two matches → undefined.
- * shortcut: exact words, so typos and extra words (the neighborhood) miss; add edit distance if that shows up.
+ * Damerau-Levenshtein, optimal string alignment variant: insert, delete,
+ * replace or swap two neighbor letters, 1 each. Stops early past `max`.
  */
-export function pickStreet<T extends { name: string }>(address: string, candidates: T[]): T | undefined {
-  if (nameWords(address).length === 0) return undefined;
-  const matches = candidates.filter((street) => mentions(street.name, address));
-  return matches.length === 1 ? matches[0] : undefined;
+export const damerauLevenshtein: Distance = (a, b, max) => {
+  if (Math.abs(a.length - b.length) > max) return max + 1;
+  let beforePrev: number[] = [];
+  let prev = Array.from({ length: b.length + 1 }, (_, j) => j);
+  for (let i = 1; i <= a.length; i++) {
+    const row = [i];
+    let rowMin = i;
+    for (let j = 1; j <= b.length; j++) {
+      row[j] = Math.min(prev[j] + 1, row[j - 1] + 1, prev[j - 1] + (a[i - 1] === b[j - 1] ? 0 : 1));
+      if (i > 1 && j > 1 && a[i - 1] === b[j - 2] && a[i - 2] === b[j - 1]) {
+        row[j] = Math.min(row[j], beforePrev[j - 2] + 1);
+      }
+      rowMin = Math.min(rowMin, row[j]);
+    }
+    if (rowMin > max) return max + 1;
+    beforePrev = prev;
+    prev = row;
+  }
+  return prev[b.length];
+};
+
+/** Typos tolerated per word: none up to 3 letters, 1 up to 7, 2 from 8 (ADR 0007). */
+const typosAllowed = (word: string) => (word.length <= 3 ? 0 : word.length <= 7 ? 1 : 2);
+
+/**
+ * The only street holding every name word the citizen wrote.
+ * "R ítalo fontanini 40" → "RUA ITALO ADO FONTANINI". Two matches → undefined.
+ * Exact words first; only when no street matches, words may differ by a typo
+ * ("oswaldo" for "osvaldo", "fotnanini" for "fontanini"). See ADR 0007.
+ */
+export function pickStreet<T extends IndexedStreet>(
+  address: string,
+  streets: T[],
+  distance: Distance = damerauLevenshtein,
+): T | undefined {
+  const wanted = nameWords(address);
+  if (wanted.length === 0) return undefined;
+  const only = (matches: T[]) => (matches.length === 1 ? matches[0] : undefined);
+
+  const exact = streets.filter((street) => wanted.every((word) => street.wordSet.has(word)));
+  if (exact.length > 0) return only(exact);
+
+  const close = (word: string, street: T) => {
+    if (street.wordSet.has(word)) return true;
+    const max = /^\d+$/.test(word) ? 0 : typosAllowed(word);
+    return max > 0 && street.words.some((other) => distance(word, other, max) <= max);
+  };
+  return only(streets.filter((street) => wanted.every((word) => close(word, street))));
 }
 
 /** The last number of the address that is neither the CEP nor part of the street name ("Rua 13 de Maio"). */
