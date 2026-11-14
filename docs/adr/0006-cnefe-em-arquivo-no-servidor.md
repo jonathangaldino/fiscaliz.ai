@@ -1,6 +1,6 @@
 # CNEFE em arquivo no servidor, não em tabela do Convex
 
-O geocoding pelo CNEFE ([ADR 0005](./0005-geocodificacao-pelo-cnefe-do-ibge.md)) precisa achar a rua pelo nome e ler os números dela a cada mensagem com endereço. Os dados podiam ficar numa tabela do Convex com índice de busca, ou num módulo TypeScript gerado do CSV e empacotado com as funções. Nas duas opções os dados ficam no servidor e o navegador nunca os recebe. No Fiscaliza.i, tempo de resposta conta: cada milissegundo entra na espera do cidadão no WhatsApp.
+O geocoding pelo CNEFE ([ADR 0005](./0005-geocodificacao-pelo-cnefe-do-ibge.md)) precisa achar a rua pelo nome e ler os números dela a cada mensagem com endereço. Os dados podiam ficar numa tabela do Convex com índice de busca, ou num módulo TypeScript gerado do CSV e empacotado com as funções. Nas duas opções os dados ficam no servidor e o navegador nunca os recebe. No Fiscaliz.ai, tempo de resposta conta: cada milissegundo entra na espera do cidadão no WhatsApp.
 
 Decidimos pelo **arquivo no servidor**: `scripts/cnefe.mjs build` gera `convex/cnefe/<código IBGE>.ts` a partir do CSV em `data/cnefe/`, e `geocode.ts` o importa direto. A busca não toca o banco.
 

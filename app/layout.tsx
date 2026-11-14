@@ -3,7 +3,7 @@ import "./globals.css";
 import { ConvexClientProvider } from "./ConvexClientProvider";
 
 export const metadata: Metadata = {
-  title: "Fiscaliza.i",
+  title: "Fiscaliz.ai",
   description: "Ocorrências urbanas de Apucarana, PR, relatadas pelos cidadãos",
 };
 

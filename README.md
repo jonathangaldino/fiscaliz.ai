@@ -1,8 +1,8 @@
-# Fiscaliza.i
+# Fiscaliz.ai
 
 **Do aviso do cidadão ao órgão certo da prefeitura, sem triagem manual.**
 
-O Fiscaliza.i automatiza a triagem e o roteamento de demandas urbanas de Apucarana, PR. O cidadão manda pelo WhatsApp, em texto, áudio ou localização, que tem um buraco na rua, um poste apagado ou entulho na calçada. Uma camada de IA entende a mensagem, pergunta só o que falta, classifica o problema, descobre o órgão responsável e põe a ocorrência num mapa público em tempo real. Vários cidadãos relatando o mesmo problema viram uma única ocorrência, que ganha **apelo**: quantas pessoas pedem aquela solução.
+O Fiscaliz.ai automatiza a triagem e o roteamento de demandas urbanas de Apucarana, PR. O cidadão manda pelo WhatsApp, em texto, áudio ou localização, que tem um buraco na rua, um poste apagado ou entulho na calçada. Uma camada de IA entende a mensagem, pergunta só o que falta, classifica o problema, descobre o órgão responsável e põe a ocorrência num mapa público em tempo real. Vários cidadãos relatando o mesmo problema viram uma única ocorrência, que ganha **apelo**: quantas pessoas pedem aquela solução.
 
 - **Para quem:** a Prefeitura de Apucarana, que passa a ver onde estão os problemas, quantas pessoas cada um afeta e qual secretaria deve agir.
 - **Trilha:** 07, Logística e automação, do [Hack Brasil 2026](./RULES.md). O fluxo automatizado é a triagem e o roteamento: em vez de o cidadão descobrir sozinho qual secretaria procurar, a mensagem sai do WhatsApp direto para a fila do órgão responsável.

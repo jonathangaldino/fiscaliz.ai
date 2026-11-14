@@ -20,7 +20,7 @@ const text = (value: string): OutgoingMessage => ({ text: value });
 
 export const askProblem = () =>
   text(
-    "Olá! Eu sou o Fiscaliza.i, o canal para avisar a Prefeitura de Apucarana sobre problemas na cidade, como buraco na rua, poste apagado ou entulho na calçada. Qual é o problema e onde ele está?",
+    "Olá! Eu sou o Fiscaliz.ai, o canal para avisar a Prefeitura de Apucarana sobre problemas na cidade, como buraco na rua, poste apagado ou entulho na calçada. Qual é o problema e onde ele está?",
   );
 
 export const askDescription = () =>

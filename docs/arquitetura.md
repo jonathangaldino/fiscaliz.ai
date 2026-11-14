@@ -1,4 +1,4 @@
-# Arquitetura do Fiscaliza.i
+# Arquitetura do Fiscaliz.ai
 
 Este documento detalha como a V1 é construída. As decisões e seus porquês estão nas ADRs ([0001](./adr/0001-emergencias-e-fora-de-escopo-so-contador-anonimo.md), [0002](./adr/0002-whatsapp-cloud-api-oficial.md), [0003](./adr/0003-arquitetura-v1.md), [0004](./adr/0004-por-que-nao-langgraph.md), [0005](./adr/0005-geocodificacao-pelo-cnefe-do-ibge.md), [0006](./adr/0006-cnefe-em-arquivo-no-servidor.md), [0007](./adr/0007-damerau-levenshtein-no-nome-da-rua.md)). O vocabulário segue o [GLOSSARY](../GLOSSARY.md); os nomes no código seguem a tabela "Nomes no código" de lá.
 
