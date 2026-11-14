@@ -62,7 +62,11 @@ export async function sendWhatsApp(
     );
     if (!response.ok) {
       // Never log the body we sent: it may contain the phone number.
-      throw new Error(`WhatsApp send failed: HTTP ${response.status}`);
+      // Graph's error code and message identify the cause without it.
+      const { error } = await response.json().catch(() => ({ error: undefined }));
+      throw new Error(
+        `WhatsApp send failed: HTTP ${response.status} (${error?.code ?? "?"}: ${error?.message ?? "no message"})`,
+      );
     }
   }
 }
