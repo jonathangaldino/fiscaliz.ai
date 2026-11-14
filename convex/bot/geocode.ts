@@ -1,7 +1,9 @@
 /**
- * Google Geocoding API. Runs inside actions only.
- * Forward geocoding is restricted to Apucarana, PR.
+ * Text address → coordinates: IBGE CNEFE first (ADR 0005), Google Geocoding
+ * as the fallback. Runs inside actions only. Restricted to Apucarana, PR.
  */
+import { STREETS } from "../cnefe/4101408";
+import { displayName, houseNumber, locate, mentions, pickStreet } from "../lib/streets";
 import type { ResolvedLocation } from "./types";
 
 const ENDPOINT = "https://maps.googleapis.com/maps/api/geocode/json";
@@ -55,6 +57,14 @@ const TOO_BROAD = ["locality", "administrative_area_level_1", "administrative_ar
 export async function geocodeAddress(
   address: string,
 ): Promise<ResolvedLocation | null> {
+  // The IBGE knows "Ítalo Ado Fontanini" from "ítalo fontanini"; Google does not.
+  const street = pickStreet(address, STREETS);
+  if (street) {
+    const number = houseNumber(address, street.name);
+    const name = displayName(street.name);
+    return { ...locate(street, number), address: number ? `${name}, ${number}` : name };
+  }
+
   const body = await call({
     address,
     components: "locality:Apucarana|administrative_area:PR|country:BR",
@@ -79,25 +89,13 @@ export async function geocodeAddress(
   };
 }
 
-const STREET_WORDS = new Set(["rua", "avenida", "travessa", "alameda", "praca", "rodovia", "estrada", "dos", "das"]);
-
-const words = (text: string) =>
-  text
-    .normalize("NFD")
-    .replace(/[\u0300-\u036f]/g, "")
-    .toLowerCase()
-    .split(/[^a-z0-9]+/);
-
 /**
  * True when every name word the citizen wrote shows up in the result.
  * shortcut: exact word match, so typos ("Osvaldo" vs "Oswaldo") are rejected
  * on partial matches; add edit distance if that shows up in practice.
  */
 function mentionsResult(address: string, result: GeocodeResult): boolean {
-  const found = new Set(words(result.address_components.map((c) => c.long_name).join(" ")));
-  return words(address)
-    .filter((word) => word.length >= 3 && !/^\d+$/.test(word) && !STREET_WORDS.has(word))
-    .every((word) => found.has(word));
+  return mentions(result.address_components.map((c) => c.long_name).join(" "), address);
 }
 
 /** Pin → readable address. Falls back to coordinates if nothing is found. */
