@@ -3,10 +3,10 @@ import type { CategoryKey } from "./lib/categories";
 /**
  * Synthetic occurrences for the demo (rule 9 of the Hack Brasil rules):
  * real street names of Apucarana, made-up problems, no personal data.
- * Coordinates sit on the named street: an IBGE CNEFE address point (the same
- * data the bot geocodes with), or Google Geocoding for places that are not a
- * street (Lago Jaboti, Cemitério Cristo Rei). Districts and rural roads are
- * placed on a CNEFE road nearby, not on a verified district boundary.
+ * Coordinates are IBGE CNEFE 2022 address points on the named street (the same
+ * data the bot geocodes with); only Lago Jaboti comes from Google Geocoding.
+ * Neighbourhoods are the CNEFE locality (DSC_LOCALIDADE) of the chosen point,
+ * and the rural rows sit in the district their name says (COD_DISTRITO).
  */
 export type SeedOccurrence = {
   category: CategoryKey;
@@ -40,7 +40,7 @@ export const SEED_OCCURRENCES: SeedOccurrence[] = [
   },
   {
     category: "street_lighting",
-    address: "Avenida Minas Gerais, Centro",
+    address: "Avenida Minas Gerais, Jardim Apucarana",
     lat: -23.546792,
     lng: -51.452135,
     summary: "Três postes seguidos apagados à noite.",
@@ -50,8 +50,8 @@ export const SEED_OCCURRENCES: SeedOccurrence[] = [
   {
     category: "street_lighting",
     address: "Rua Osvaldo Cruz, Centro",
-    lat: -23.559263,
-    lng: -51.460771,
+    lat: -23.552652,
+    lng: -51.462319,
     summary: "Luminária quebrada, pendurada no poste.",
     appeal: 3,
     daysAgo: 1,
@@ -76,7 +76,7 @@ export const SEED_OCCURRENCES: SeedOccurrence[] = [
   },
   {
     category: "drainage",
-    address: "Avenida Santos Dumont, Vila Nova",
+    address: "Avenida Santos Dumont, Vila Shangri-La",
     lat: -23.559235,
     lng: -51.429405,
     summary: "Boca de lobo entupida; a rua alaga quando chove.",
@@ -103,7 +103,7 @@ export const SEED_OCCURRENCES: SeedOccurrence[] = [
   },
   {
     category: "urban_cleaning",
-    address: "Avenida Aviação, Jardim Trabalhista",
+    address: "Avenida Aviação, Vila Nova",
     lat: -23.553663,
     lng: -51.439809,
     summary: "Entulho de obra descartado na via.",
@@ -121,7 +121,7 @@ export const SEED_OCCURRENCES: SeedOccurrence[] = [
   },
   {
     category: "public_spaces",
-    address: "Lago Jaboti, Jardim Menegazzo",
+    address: "Lago Jaboti",
     lat: -23.567603,
     lng: -51.472206,
     summary: "Trecho da pista de caminhada com piso quebrado.",
@@ -139,7 +139,7 @@ export const SEED_OCCURRENCES: SeedOccurrence[] = [
   },
   {
     category: "tree_removal",
-    address: "Rua Dom Romeu Alberti, Jardim Flamingos",
+    address: "Rua Dom Romeu Alberti, Jardim Bela Vista",
     lat: -23.55921,
     lng: -51.440745,
     summary: "Galhos de poda acumulados na calçada há uma semana.",
@@ -175,7 +175,7 @@ export const SEED_OCCURRENCES: SeedOccurrence[] = [
   },
   {
     category: "construction",
-    address: "Rua Ponta Grossa, Vila Agari",
+    address: "Rua Ponta Grossa, Centro",
     lat: -23.551655,
     lng: -51.455167,
     summary: "Obra pública parada com tapume ocupando a calçada.",
@@ -185,26 +185,26 @@ export const SEED_OCCURRENCES: SeedOccurrence[] = [
   {
     category: "cemeteries",
     address: "Cemitério Cristo Rei",
-    lat: -23.57113,
-    lng: -51.458856,
+    lat: -23.570253,
+    lng: -51.458482,
     summary: "Muro lateral do cemitério com rachaduras.",
     appeal: 1,
     daysAgo: 11,
   },
   {
     category: "rural_roads",
-    address: "Estrada do Bilote, zona rural",
-    lat: -23.572063,
-    lng: -51.514171,
+    address: "Estrada da Jangadinha, Distrito de Pirapó",
+    lat: -23.595235,
+    lng: -51.54747,
     summary: "Estrada de terra com valetas que impedem a passagem.",
     appeal: 4,
     daysAgo: 13,
   },
   {
     category: "rural_area",
-    address: "Distrito de São Pedro",
-    lat: -23.505815,
-    lng: -51.575335,
+    address: "Estrada São Pedro-Cambirá, Distrito de São Pedro",
+    lat: -23.510517,
+    lng: -51.591156,
     summary: "Mata-burro quebrado na entrada da comunidade.",
     appeal: 2,
     daysAgo: 5,
