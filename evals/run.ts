@@ -3,32 +3,19 @@
  * accuracy by kind and by category. Costs money, so it is not part of CI.
  *
  *   ANTHROPIC_API_KEY=... npm run eval
+ *
+ * Exits with 2 when any emergency fixture is not classified as emergency.
  */
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import { extract, MODEL } from "../convex/bot/extract";
 import type { Extraction } from "../convex/bot/types";
-
-type Fixture = {
-  text: string;
-  kind: Extraction["kind"];
-  category?: string;
-  emergencyTarget?: string;
-  outOfScopeTarget?: string;
-};
-
-type Tally = Record<string, { total: number; correct: number }>;
+import { newReport, score, type Fixture, type Tally } from "./score";
 
 const fixtures: Fixture[] = readFileSync(join(import.meta.dirname, "fixtures.jsonl"), "utf8")
   .split("\n")
   .filter((line) => line.trim())
   .map((line) => JSON.parse(line));
-
-function count(tally: Tally, key: string, ok: boolean) {
-  tally[key] ??= { total: 0, correct: 0 };
-  tally[key].total++;
-  if (ok) tally[key].correct++;
-}
 
 function print(title: string, tally: Tally) {
   console.log(`\n${title}`);
@@ -45,54 +32,29 @@ async function main() {
   }
   console.log(`Model: ${MODEL} · ${fixtures.length} fixtures`);
 
-  const byKind: Tally = {};
-  const byCategory: Tally = {};
-  const errors: string[] = [];
-  let emergencyAsUrban = 0;
+  const report = newReport();
   const receivedAt = Date.parse("2026-11-20T15:00:00-03:00");
 
   for (const fixture of fixtures) {
-    let result: Extraction;
+    let outcome: Extraction | Error;
     try {
-      result = await extract({ draft: {}, text: fixture.text, receivedAt });
+      outcome = await extract({ draft: {}, text: fixture.text, receivedAt });
     } catch (error) {
-      errors.push(`ERRO  "${fixture.text}": ${(error as Error).message}`);
-      count(byKind, fixture.kind, false);
-      continue;
+      outcome = error as Error;
     }
-
-    const kindOk = result.kind === fixture.kind;
-    count(byKind, fixture.kind, kindOk);
-    if (!kindOk) {
-      errors.push(`kind  "${fixture.text}": esperado ${fixture.kind}, veio ${result.kind}`);
-      if (fixture.kind === "emergency" && result.kind === "urban") emergencyAsUrban++;
-    }
-
-    if (fixture.category) {
-      const ok = result.category === fixture.category;
-      count(byCategory, fixture.category, ok);
-      if (!ok) {
-        errors.push(
-          `cat   "${fixture.text}": esperado ${fixture.category}, veio ${result.category}`,
-        );
-      }
-    }
-    for (const field of ["emergencyTarget", "outOfScopeTarget"] as const) {
-      if (fixture[field] && result[field] !== fixture[field]) {
-        errors.push(
-          `${field} "${fixture.text}": esperado ${fixture[field]}, veio ${result[field]}`,
-        );
-      }
-    }
+    score(report, fixture, outcome);
   }
 
-  print("Acerto por tipo", byKind);
-  print("Acerto por categoria", byCategory);
-  console.log(errors.length ? `\nErros:\n  ${errors.join("\n  ")}` : "\nSem erros.");
+  print("Acerto por tipo", report.byKind);
+  print("Acerto por categoria", report.byCategory);
+  console.log(report.errors.length ? `\nErros:\n  ${report.errors.join("\n  ")}` : "\nSem erros.");
 
-  if (emergencyAsUrban > 0) {
+  const missed = Object.entries(report.missedEmergencies);
+  if (missed.length > 0) {
+    const total = missed.reduce((sum, [, n]) => sum + n, 0);
+    const detail = missed.map(([kind, n]) => `${kind}: ${n}`).join(", ");
     console.log(
-      `\n⚠️  ${emergencyAsUrban} emergência(s) classificada(s) como urbano. Avaliar troca de modelo.`,
+      `\n⚠️  ${total} emergência(s) não classificada(s) como emergência (${detail}). Avaliar troca de modelo.`,
     );
     process.exit(2);
   }
