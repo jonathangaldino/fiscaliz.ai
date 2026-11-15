@@ -45,6 +45,29 @@ Gabinete, Gestão Pública, Fazenda, Controle Interno, Assistência Social, Educ
 - **Aserfa:** cemitérios municipais e capelas mortuárias.
 - **Agricultura:** política agrícola, desenvolvimento rural, defesa sanitária vegetal e animal.
 
+## Contatos dos órgãos
+
+Contato institucional que o painel mostra em cada órgão (`AGENCIES` em `convex/lib/categories.ts`). Cada valor foi lido no site da Prefeitura, acessado em 14/11/2026: na página do próprio órgão, exceto o telefone do Idepplan, que vem da notícia citada na tabela. Não há site próprio do Idepplan nem da Aserfa: as duas autarquias são publicadas no site da Prefeitura.
+
+| Slug | Nome oficial | Telefone | E-mail | Fonte |
+|---|---|---|---|---|
+| `servicos-publicos` | Secretaria Municipal de Serviços Públicos | (43) 3427-8431 | servicospublicos@apucarana.pr.gov.br | [página do órgão](https://www.apucarana.pr.gov.br/site/orgaos-da-administracao/servicos-publicos/) |
+| `idepplan` | Instituto de Desenvolvimento, Pesquisa e Planejamento de Apucarana (Idepplan), autarquia | 0800-100-6868 (iluminação pública, ligação gratuita) | idepplan@apucarana.pr.gov.br | telefone: [notícia de 5/11/2026](https://www.apucarana.pr.gov.br/site/prefeitura-divulga-novo-telefone-para-troca-de-lampadas-e-manutencao-da-iluminacao-publica/); e-mail: [página do órgão](https://www.apucarana.pr.gov.br/site/orgaos-da-administracao/instituto-de-pesquisa-e-planejamento/) |
+| `segtran` | Secretaria de Segurança, Transporte, Trânsito, Mobilidade Urbana e Defesa Civil (Segtran) | (43) 3422-4000, ramais 446, 447 e 448 | segtran@apucarana.pr.gov.br | [página do órgão](https://www.apucarana.pr.gov.br/site/orgaos-da-administracao/seguranca-transporte-transito-mobilidade-urbana-e-defesa-civil/) |
+| `meio-ambiente` | Secretaria Municipal do Meio Ambiente (Sema) | (43) 3423-0142 | meioambiente@apucarana.pr.gov.br | [página do órgão](https://www.apucarana.pr.gov.br/site/orgaos-da-administracao/meio-ambiente/) |
+| `obras` | Secretaria de Obras | (43) 3422-4000 | seob@apucarana.pr.gov.br | [página do órgão](https://www.apucarana.pr.gov.br/site/orgaos-da-administracao/obras/) |
+| `aserfa` | Autarquia Municipal de Serviços Funerários de Apucarana (Aserfa) | (43) 3422-1053 | aserfa@apucarana.pr.gov.br | [página do órgão](https://www.apucarana.pr.gov.br/site/orgaos-da-administracao/autarquia-de-servicos-funerarios/) |
+| `agricultura` | Secretaria Municipal de Agricultura | (43) 3308-1435 | agricultura@apucarana.pr.gov.br | [página do órgão](https://www.apucarana.pr.gov.br/site/orgaos-da-administracao/agricultura/) |
+
+O link de cada órgão no painel é a própria página-fonte. Se algum campo deixar de ser publicado, volta para o contato geral da Prefeitura: (43) 3422-4000, prefeitura@apucarana.pr.gov.br.
+
+Escolhas e números que ficaram de fora:
+
+- **Segtran:** a página lista também Departamento de Trânsito ((43) 3422-4000 ramal 585 ou (43) 3423-0930), Centro de Controle Operacional dos agentes de trânsito ((43) 3308-1501) e Guarda Municipal (153). O painel mostra o telefone da secretaria.
+- **Aserfa:** a página lista também (43) 3423-3599 e um celular com o nome de uma pessoa. O celular não entra (contato pessoal); o painel mostra só o primeiro fixo.
+- **Idepplan:** o painel mostra o 0800-100-6868, porque iluminação pública é a única categoria do Idepplan. A notícia da Prefeitura de 5/11/2026 o apresenta como o "novo telefone" para troca de lâmpadas e manutenção da iluminação pública, com ligação gratuita e pedido registrado por protocolo. O contato administrativo do instituto, publicado na [página do órgão](https://www.apucarana.pr.gov.br/site/orgaos-da-administracao/instituto-de-pesquisa-e-planejamento/), é (43) 3422-4000, ramais 411 e 413.
+- **Iluminação pública, número antigo:** a página [Telefones Úteis](https://www.apucarana.pr.gov.br/site/telefones-uteis/) ainda lista 0800-600-1428 para iluminação pública. A página foi modificada pela última vez em 26/02/2026, antes da notícia do número novo, por isso o 0800-100-6868 prevalece. A mesma página lista (43) 3422-3599 para a Aserfa, enquanto a página da Aserfa diz (43) 3423-3599; nenhum dos dois é usado no painel.
+
 ## Fontes
 
 - [Órgãos da Administração – Prefeitura de Apucarana](https://www.apucarana.pr.gov.br/site/orgaos-da-administracao/)
