@@ -25,62 +25,64 @@ export type AgencyInfo = {
   url: string;
 };
 
-// The city website only publishes the general city hall contact; agency-specific
-// channels are a follow-up. All values are public institutional data.
+// Values come from official city website pages; sources and access date are in
+// COMPETENCIAS.md. Mostly the agency's own page: agencies housed in the city hall
+// building answer on its main line, plus an extension when the page lists one.
+// Idepplan's phone is the street-lighting toll-free line instead, since street
+// lighting is its only category. All values are public institutional data;
+// personal mobiles listed on those pages are left out.
 const CITY_HALL_PHONE = "(43) 3422-4000";
-const CITY_HALL_EMAIL = "prefeitura@apucarana.pr.gov.br";
-const AGENCIES_URL =
-  "https://www.apucarana.pr.gov.br/site/orgaos-da-administracao/";
+const AGENCY_PAGES = "https://www.apucarana.pr.gov.br/site/orgaos-da-administracao";
 
 export const AGENCIES: Record<AgencySlug, AgencyInfo> = {
   "servicos-publicos": {
     slug: "servicos-publicos",
     name: "Secretaria de Serviços Públicos",
-    phone: CITY_HALL_PHONE,
-    email: CITY_HALL_EMAIL,
-    url: AGENCIES_URL,
+    phone: "(43) 3427-8431",
+    email: "servicospublicos@apucarana.pr.gov.br",
+    url: `${AGENCY_PAGES}/servicos-publicos/`,
   },
   idepplan: {
     slug: "idepplan",
     name: "Idepplan",
-    phone: CITY_HALL_PHONE,
-    email: CITY_HALL_EMAIL,
-    url: AGENCIES_URL,
+    phone: "0800-100-6868",
+    email: "idepplan@apucarana.pr.gov.br",
+    url: `${AGENCY_PAGES}/instituto-de-pesquisa-e-planejamento/`,
   },
   segtran: {
     slug: "segtran",
     name: "Segtran",
-    phone: CITY_HALL_PHONE,
-    email: CITY_HALL_EMAIL,
-    url: AGENCIES_URL,
+    phone: `${CITY_HALL_PHONE} (ramais 446, 447 e 448)`,
+    email: "segtran@apucarana.pr.gov.br",
+    url: `${AGENCY_PAGES}/seguranca-transporte-transito-mobilidade-urbana-e-defesa-civil/`,
   },
   "meio-ambiente": {
     slug: "meio-ambiente",
     name: "Secretaria de Meio Ambiente",
-    phone: CITY_HALL_PHONE,
-    email: CITY_HALL_EMAIL,
-    url: AGENCIES_URL,
+    phone: "(43) 3423-0142",
+    email: "meioambiente@apucarana.pr.gov.br",
+    url: `${AGENCY_PAGES}/meio-ambiente/`,
   },
   obras: {
     slug: "obras",
     name: "Secretaria de Obras",
     phone: CITY_HALL_PHONE,
-    email: CITY_HALL_EMAIL,
-    url: AGENCIES_URL,
+    email: "seob@apucarana.pr.gov.br",
+    url: `${AGENCY_PAGES}/obras/`,
   },
   aserfa: {
     slug: "aserfa",
     name: "Aserfa",
-    phone: CITY_HALL_PHONE,
-    email: CITY_HALL_EMAIL,
-    url: AGENCIES_URL,
+    phone: "(43) 3422-1053",
+    email: "aserfa@apucarana.pr.gov.br",
+    url: `${AGENCY_PAGES}/autarquia-de-servicos-funerarios/`,
   },
   agricultura: {
     slug: "agricultura",
     name: "Secretaria de Agricultura",
-    phone: CITY_HALL_PHONE,
-    email: CITY_HALL_EMAIL,
-    url: AGENCIES_URL,
+    phone: "(43) 3308-1435",
+    email: "agricultura@apucarana.pr.gov.br",
+    url: `${AGENCY_PAGES}/agricultura/`,
   },
 };
 
@@ -242,6 +244,11 @@ export const CATEGORIES: Record<CategoryKey, CategoryInfo> = {
 export function agencyForCategory(category: CategoryKey): AgencyInfo | null {
   const slug = CATEGORIES[category].agency;
   return slug ? AGENCIES[slug] : null;
+}
+
+/** Digits for a tel: link; drops a trailing "(ramal ...)" or "(ramais ...)" note. */
+export function dialablePhone(phone: string): string {
+  return phone.replace(/\(ram(al|ais)\b.*$/i, "").replace(/\D/g, "");
 }
 
 export function isCategoryKey(value: string): value is CategoryKey {
