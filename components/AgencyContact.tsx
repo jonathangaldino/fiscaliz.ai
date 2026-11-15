@@ -1,4 +1,4 @@
-import type { AgencyInfo } from "@/convex/lib/categories";
+import { dialablePhone, type AgencyInfo } from "@/convex/lib/categories";
 
 /** Institutional contact only: never a person's name. */
 export function AgencyContact({ agency }: { agency: AgencyInfo }) {
@@ -11,7 +11,7 @@ export function AgencyContact({ agency }: { agency: AgencyInfo }) {
       <div className="flex gap-2">
         <dt className="text-zinc-500">Telefone</dt>
         <dd>
-          <a href={`tel:${agency.phone.replace(/\D/g, "")}`} className="underline">
+          <a href={`tel:${dialablePhone(agency.phone)}`} className="underline">
             {agency.phone}
           </a>
         </dd>
