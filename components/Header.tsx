@@ -16,6 +16,9 @@ export function Header() {
         <Link href="/simular" className="hover:underline">
           Simular relato
         </Link>
+        <Link href="/confiabilidade" className="hover:underline">
+          Confiabilidade
+        </Link>
       </nav>
     </header>
   );

@@ -70,3 +70,30 @@ export const incomingMessageValidator = v.object({
   // Media types the bot does not handle (image, sticker, video...).
   unsupported: v.optional(v.boolean()),
 });
+
+// Address reliability metrics (issue #37).
+export const geocodeSourceValidator = v.union(
+  v.literal("cnefe_exact"),
+  v.literal("cnefe_typo"),
+  v.literal("google"),
+  v.literal("none"),
+);
+
+export const geocodeOutcomeValidator = v.union(
+  v.literal("confirmed"),
+  v.literal("corrected_pin"),
+  v.literal("corrected_text"),
+  v.literal("abandoned"),
+);
+
+/** What the action measured on one geocoded address; applyStep stores it. */
+export const geocodeAttemptValidator = v.object({
+  // How the citizen sent the address. Not `channel`, which is whatsapp/simulator.
+  medium: v.union(v.literal("text"), v.literal("audio")),
+  source: geocodeSourceValidator,
+  typoDistance: v.number(),
+  ambiguous: v.boolean(),
+  ms: v.number(),
+  // The address text, kept only when it failed or was ambiguous.
+  query: v.optional(v.string()),
+});
