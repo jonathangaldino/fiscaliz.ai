@@ -92,7 +92,7 @@ evals/
   run.ts
 ```
 
-As rotas públicas (`/ocorrencias`, `/orgaos`, `/simular`) ficam em pt-BR porque o cidadão as vê no link. Fora isso, nomes de arquivo e de código são em inglês.
+As rotas públicas (`/ocorrencias`, `/orgaos`, `/simular`, `/confiabilidade`) ficam em pt-BR porque o cidadão as vê no link. Fora isso, nomes de arquivo e de código são em inglês.
 
 ## Modelo de dados
 
@@ -107,10 +107,12 @@ Tabelas do Convex (`convex/schema.ts`):
 | `conversations` | `citizenId`, `state` (união discriminada, ver abaixo), `updatedAt` | `by_citizen`, `by_updatedAt` |
 | `processedMessages` | `channel`, `messageId` | `by_channel_message` |
 | `anonymousCounters` | `kind` (`emergency` / `out_of_scope`), `target` (ex.: `samu`, `sanepar`), `createdAt` | `by_kind` |
+| `geocodeAttempts` | `citizenId`, `medium` (`text` / `audio`), `source` (`cnefe_exact` / `cnefe_typo` / `google` / `none`), `typoDistance`, `ambiguous`, `precise?`, `ms`, `lat?`, `lng?`, `outcome?` (`confirmed` / `corrected_pin` / `corrected_text` / `abandoned`), `errorMeters?`, `query?` (texto do endereço, só quando `none` ou ambíguo), `createdAt` | `by_citizen_outcome` |
 
 - **`appeal` é desnormalizado**: a mesma mutation que insere o primeiro relato de um cidadão numa ocorrência incrementa o campo. Assim o mapa ordena por apelo sem contar relatos a cada leitura.
 - **Um cidadão conta uma vez por ocorrência**: se ele relatar de novo a mesma ocorrência, o bot responde "você já relatou" e nada muda.
 - **`anonymousCounters` não tem telefone, texto nem local** (ADR 0001).
+- **`geocodeAttempts` mede o match de endereços** (#37): uma linha por endereço em texto ou áudio, gravada no `applyStep`. O desfecho é preenchido no SIM, quando chega pin ou outro endereço, ou quando a conversa acaba. A página `/confiabilidade` mostra só contagens; o texto que falhou sai só por `npx convex run addressMetrics:failedQueries`.
 
 ## Recebimento de mensagens
 
@@ -265,6 +267,7 @@ Aberto, sem login, somente leitura.
 | Descrição do relato | `reports.description` | Nunca |
 | Resumo público | `occurrences.summary` (reescrito pela IA, sem dados pessoais) | Sim |
 | Emergência e fora de escopo | Só tipo + data/hora em `anonymousCounters` | Só agregado |
+| Endereço que o match não achou | `geocodeAttempts.query` | Nunca; a página `/confiabilidade` só tem contagens |
 
 Como isso é garantido:
 
