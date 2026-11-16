@@ -8,6 +8,7 @@ import { modules } from "./test.setup";
 const PHONE = "5543988887777";
 const HASH = "citizen-hash-abc";
 const DESCRIPTION = "Moro no número 123, meu nome é Fulano, o buraco fica em frente";
+const ADDRESS_QUERY = "Rua do Fulano, casa da minha sogra";
 
 async function setup() {
   const t = convexTest(schema, modules);
@@ -41,6 +42,16 @@ async function setup() {
       occurredAt: Date.now(),
       createdAt: Date.now(),
     });
+    await ctx.db.insert("geocodeAttempts", {
+      citizenId,
+      medium: "audio",
+      source: "none",
+      typoDistance: 0,
+      ambiguous: false,
+      ms: 5,
+      query: ADDRESS_QUERY,
+      createdAt: Date.now(),
+    });
     return { occurrenceId, citizenId };
   });
   return { t, ...ids };
@@ -55,14 +66,16 @@ describe("public queries never expose personal data", () => {
       t.query(api.occurrences.listByAgency, { slug: "servicos-publicos" }),
       t.query(api.agencies.list, {}),
       t.query(api.agencies.getBySlug, { slug: "servicos-publicos" }),
+      t.query(api.addressMetrics.summary, {}),
     ]);
     const serialized = JSON.stringify(results);
 
     expect(serialized).toContain("Buraco no asfalto.");
-    for (const secret of [PHONE, HASH, DESCRIPTION, citizenId]) {
+    expect(serialized).toContain('"medium":"audio"');
+    for (const secret of [PHONE, HASH, DESCRIPTION, ADDRESS_QUERY, citizenId]) {
       expect(serialized).not.toContain(secret);
     }
-    for (const field of ["phone\":\"55", "externalIdHash", "description", "citizenId"]) {
+    for (const field of ["phone\":\"55", "externalIdHash", "description", "citizenId", "query"]) {
       expect(serialized).not.toContain(field);
     }
   });

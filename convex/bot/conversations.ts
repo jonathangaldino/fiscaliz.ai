@@ -9,8 +9,10 @@ import { startOfDayInBrasilia } from "../lib/time";
 import {
   channelValidator,
   conversationStateValidator,
+  geocodeAttemptValidator,
   outgoingMessageValidator,
 } from "../validators";
+import { closeOpenAttempts } from "./geocodeAttempts";
 import * as messages from "./messages";
 import { registerReport } from "./register";
 import { DAILY_REPORT_LIMIT, nextStep } from "./stateMachine";
@@ -78,6 +80,8 @@ export const applyStep = internalMutation({
     addressNotFound: v.optional(v.boolean()),
     // Occurrence the AI judged to be the same problem (only on SIM).
     matchId: v.optional(v.union(v.id("occurrences"), v.null())),
+    // Set when this message carried an address in text or audio.
+    geocode: v.optional(geocodeAttemptValidator),
   },
   returns: v.union(
     v.object({ ok: v.literal(true), messages: v.array(outgoingMessageValidator) }),
@@ -111,6 +115,21 @@ export const applyStep = internalMutation({
       addressNotFound: args.addressNotFound ?? false,
     });
 
+    // A new address or a pin replaces the one shown before (issue #37).
+    if (args.geocode) {
+      await closeOpenAttempts(ctx, args.citizenId, "corrected_text");
+      await ctx.db.insert("geocodeAttempts", {
+        ...args.geocode,
+        citizenId: args.citizenId,
+        createdAt: now,
+        lat: args.location?.lat,
+        lng: args.location?.lng,
+        precise: args.location?.precise,
+      });
+    } else if (args.location) {
+      await closeOpenAttempts(ctx, args.citizenId, "corrected_pin", args.location);
+    }
+
     if (step.type === "register") {
       const result = await registerReport(ctx, {
         citizenId: args.citizenId,
@@ -120,6 +139,7 @@ export const applyStep = internalMutation({
         matchId: args.matchId ?? null,
       });
       // The conversation ends here.
+      await closeOpenAttempts(ctx, args.citizenId, "confirmed");
       if (conversation) await ctx.db.delete(conversation._id);
       const link = messages.occurrenceLink(
         process.env.PUBLIC_APP_URL ?? "",
@@ -143,6 +163,7 @@ export const applyStep = internalMutation({
     }
 
     if (step.state === null) {
+      await closeOpenAttempts(ctx, args.citizenId, "abandoned");
       if (conversation) await ctx.db.delete(conversation._id);
     } else if (conversation) {
       await ctx.db.patch(conversation._id, {
@@ -174,7 +195,10 @@ export const expire = internalMutation({
       .query("conversations")
       .withIndex("by_updatedAt", (q) => q.lt("updatedAt", cutoff))
       .take(500);
-    for (const conversation of stale) await ctx.db.delete(conversation._id);
+    for (const conversation of stale) {
+      await closeOpenAttempts(ctx, conversation.citizenId, "abandoned");
+      await ctx.db.delete(conversation._id);
+    }
     return stale.length;
   },
 });
