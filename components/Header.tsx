@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { NavLinks } from "./NavLinks";
+import { SoundToggle } from "./SoundToggle";
 
 /**
  * Floating glass bar. On the map page it sits over the map (`overlay`);
@@ -26,7 +27,10 @@ export function Header({ overlay = false }: { overlay?: boolean }) {
             Ocorrências urbanas de Apucarana, PR
           </span>
         </Link>
-        <NavLinks />
+        <div className="flex items-center gap-1">
+          <NavLinks />
+          <SoundToggle />
+        </div>
       </div>
     </header>
   );

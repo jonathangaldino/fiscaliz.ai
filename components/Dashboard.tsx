@@ -16,6 +16,7 @@ import {
 import type { PublicOccurrence } from "@/convex/occurrences";
 import { useMediaQuery } from "@/lib/media";
 import { matchesSearch } from "@/lib/search";
+import { playSound } from "@/lib/sound";
 import { CategoryBar } from "./CategoryBar";
 import { AgencyFilter } from "./Filters";
 import { OccurrenceCard } from "./OccurrenceCard";
@@ -89,11 +90,22 @@ export function Dashboard() {
     setSelectedId(null);
   }
 
+  function select(id: string | null) {
+    if (id === selectedId) return;
+    playSound(id ? "open" : "close");
+    setSelectedId(id);
+  }
+
+  function setCategory(next: CategoryKey | null) {
+    playSound(next ? "toggleOn" : "toggleOff");
+    setFilters({ category: next, agency });
+  }
+
   const selected = occurrences?.find((o) => o._id === selectedId) ?? null;
   const card = selected && (
     <OccurrenceCard
       occurrence={selected}
-      onClose={() => setSelectedId(null)}
+      onClose={() => select(null)}
       className="w-[min(380px,calc(100vw-1.5rem))]"
     />
   );
@@ -107,8 +119,8 @@ export function Dashboard() {
         <OccurrenceMap
           occurrences={occurrences ?? []}
           selectedId={selectedId}
-          onSelect={setSelectedId}
-          onMapClick={() => setSelectedId(null)}
+          onSelect={select}
+          onMapClick={() => selectedId && select(null)}
           popup={
             desktop && selected
               ? { lat: selected.lat, lng: selected.lng, content: card }
@@ -131,7 +143,7 @@ export function Dashboard() {
           variant="dock"
           counts={counts}
           selected={category}
-          onChange={(next) => setFilters({ category: next, agency })}
+          onChange={setCategory}
           className="pointer-events-auto"
         />
       </div>
@@ -153,7 +165,10 @@ export function Dashboard() {
       >
         <button
           type="button"
-          onClick={() => setSheetOpen((open) => !open)}
+          onClick={() => {
+            playSound("tap");
+            setSheetOpen((open) => !open);
+          }}
           aria-expanded={sheetOpen}
           aria-controls="occurrence-list"
           className="flex w-full flex-col items-center pt-2 md:hidden"
@@ -188,7 +203,7 @@ export function Dashboard() {
           variant="row"
           counts={counts}
           selected={category}
-          onChange={(next) => setFilters({ category: next, agency })}
+          onChange={setCategory}
           className={`md:hidden ${sheetOpen ? "" : "pb-[max(0.75rem,env(safe-area-inset-bottom))]"}`}
         />
 
@@ -197,7 +212,10 @@ export function Dashboard() {
         >
           <AgencyFilter
             agency={agency}
-            onChange={(next) => setFilters({ category, agency: next })}
+            onChange={(next) => {
+              playSound("tap");
+              setFilters({ category, agency: next });
+            }}
           />
         </div>
 
@@ -214,7 +232,7 @@ export function Dashboard() {
               occurrences={occurrences}
               selectedId={selectedId}
               onSelect={(id) => {
-                setSelectedId(id);
+                select(id);
                 setSheetOpen(false);
               }}
               emptyMessage={
@@ -229,6 +247,7 @@ export function Dashboard() {
               <button
                 type="button"
                 onClick={() => {
+                  playSound("toggleOff");
                   setSearch("");
                   setFilters({ category: null, agency: null });
                 }}

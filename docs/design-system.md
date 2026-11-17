@@ -81,3 +81,21 @@ Regras:
 - Durações só pelos tokens (`--dur-fast`, `--dur`, `--dur-slow`); com `prefers-reduced-motion` todas viram 1 ms e a luz não aparece.
 - A luz só existe com mouse (`hover: hover`); no toque não há efeito de hover.
 - Nada anima em loop, exceto o ponto do selo "Verificando".
+
+## Som
+
+Sons curtos (até 250 ms) e baixos que confirmam uma ação. Ficam em `lib/sound.ts`, sintetizados com a Web Audio API: não há arquivo de áudio, licença nem download.
+
+| Som | Quando |
+|---|---|
+| `tap` | Tocar num pin no simulador, abrir ou fechar a lista, trocar o órgão, botões SIM/NÃO |
+| `toggleOn` / `toggleOff` | Ligar e desligar um filtro de categoria, limpar filtros |
+| `open` / `close` | Abrir e fechar o card da ocorrência |
+| `send` / `receive` | Mensagem enviada e resposta do bot no simulador |
+| `success` | Verificação iniciada |
+
+Regras:
+- Som só depois de uma ação da pessoa; nunca ao carregar a página nem em atualizações automáticas (a resposta do bot é consequência de uma mensagem enviada).
+- O botão de som no topo liga e desliga tudo (`aria-pressed`); a escolha fica salva no navegador.
+- O som nunca carrega informação sozinho: tudo o que ele confirma também aparece na tela.
+- Som novo: acrescentar ao `SoundName` e ao mapa `SOUNDS`, com notas curtas e ataque rápido.
