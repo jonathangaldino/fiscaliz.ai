@@ -64,10 +64,10 @@ def scene2(t, D):
     times = [0.6, 2.0, 3.3, 4.6, 6.0, 7.0]
     k = sum(1 for x in times if t >= x)
     k = max(1, k)
-    ph = img(f"phone-{k}.png", 0.62)
+    ph = img(f"phone-{k}.png", 0.72)
     place(c, ph, cx, 560, 1.0, a)
     if k > 1 and t - times[k - 1] < 0.25:  # quick crossfade from previous state
-        place(c, img(f"phone-{k-1}.png", 0.62), cx, 560, 1.0, a * (1 - (t - times[k - 1]) / 0.25))
+        place(c, img(f"phone-{k-1}.png", 0.72), cx, 560, 1.0, a * (1 - (t - times[k - 1]) / 0.25))
     return c
 
 CATS = ["pavement", "rural_roads", "drainage", "urban_cleaning", "public_spaces", "street_lighting",
@@ -88,18 +88,18 @@ def scene3(t, D):
             s = appear * (1 + 1.4 * ease_io(focus))
             place(c, img(f"{k}.webp", 0.85), x, y, s, min(1, appear))
         else:
-            alpha = min(1, appear) * (1 - 0.88 * ease_io(focus))
+            alpha = min(1, appear) * (1 - ease_io(focus))
             place(c, img(f"{k}.webp", 0.85), x, y, appear, alpha)
     a = ease_out(seg(t, 4.4, 5.0))
-    place(c, img("ai.png", 0.62), 1180, 470 + (1 - a) * 30, 1.0, a)
+    place(c, img("ai.png", 0.8), 1240, 470 + (1 - a) * 30, 1.0, a)
     b = ease_out(seg(t, 5.6, 6.3))
-    place(c, img("agency.png", 0.62), 1220, 640 + (1 - b) * 30, 1.0, b)
+    place(c, img("agency.png", 0.8), 1260, 650 + (1 - b) * 30, 1.0, b)
     if b > 0:  # connector
         layer = Image.new("RGBA", (W, H)); d = ImageDraw.Draw(layer)
-        d.line([(720, 560), (720 + 140 * b, 560)], fill=(11, 95, 198, round(160 * b)), width=4)
+        d.line([(760, 560), (760 + 90 * b, 560)], fill=(11, 95, 198, round(160 * b)), width=4)
         c.alpha_composite(layer)
     ta = 1 - ease_out(seg(t, 3.2, 3.8))
-    text(c, "A IA entende e encaminha", W / 2, 150, 64, alpha=min(ease_out(seg(t, 0.1, 0.7)), 1), anchor="ma")
+    text(c, "A IA entende e encaminha", W / 2, 120, 64, alpha=min(ease_out(seg(t, 0.1, 0.7)), 1) * (1 - ease_io(seg(t, 3.4, 4.0))), anchor="ma")
     return c
 
 MAP = None
@@ -119,15 +119,16 @@ def scene4(t, D):
     g = seg(t, 2.6, 7.0)
     appear = seg(t, 1.6, 2.2)
     s = (0.5 + 0.45 * ease_io(g)) * spring(appear)
-    place(c, img("pin-pavement.png", 1.0), 1000, 560 - 150 * s, s, min(1, appear * 2))
+    place(c, img("pin-pavement.png", 1.0), 980, 640 - 150 * s, s, min(1, appear * 2))
     n = 1 + round(13 * ease_io(g))
     if appear > 0:
         pill = Image.new("RGBA", (W, H)); d = ImageDraw.Draw(pill)
-        x0, y0 = 1080 + 90 * s, 420 - 120 * s
-        d.rounded_rectangle([x0, y0, x0 + 300, y0 + 84], 42, fill=(255, 255, 255, round(235 * min(1, appear * 2))))
+        x0, y0 = 1060 + 90 * s, 520 - 120 * s
+        d.rounded_rectangle([x0, y0, x0 + 330, y0 + 84], 42, fill=(255, 255, 255, round(235 * min(1, appear * 2))))
         c.alpha_composite(pill)
         text(c, f"{n}", x0 + 34, y0 + 42, 46, anchor="lm", alpha=min(1, appear * 2))
-        text(c, "pessoas pedindo" if n > 1 else "pessoa pedindo", x0 + 34 + (36 if n < 10 else 62), y0 + 46, 26,
+        nw = ImageFont.truetype(FONT_SB, 46).getlength(str(n))
+        text(c, "pessoas pedindo" if n > 1 else "pessoa pedindo", x0 + 34 + nw + 12, y0 + 46, 26,
              color=(70, 77, 73), font=FONT_MD, anchor="lm", alpha=min(1, appear * 2))
     return c
 
@@ -139,8 +140,8 @@ def scene5(t, D):
     c = c.copy()
     veil = Image.new("RGBA", (W, H), (238, 241, 238, 120)); c.alpha_composite(veil)
     a = ease_out(seg(t, 0.1, 0.9))
-    place(c, img("queue.png", 0.62), 1220, 560 + (1 - a) * 120, 1.0, a)
-    title(c, t, "Uma fila por secretaria", "Primeiro, o que afeta mais gente.", x=130, y=420, start=0.4)
+    place(c, img("queue.png", 0.6), 1390, 560 + (1 - a) * 120, 1.0, a)
+    title(c, t, "Uma fila por órgão", "Primeiro, o que afeta mais gente.", x=130, y=420, start=0.4)
     return c
 
 def scene6(t, D):
@@ -148,16 +149,16 @@ def scene6(t, D):
     st = "card-open.png" if t < 2.6 else "card-verifying.png" if t < 5.4 else "card-resolved.png"
     a = ease_out(seg(t, 0.0, 0.7))
     pulse = 1 + 0.04 * math.exp(-8 * min(abs(t - 2.6), abs(t - 5.4)))
-    place(c, img(st, 0.8), 1250, 540 + (1 - a) * 60, pulse, a)
-    if 2.6 <= t < 2.9: place(c, img("card-open.png", 0.8), 1250, 540, 1, 1 - (t - 2.6) / 0.3)
-    if 5.4 <= t < 5.7: place(c, img("card-verifying.png", 0.8), 1250, 540, 1, 1 - (t - 5.4) / 0.3)
-    l1, l2 = ("Resolvido de verdade", "Quem fecha a ocorrência é o cidadão.")
+    place(c, img(st, 0.8), 1390, 540 + (1 - a) * 60, pulse, a)
+    if 2.6 <= t < 2.9: place(c, img("card-open.png", 0.8), 1390, 540, 1, 1 - (t - 2.6) / 0.3)
+    if 5.4 <= t < 5.7: place(c, img("card-verifying.png", 0.8), 1390, 540, 1, 1 - (t - 5.4) / 0.3)
+    l1, l2 = ("Resolvido de verdade", "Quem fecha é o cidadão.")
     title(c, t, l1, l2, x=130, y=410, start=0.3)
     if t >= 5.4:
         g = ease_out(seg(t, 5.4, 6.2))
         layer = Image.new("RGBA", (W, H)); d = ImageDraw.Draw(layer)
         r = 60 + 340 * g
-        d.ellipse([1250 - r, 540 - r, 1250 + r, 540 + r], outline=(22, 163, 74, round(120 * (1 - g))), width=6)
+        d.ellipse([1390 - r, 540 - r, 1390 + r, 540 + r], outline=(22, 163, 74, round(120 * (1 - g))), width=6)
         c.alpha_composite(layer)
     return c
 
