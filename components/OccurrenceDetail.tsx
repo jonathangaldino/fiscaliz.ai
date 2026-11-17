@@ -8,12 +8,8 @@ import { api } from "@/convex/_generated/api";
 import { AGENCIES, CATEGORIES, type AgencySlug } from "@/convex/lib/categories";
 import { formatAppeal, formatDateTime } from "@/lib/format";
 import { AgencyContact } from "./AgencyContact";
-
-const STATUS_LABEL = {
-  open: "Aberta",
-  verifying: "Verificando",
-  resolved: "Resolvida",
-} as const;
+import { Button } from "./ui/Button";
+import { StatusBadge } from "./ui/StatusBadge";
 
 export function OccurrenceDetail({ id }: { id: string }) {
   const occurrence = useQuery(api.occurrences.get, { id });
@@ -46,7 +42,9 @@ export function OccurrenceDetail({ id }: { id: string }) {
       <dl className="grid grid-cols-2 gap-4 text-sm">
         <div>
           <dt className="text-zinc-500">Situação</dt>
-          <dd className="font-medium">{STATUS_LABEL[occurrence.status]}</dd>
+          <dd className="mt-0.5">
+            <StatusBadge status={occurrence.status} />
+          </dd>
         </div>
         <div>
           <dt className="text-zinc-500">Apelo</dt>
@@ -136,8 +134,8 @@ function Verification({
             Demonstração: o bot pergunta pelo WhatsApp a quem relatou se o
             problema já foi resolvido.
           </p>
-          <button
-            type="button"
+          <Button
+            variant="warning"
             disabled={pending}
             onClick={async () => {
               setPending(true);
@@ -154,10 +152,9 @@ function Verification({
                 setPending(false);
               }
             }}
-            className="rounded-lg bg-amber-500 px-4 py-2 font-medium text-white hover:bg-amber-600 disabled:opacity-50"
           >
             Iniciar verificação
-          </button>
+          </Button>
           {error && <p className="text-xs text-red-600">{error}</p>}
         </>
       ) : (

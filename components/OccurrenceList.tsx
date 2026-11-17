@@ -2,6 +2,7 @@ import Link from "next/link";
 import type { PublicOccurrence } from "@/convex/occurrences";
 import { AGENCIES, CATEGORIES, type AgencySlug } from "@/convex/lib/categories";
 import { formatAppeal, formatDate } from "@/lib/format";
+import { StatusBadge } from "./ui/StatusBadge";
 
 type Props = {
   occurrences: PublicOccurrence[];
@@ -41,9 +42,7 @@ export function OccurrenceList({ occurrences, selectedId, onSelect }: Props) {
                 <span className="block text-xs font-medium text-zinc-500">
                   {category.label}
                   {o.status === "verifying" && (
-                    <span className="ml-2 rounded bg-amber-100 px-1.5 py-0.5 text-amber-800 dark:bg-amber-950 dark:text-amber-300">
-                      Verificando
-                    </span>
+                    <StatusBadge status="verifying" className="ml-2" />
                   )}
                 </span>
                 <span className="block text-sm">{o.summary}</span>

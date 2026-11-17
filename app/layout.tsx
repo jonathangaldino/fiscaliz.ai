@@ -10,7 +10,7 @@ export const metadata: Metadata = {
 export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
     <html lang="pt-BR" className="h-full antialiased">
-      <body className="flex h-full flex-col">
+      <body className="ambient flex h-full flex-col">
         <ConvexClientProvider>{children}</ConvexClientProvider>
       </body>
     </html>
