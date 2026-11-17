@@ -21,7 +21,7 @@ export function NavLinks() {
               <Link
                 href={link.href}
                 aria-current={active ? "page" : undefined}
-                className={`inline-flex h-10 items-center rounded-full px-3 sm:px-3.5 text-sm font-medium transition-colors duration-(--dur) ${
+                className={`lit inline-flex h-10 items-center rounded-full px-3 sm:px-3.5 text-sm font-medium transition-colors duration-(--dur) ${
                   active
                     ? "bg-fg text-bg"
                     : "text-muted hover:bg-accent-tint hover:text-fg"

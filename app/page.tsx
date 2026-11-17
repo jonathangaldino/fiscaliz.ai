@@ -5,7 +5,7 @@ import { Header } from "@/components/Header";
 export default function Home() {
   return (
     <>
-      <Header />
+      <Header overlay />
       {/* useSearchParams needs a Suspense boundary for static rendering. */}
       <Suspense>
         <Dashboard />
