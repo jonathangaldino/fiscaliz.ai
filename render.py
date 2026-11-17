@@ -64,10 +64,10 @@ def scene2(t, D):
     times = [0.6, 2.0, 3.3, 4.6, 6.0, 7.0]
     k = sum(1 for x in times if t >= x)
     k = max(1, k)
-    ph = img(f"phone-{k}.png", 0.72)
+    ph = img(f"phone-{k}.png", 0.66)
     place(c, ph, cx, 560, 1.0, a)
     if k > 1 and t - times[k - 1] < 0.25:  # quick crossfade from previous state
-        place(c, img(f"phone-{k-1}.png", 0.72), cx, 560, 1.0, a * (1 - (t - times[k - 1]) / 0.25))
+        place(c, img(f"phone-{k-1}.png", 0.66), cx, 560, 1.0, a * (1 - (t - times[k - 1]) / 0.25))
     return c
 
 CATS = ["pavement", "rural_roads", "drainage", "urban_cleaning", "public_spaces", "street_lighting",
@@ -80,7 +80,7 @@ def scene3(t, D):
     for i, k in enumerate(CATS):
         r, q = divmod(i, cols)
         x = W / 2 + (q - (cols - 1) / 2) * cell
-        y = 330 + r * cell
+        y = 470 + r * cell
         appear = spring(seg(t, 0.15 + i * 0.07, 0.75 + i * 0.07))
         if k == "pavement":
             tx, ty = 560, 560
@@ -104,7 +104,7 @@ def scene3(t, D):
 
 MAP = None
 PINS = [("drainage", 560, 420), ("street_lighting", 820, 300), ("traffic_light", 1180, 330),
-        ("tree_removal", 1420, 520), ("urban_cleaning", 760, 760), ("public_spaces", 1300, 800),
+        ("tree_removal", 1560, 640), ("urban_cleaning", 760, 760), ("public_spaces", 1300, 800),
         ("traffic_signs", 460, 680), ("construction", 1600, 330)]
 def scene4(t, D):
     global MAP
