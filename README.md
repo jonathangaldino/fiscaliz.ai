@@ -104,6 +104,31 @@ Para o WhatsApp, cadastre `https://<deployment>.convex.site/whatsapp` como webho
 | `npm run bench:streets` | Benchmark do match de nomes de rua com erro de digitação ([ADR 0007](./docs/adr/0007-damerau-levenshtein-no-nome-da-rua.md)) |
 | `node scripts/cnefe.mjs download\|build ["Cidade, UF"]` | Baixa o CNEFE do IBGE e gera o módulo de ruas usado no geocoding ([docs/dados-ibge.md](./docs/dados-ibge.md)) |
 
+## API aberta
+
+As ocorrências saem do Fiscaliz.ai para onde a prefeitura já trabalha: GIS, mapas e planilhas. Só os campos públicos do painel; nenhum dado pessoal.
+
+| Rota | Formato |
+|---|---|
+| `GET /api/ocorrencias.geojson` | GeoJSON (`FeatureCollection` de pontos), para QGIS, ArcGIS e mapas web |
+| `GET /api/ocorrencias.csv` | CSV, para Excel e Google Sheets |
+
+Filtros opcionais, com os mesmos nomes do painel:
+
+- `orgao`: slug do órgão (`servicos-publicos`, `idepplan`, ...; ver [COMPETENCIAS.md](./COMPETENCIAS.md))
+- `categoria`: chave da categoria (`pavement`, `street_lighting`, ...)
+- `status`: `open`, `verifying` ou `resolved`
+
+```bash
+# Buracos abertos, para abrir no QGIS
+curl "https://<site>/api/ocorrencias.geojson?categoria=pavement&status=open" -o buracos.geojson
+
+# Tudo de Serviços Públicos, em planilha
+curl "https://<site>/api/ocorrencias.csv?orgao=servicos-publicos" -o servicos-publicos.csv
+```
+
+Campos: `id`, `category`, `categoryLabel`, `agency`, `status`, `address`, `summary`, `appeal`, `lat`, `lng`, `openedAt`, `resolvedAt` (ISO 8601) e `url` da ocorrência. Ordem por apelo, no máximo 1000 itens; resposta em cache por 1 minuto. Valor de filtro inválido responde 400. A fila de cada órgão tem o link **Baixar dados** com o CSV já filtrado.
+
 ## Privacidade
 
 - **Dados sintéticos:** o seed e a demo usam só ocorrências inventadas em ruas reais de Apucarana. Nenhum dado pessoal real (regra 9 do regulamento).
