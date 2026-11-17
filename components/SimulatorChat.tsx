@@ -4,6 +4,7 @@ import { useMutation, useQuery } from "convex/react";
 import dynamic from "next/dynamic";
 import { useEffect, useRef, useState, useSyncExternalStore } from "react";
 import { api } from "@/convex/_generated/api";
+import { playSound } from "@/lib/sound";
 import { Button } from "./ui/Button";
 import { Glyph } from "./ui/Glyph";
 
@@ -96,6 +97,20 @@ export function SimulatorChat() {
     bottomRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [chat?.length]);
 
+  // A chime when the bot answers (not for the history loaded on open).
+  const seenBotMessages = useRef<number | null>(null);
+  const botMessages = chat?.filter((m) => m.author === "bot").length;
+  useEffect(() => {
+    if (botMessages === undefined) return;
+    if (
+      seenBotMessages.current !== null &&
+      botMessages > seenBotMessages.current
+    ) {
+      playSound("receive");
+    }
+    seenBotMessages.current = botMessages;
+  }, [botMessages]);
+
   const last = chat?.at(-1);
   const waitingForBot = last?.author === "citizen";
   const buttons = last?.author === "bot" ? last.buttons : undefined;
@@ -107,6 +122,7 @@ export function SimulatorChat() {
   }) {
     if (!sessionId) return;
     setError(null);
+    playSound(payload.button ? "tap" : "send");
     try {
       await send({ sessionId, ...payload });
     } catch {
@@ -115,12 +131,15 @@ export function SimulatorChat() {
   }
 
   return (
-    <div className="relative min-h-0 flex-1 overflow-hidden">
+    <main id="conteudo" className="relative min-h-0 flex-1 overflow-hidden">
       <div className="absolute inset-0">
         <OccurrenceMap
           occurrences={occurrences ?? []}
           marker={pin}
-          onMapClick={setPin}
+          onMapClick={(point) => {
+            playSound("tap");
+            setPin(point);
+          }}
           padding={{ top: 72 }}
         />
       </div>
@@ -152,6 +171,7 @@ export function SimulatorChat() {
             variant="ghost"
             size="sm"
             onClick={() => {
+              playSound("close");
               resetSession();
               setPin(null);
             }}
@@ -261,6 +281,6 @@ export function SimulatorChat() {
           </p>
         )}
       </section>
-    </div>
+    </main>
   );
 }

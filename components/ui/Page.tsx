@@ -10,6 +10,7 @@ export function Page({
 }) {
   return (
     <main
+      id="conteudo"
       className={`mx-auto w-full space-y-5 px-4 pt-6 pb-12 sm:px-6 ${
         width === "lg" ? "max-w-3xl" : "max-w-2xl"
       }`}
