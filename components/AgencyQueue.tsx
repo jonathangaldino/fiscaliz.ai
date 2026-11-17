@@ -6,6 +6,7 @@ import { api } from "@/convex/_generated/api";
 import { AGENCIES, CATEGORIES, isAgencySlug } from "@/convex/lib/categories";
 import { formatDate } from "@/lib/format";
 import { AgencyContact } from "./AgencyContact";
+import { CategoryIcon } from "./ui/CategoryIcon";
 
 export function AgencyQueue({ slug }: { slug: string }) {
   const queue = useQuery(api.occurrences.listByAgency, { slug });
@@ -58,6 +59,7 @@ export function AgencyQueue({ slug }: { slug: string }) {
                       <span className="w-6 shrink-0 text-right text-sm text-zinc-500">
                         {index + 1}.
                       </span>
+                      <CategoryIcon category={o.category} size={28} />
                       <span className="min-w-0 flex-1">
                         <span className="block text-xs text-zinc-500">
                           {CATEGORIES[o.category].label}

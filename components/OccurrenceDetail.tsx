@@ -9,6 +9,7 @@ import { AGENCIES, CATEGORIES, type AgencySlug } from "@/convex/lib/categories";
 import { formatAppeal, formatDateTime } from "@/lib/format";
 import { AgencyContact } from "./AgencyContact";
 import { Button } from "./ui/Button";
+import { CategoryIcon } from "./ui/CategoryIcon";
 import { StatusBadge } from "./ui/StatusBadge";
 
 export function OccurrenceDetail({ id }: { id: string }) {
@@ -29,10 +30,8 @@ export function OccurrenceDetail({ id }: { id: string }) {
   return (
     <article className="mx-auto w-full max-w-2xl space-y-6 p-6">
       <div className="space-y-2">
-        <span
-          className="inline-flex items-center gap-2 rounded-full px-3 py-1 text-xs font-medium text-white"
-          style={{ backgroundColor: category.color }}
-        >
+        <span className="glass inline-flex items-center gap-2 rounded-full py-1 pr-3 pl-1.5 text-xs font-semibold">
+          <CategoryIcon category={occurrence.category} size={22} />
           {category.label}
         </span>
         <h1 className="text-2xl font-semibold">{occurrence.summary}</h1>

@@ -5,6 +5,7 @@ import Link from "next/link";
 import { api } from "@/convex/_generated/api";
 import { CATEGORIES } from "@/convex/lib/categories";
 import { formatAppeal, formatDate } from "@/lib/format";
+import { CategoryIcon } from "./ui/CategoryIcon";
 
 /** History of occurrences that citizens confirmed as solved (V2). */
 export function ResolvedList() {
@@ -34,11 +35,7 @@ export function ResolvedList() {
                   href={`/ocorrencias/${o._id}`}
                   className="flex items-start gap-3 p-3 hover:bg-zinc-50 dark:hover:bg-zinc-900"
                 >
-                  <span
-                    aria-hidden
-                    className="mt-1 h-3 w-3 shrink-0 rounded-full"
-                    style={{ backgroundColor: category.color }}
-                  />
+                  <CategoryIcon category={o.category} size={32} />
                   <span className="min-w-0 flex-1">
                     <span className="block text-xs font-medium text-zinc-500">
                       {category.label}

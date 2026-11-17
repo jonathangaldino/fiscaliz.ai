@@ -50,3 +50,15 @@ Em `components/ui/`:
 | `StatusBadge` | Situação da ocorrência; o texto carrega o sentido, a cor só reforça. |
 
 `Header` é a barra de vidro flutuante; na página do mapa usa `overlay` para ficar por cima do mapa.
+
+## Ícones de categoria
+
+Um ícone 3D por categoria de `COMPETENCIAS.md`, no estilo dos emojis da Apple: brilho suave, formas arredondadas, leitura clara a partir de 24 px.
+
+- Arquivos: `public/icons/categories/<categoria>.webp`, 128 × 128 px com transparência, ~6 KB cada.
+- Mapa categoria → arquivo: `lib/categoryIcons.ts`. É um `Record<CategoryKey, string>`: categoria nova sem ícone quebra o typecheck.
+- Componente: `CategoryIcon`. Decorativo por padrão (`alt=""`), porque o nome da categoria vem ao lado; passe `label` quando o ícone aparecer sozinho.
+- Origem: gerados para o projeto com o GPT Image 2.6 no Higgsfield, fundo transparente, recortados e reduzidos para 128 px. Mesma licença do repositório.
+- Categoria nova: gerar com o mesmo prompt-base abaixo, trocando só o assunto, e salvar com o nome da chave.
+
+> A single 3D icon in the style of Apple's emoji set: glossy, soft studio lighting from the top left, rounded friendly chunky shapes, gentle 3/4 perspective, vibrant but natural colors, subtle soft contact shadow. Compact silhouette that fills most of the square and stays readable at 24 pixels. No text, no letters, no outline, no frame, no background plate. One isolated object centered, transparent background. Subject: …

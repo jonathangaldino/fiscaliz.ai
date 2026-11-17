@@ -2,6 +2,7 @@ import Link from "next/link";
 import type { PublicOccurrence } from "@/convex/occurrences";
 import { AGENCIES, CATEGORIES, type AgencySlug } from "@/convex/lib/categories";
 import { formatAppeal, formatDate } from "@/lib/format";
+import { CategoryIcon } from "./ui/CategoryIcon";
 import { StatusBadge } from "./ui/StatusBadge";
 
 type Props = {
@@ -33,11 +34,7 @@ export function OccurrenceList({ occurrences, selectedId, onSelect }: Props) {
                 selected ? "bg-zinc-100 dark:bg-zinc-900" : ""
               }`}
             >
-              <span
-                aria-hidden
-                className="mt-1 h-3 w-3 shrink-0 rounded-full"
-                style={{ backgroundColor: category.color }}
-              />
+              <CategoryIcon category={o.category} size={32} />
               <span className="min-w-0 flex-1">
                 <span className="block text-xs font-medium text-zinc-500">
                   {category.label}
