@@ -40,7 +40,7 @@ function ContactRow({
       <a
         href={href}
         {...(external ? { target: "_blank", rel: "noreferrer" } : {})}
-        className="-mx-2 flex min-h-11 items-center gap-3 rounded-control px-2 text-fg transition-colors hover:bg-accent-tint"
+        className="lit -mx-2 flex min-h-11 items-center gap-3 rounded-control px-2 text-fg transition-colors hover:bg-accent-tint"
       >
         <span className="flex size-8 shrink-0 items-center justify-center rounded-full bg-accent-tint text-accent">
           <Glyph name={icon} size={16} />

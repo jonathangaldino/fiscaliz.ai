@@ -7,6 +7,7 @@ import Link from "next/link";
 import { api } from "@/convex/_generated/api";
 import { AGENCIES, CATEGORIES, type AgencySlug } from "@/convex/lib/categories";
 import { formatAppeal, formatDateTime } from "@/lib/format";
+import { playSound } from "@/lib/sound";
 import { AgencyContact } from "./AgencyContact";
 import { Button, buttonClass } from "./ui/Button";
 import { CategoryIcon } from "./ui/CategoryIcon";
@@ -164,6 +165,7 @@ function Verification({
               setError(null);
               try {
                 await start({ id });
+                playSound("success");
               } catch (e) {
                 setError(
                   e instanceof ConvexError

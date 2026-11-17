@@ -10,6 +10,7 @@ export default function PrivacyPage() {
   return (
     <>
       <Header />
+      <main id="conteudo">
       <article className="glass-strong mx-auto my-6 w-[calc(100%-2rem)] max-w-2xl space-y-6 rounded-panel p-6 text-[15px] leading-relaxed sm:p-8">
         <div className="space-y-1">
           <h1 className="text-3xl font-semibold tracking-tight">Política de Privacidade</h1>
@@ -86,6 +87,7 @@ export default function PrivacyPage() {
           </p>
         </Section>
       </article>
+      </main>
     </>
   );
 }

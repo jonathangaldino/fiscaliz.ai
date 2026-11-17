@@ -34,6 +34,14 @@ const MAP_STYLE = {
   dark: "https://tiles.openfreemap.org/styles/dark",
 } as const;
 
+/** MapLibre's own labels, in Portuguese for screen readers and tooltips. */
+const MAP_LOCALE = {
+  "Map.Title": "Mapa de ocorrências. As mesmas ocorrências estão na lista.",
+  "AttributionControl.ToggleAttribution": "Mostrar créditos do mapa",
+  "Popup.Close": "Fechar",
+  "Marker.Title": "Local marcado",
+};
+
 const HOME_VIEW = {
   latitude: APUCARANA_CENTER.lat,
   longitude: APUCARANA_CENTER.lng,
@@ -229,6 +237,7 @@ export default function OccurrenceMap({
         // The simulator (which passes a marker) drops a pin with each click.
         cursor={marker !== undefined ? "crosshair" : undefined}
         attributionControl={{ compact: true }}
+        locale={MAP_LOCALE}
         style={{ width: "100%", height: "100%" }}
       >
         {ready && (
@@ -360,7 +369,7 @@ export default function OccurrenceMap({
               aria-label="Aproximar"
               title="Aproximar"
               onClick={() => mapRef.current?.zoomIn()}
-              className="flex size-11 items-center justify-center transition-colors hover:bg-accent-tint"
+              className="lit flex size-11 items-center justify-center transition-[background-color,transform] duration-(--dur) hover:bg-accent-tint active:scale-90"
             >
               <Glyph name="plus" />
             </button>
@@ -370,7 +379,7 @@ export default function OccurrenceMap({
               aria-label="Afastar"
               title="Afastar"
               onClick={() => mapRef.current?.zoomOut()}
-              className="flex size-11 items-center justify-center transition-colors hover:bg-accent-tint"
+              className="lit flex size-11 items-center justify-center transition-[background-color,transform] duration-(--dur) hover:bg-accent-tint active:scale-90"
             >
               <Glyph name="minus" />
             </button>

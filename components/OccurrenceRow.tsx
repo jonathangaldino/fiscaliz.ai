@@ -24,7 +24,7 @@ export function OccurrenceRow({
     <li>
       <Link
         href={`/ocorrencias/${o._id}`}
-        className="group flex items-center gap-3 rounded-card p-2.5 transition-[background-color] duration-(--dur) hover:bg-(--glass-bg-strong)"
+        className="group lit flex items-center gap-3 rounded-card p-2.5 transition-[background-color,transform] duration-(--dur) hover:bg-(--glass-bg-strong) active:scale-[0.99]"
       >
         {rank !== undefined && (
           <span className="w-6 shrink-0 text-right text-sm font-semibold text-subtle tabular-nums">
@@ -32,7 +32,11 @@ export function OccurrenceRow({
           </span>
         )}
         <span className="flex size-12 shrink-0 items-center justify-center rounded-control border border-line bg-surface/70">
-          <CategoryIcon category={o.category} size={34} />
+          <CategoryIcon
+            category={o.category}
+            size={34}
+            className="transition-transform duration-(--dur-slow) ease-spring group-hover:scale-110"
+          />
         </span>
         <span className="min-w-0 flex-1">
           <span className="flex items-center gap-2 text-xs font-medium text-muted">
