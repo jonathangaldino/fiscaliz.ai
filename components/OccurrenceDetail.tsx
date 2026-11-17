@@ -1,6 +1,8 @@
 "use client";
 
-import { useQuery } from "convex/react";
+import { useMutation, useQuery } from "convex/react";
+import { ConvexError } from "convex/values";
+import { useState } from "react";
 import Link from "next/link";
 import { api } from "@/convex/_generated/api";
 import { AGENCIES, CATEGORIES, type AgencySlug } from "@/convex/lib/categories";
@@ -70,6 +72,8 @@ export function OccurrenceDetail({ id }: { id: string }) {
         )}
       </dl>
 
+      <Verification id={occurrence._id} status={occurrence.status} />
+
       <section className="rounded-lg border border-zinc-200 p-4 text-sm dark:border-zinc-800">
         <h2 className="mb-2 font-semibold">Órgão responsável</h2>
         {agency ? (
@@ -96,5 +100,72 @@ export function OccurrenceDetail({ id }: { id: string }) {
         Ver no mapa
       </Link>
     </article>
+  );
+}
+
+/** V2: starts a verification (demo only) or shows how it is going. */
+function Verification({
+  id,
+  status,
+}: {
+  id: string;
+  status: "open" | "verifying" | "resolved";
+}) {
+  const availability = useQuery(api.verification.availability, { id });
+  const start = useMutation(api.verification.start);
+  const [pending, setPending] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  if (status === "verifying") {
+    return (
+      <p className="rounded-lg border border-amber-300 bg-amber-50 p-4 text-sm text-amber-900 dark:border-amber-800 dark:bg-amber-950 dark:text-amber-200">
+        Verificando: perguntamos a quem relatou se o problema foi resolvido. A
+        ocorrência é resolvida quando 30% do apelo responde SIM; se o NÃO
+        passar o SIM, ou em 48 h sem resposta suficiente, ela volta a ficar aberta.
+      </p>
+    );
+  }
+  if (status !== "open" || !availability) return null;
+
+  return (
+    <section className="space-y-2 rounded-lg border border-zinc-200 p-4 text-sm dark:border-zinc-800">
+      <h2 className="font-semibold">O problema foi resolvido?</h2>
+      {availability.canStart ? (
+        <>
+          <p className="text-zinc-500">
+            Demonstração: o bot pergunta pelo WhatsApp a quem relatou se o
+            problema já foi resolvido.
+          </p>
+          <button
+            type="button"
+            disabled={pending}
+            onClick={async () => {
+              setPending(true);
+              setError(null);
+              try {
+                await start({ id });
+              } catch (e) {
+                setError(
+                  e instanceof ConvexError
+                    ? String(e.data)
+                    : "Não foi possível iniciar a verificação.",
+                );
+              } finally {
+                setPending(false);
+              }
+            }}
+            className="rounded-lg bg-amber-500 px-4 py-2 font-medium text-white hover:bg-amber-600 disabled:opacity-50"
+          >
+            Iniciar verificação
+          </button>
+          {error && <p className="text-xs text-red-600">{error}</p>}
+        </>
+      ) : (
+        <p className="text-zinc-500">
+          Esta ocorrência foi verificada há pouco e continua aberta. Nova
+          verificação a partir de {formatDateTime(availability.availableAt)}.
+        </p>
+      )}
+    </section>
   );
 }

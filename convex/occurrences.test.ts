@@ -40,7 +40,7 @@ describe("seed", () => {
   });
 });
 
-describe("occurrences.listOpen", () => {
+describe("occurrences.listActive", () => {
   it("returns open occurrences sorted by appeal, with public fields only", async () => {
     const t = convexTest(schema, modules);
     await t.mutation(internal.seed.run, {});
@@ -59,7 +59,7 @@ describe("occurrences.listOpen", () => {
       });
     });
 
-    const list = await t.query(api.occurrences.listOpen, {});
+    const list = await t.query(api.occurrences.listActive, {});
     expect(list).toHaveLength(SEED_OCCURRENCES.length);
     expect(list.every((o) => o.status === "open")).toBe(true);
 

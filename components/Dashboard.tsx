@@ -13,7 +13,7 @@ import { OccurrenceList } from "./OccurrenceList";
 const OccurrenceMap = dynamic(() => import("./OccurrenceMap"), { ssr: false });
 
 export function Dashboard() {
-  const all = useQuery(api.occurrences.listOpen);
+  const all = useQuery(api.occurrences.listActive);
   const [selectedId, setSelectedId] = useState<string | null>(null);
 
   // Filters live in the URL so the view can be shared as a link.

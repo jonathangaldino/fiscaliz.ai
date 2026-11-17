@@ -46,27 +46,86 @@ export async function sendWhatsApp(
   to: string,
   messages: OutgoingMessage[],
 ): Promise<void> {
-  const { token, phoneNumberId } = config();
-  for (const message of messages) {
-    const response = await fetch(
-      `https://graph.facebook.com/${GRAPH_VERSION}/${phoneNumberId}/messages`,
-      {
-        method: "POST",
-        headers: {
-          Authorization: `Bearer ${token}`,
-          "Content-Type": "application/json",
+  for (const message of messages) await post(toGraphPayload(to, message));
+}
+
+// Approved Meta template (id 29312198131747499). Its body, buttons and footer
+// live at Meta; the simulator copy is messages.verificationQuestion.
+const VERIFICATION_TEMPLATE = "occurrence_verification";
+
+// Template parameters reject newlines, tabs and runs of 4+ spaces.
+const param = (value: string) => value.replace(/\s+/g, " ").trim().slice(0, 500);
+
+/** V2 question to a citizen, outside the 24 h window (ADR 0002). */
+export function toVerificationPayload(
+  to: string,
+  occurrence: { id: string; summary: string; address: string },
+  buttons: { yes: string; no: string },
+) {
+  return {
+    messaging_product: "whatsapp",
+    to,
+    type: "template",
+    template: {
+      name: VERIFICATION_TEMPLATE,
+      language: { code: "pt_BR" },
+      components: [
+        {
+          type: "body",
+          parameters: [
+            { type: "text", text: param(occurrence.summary) },
+            { type: "text", text: param(occurrence.address) },
+          ],
         },
-        body: JSON.stringify(toGraphPayload(to, message)),
-        signal: AbortSignal.timeout(10_000),
+        {
+          type: "button",
+          sub_type: "quick_reply",
+          index: "0",
+          parameters: [{ type: "payload", payload: buttons.yes }],
+        },
+        {
+          type: "button",
+          sub_type: "quick_reply",
+          index: "1",
+          parameters: [{ type: "payload", payload: buttons.no }],
+        },
+        {
+          type: "button",
+          sub_type: "url",
+          index: "2",
+          parameters: [{ type: "text", text: occurrence.id }],
+        },
+      ],
+    },
+  };
+}
+
+export async function sendVerificationTemplate(
+  ...args: Parameters<typeof toVerificationPayload>
+): Promise<void> {
+  await post(toVerificationPayload(...args));
+}
+
+async function post(body: unknown): Promise<void> {
+  const { token, phoneNumberId } = config();
+  const response = await fetch(
+    `https://graph.facebook.com/${GRAPH_VERSION}/${phoneNumberId}/messages`,
+    {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${token}`,
+        "Content-Type": "application/json",
       },
+      body: JSON.stringify(body),
+      signal: AbortSignal.timeout(10_000),
+    },
+  );
+  if (!response.ok) {
+    // Never log the body we sent: it may contain the phone number.
+    // Graph's error code and message identify the cause without it.
+    const { error } = await response.json().catch(() => ({ error: undefined }));
+    throw new Error(
+      `WhatsApp send failed: HTTP ${response.status} (${error?.code ?? "?"}: ${error?.message ?? "no message"})`,
     );
-    if (!response.ok) {
-      // Never log the body we sent: it may contain the phone number.
-      // Graph's error code and message identify the cause without it.
-      const { error } = await response.json().catch(() => ({ error: undefined }));
-      throw new Error(
-        `WhatsApp send failed: HTTP ${response.status} (${error?.code ?? "?"}: ${error?.message ?? "no message"})`,
-      );
-    }
   }
 }

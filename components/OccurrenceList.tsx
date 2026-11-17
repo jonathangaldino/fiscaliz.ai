@@ -40,6 +40,11 @@ export function OccurrenceList({ occurrences, selectedId, onSelect }: Props) {
               <span className="min-w-0 flex-1">
                 <span className="block text-xs font-medium text-zinc-500">
                   {category.label}
+                  {o.status === "verifying" && (
+                    <span className="ml-2 rounded bg-amber-100 px-1.5 py-0.5 text-amber-800 dark:bg-amber-950 dark:text-amber-300">
+                      Verificando
+                    </span>
+                  )}
                 </span>
                 <span className="block text-sm">{o.summary}</span>
                 <span className="block truncate text-xs text-zinc-500">

@@ -50,17 +50,42 @@ export function toPublicOccurrence(doc: Doc<"occurrences">): PublicOccurrence {
 
 const MAP_LIMIT = 1000;
 
-/** Open occurrences for the map, highest appeal first. */
-export const listOpen = query({
+/** Occurrences on the map (open and verifying), highest appeal first. */
+export const listActive = query({
   args: {},
   returns: v.array(publicOccurrenceValidator),
   handler: async (ctx) => {
+    const byStatus = await Promise.all(
+      (["open", "verifying"] as const).map((status) =>
+        ctx.db
+          .query("occurrences")
+          .withIndex("by_status_appeal", (q) => q.eq("status", status))
+          .order("desc")
+          .take(MAP_LIMIT),
+      ),
+    );
+    return byStatus
+      .flat()
+      .sort((a, b) => b.appeal - a.appeal)
+      .slice(0, MAP_LIMIT)
+      .map(toPublicOccurrence);
+  },
+});
+
+/** History: resolved occurrences, most recently resolved first. */
+export const listResolved = query({
+  args: {},
+  returns: v.array(publicOccurrenceValidator),
+  handler: async (ctx) => {
+    // shortcut: the index sorts by appeal, so this reads up to MAP_LIMIT and
+    // sorts by date in memory; add a by_status_resolvedAt index if it grows.
     const docs = await ctx.db
       .query("occurrences")
-      .withIndex("by_status_appeal", (q) => q.eq("status", "open"))
-      .order("desc")
+      .withIndex("by_status_appeal", (q) => q.eq("status", "resolved"))
       .take(MAP_LIMIT);
-    return docs.map(toPublicOccurrence);
+    return docs
+      .sort((a, b) => (b.resolvedAt ?? 0) - (a.resolvedAt ?? 0))
+      .map(toPublicOccurrence);
   },
 });
 
@@ -75,7 +100,7 @@ export const get = query({
   },
 });
 
-/** An agency's queue: open occurrences, highest appeal first, plus counters. */
+/** An agency's queue: unresolved occurrences, highest appeal first, plus counters. */
 export const listByAgency = query({
   args: { slug: v.string() },
   returns: v.union(
@@ -92,12 +117,17 @@ export const listByAgency = query({
       .withIndex("by_slug", (q) => q.eq("slug", slug))
       .unique();
     if (!agency) return null;
-    const open = await ctx.db
-      .query("occurrences")
-      .withIndex("by_agency_status", (q) =>
-        q.eq("agencyId", agency._id).eq("status", "open"),
-      )
-      .take(MAP_LIMIT);
+    const byStatus = await Promise.all(
+      (["open", "verifying"] as const).map((status) =>
+        ctx.db
+          .query("occurrences")
+          .withIndex("by_agency_status", (q) =>
+            q.eq("agencyId", agency._id).eq("status", status),
+          )
+          .take(MAP_LIMIT),
+      ),
+    );
+    const open = byStatus.flat();
     open.sort((a, b) => b.appeal - a.appeal);
     return {
       occurrences: open.map(toPublicOccurrence),

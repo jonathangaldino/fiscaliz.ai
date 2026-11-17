@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { toGraphPayload } from "../bot/channels/whatsapp";
+import { toGraphPayload, toVerificationPayload } from "../bot/channels/whatsapp";
 import { isValidSignature, parseWebhook } from "./webhook";
 import { sign, statusPayload, webhookPayload } from "./webhook.fixtures";
 
@@ -109,5 +109,48 @@ describe("parseWebhook: audio", () => {
     );
     expect(message.audioMediaId).toBe("media-1");
     expect(message.unsupported).toBeUndefined();
+  });
+});
+
+describe("V2 verification", () => {
+  it("reads a template quick reply as a verification answer", () => {
+    const [message] = parseWebhook(
+      webhookPayload({
+        type: "button",
+        button: { text: "SIM, resolvido", payload: "verify:k57abc123:yes" },
+      }),
+    );
+    expect(message.verification).toEqual({ occurrenceId: "k57abc123", answer: "yes" });
+    expect(message.text).toBeUndefined();
+  });
+
+  it("keeps an unknown quick reply as text", () => {
+    const [message] = parseWebhook(
+      webhookPayload({ type: "button", button: { text: "Oi", payload: "other" } }),
+    );
+    expect(message).toMatchObject({ text: "Oi" });
+    expect(message.verification).toBeUndefined();
+  });
+
+  it("fills the approved template, flattening the summary", () => {
+    const payload = toVerificationPayload(
+      "5543999990000",
+      { id: "k57abc123", summary: "Buraco\nenorme", address: "Rua X, 10" },
+      { yes: "verify:k57abc123:yes", no: "verify:k57abc123:no" },
+    );
+    expect(payload.template.name).toBe("occurrence_verification");
+    expect(payload.template.language.code).toBe("pt_BR");
+    expect(payload.template.components).toEqual([
+      {
+        type: "body",
+        parameters: [
+          { type: "text", text: "Buraco enorme" },
+          { type: "text", text: "Rua X, 10" },
+        ],
+      },
+      { type: "button", sub_type: "quick_reply", index: "0", parameters: [{ type: "payload", payload: "verify:k57abc123:yes" }] },
+      { type: "button", sub_type: "quick_reply", index: "1", parameters: [{ type: "payload", payload: "verify:k57abc123:no" }] },
+      { type: "button", sub_type: "url", index: "2", parameters: [{ type: "text", text: "k57abc123" }] },
+    ]);
   });
 });

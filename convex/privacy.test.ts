@@ -50,8 +50,10 @@ describe("public queries never expose personal data", () => {
   it("leaves out phone, citizen ids and report descriptions", async () => {
     const { t, occurrenceId, citizenId } = await setup();
     const results = await Promise.all([
-      t.query(api.occurrences.listOpen, {}),
+      t.query(api.occurrences.listActive, {}),
+      t.query(api.occurrences.listResolved, {}),
       t.query(api.occurrences.get, { id: occurrenceId }),
+      t.query(api.verification.availability, { id: occurrenceId }),
       t.query(api.occurrences.listByAgency, { slug: "servicos-publicos" }),
       t.query(api.agencies.list, {}),
       t.query(api.agencies.getBySlug, { slug: "servicos-publicos" }),
