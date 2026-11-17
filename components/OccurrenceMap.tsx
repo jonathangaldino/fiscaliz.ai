@@ -6,9 +6,10 @@ import {
   type ExpressionSpecification,
   type GeoJSONSource,
 } from "maplibre-gl";
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import Map, {
   Layer,
+  Popup,
   Source,
   type MapLayerMouseEvent,
   type MapRef,
@@ -32,6 +33,14 @@ const MAP_STYLE = {
   light: "https://tiles.openfreemap.org/styles/positron",
   dark: "https://tiles.openfreemap.org/styles/dark",
 } as const;
+
+/** MapLibre's own labels, in Portuguese for screen readers and tooltips. */
+const MAP_LOCALE = {
+  "Map.Title": "Mapa de ocorrências. As mesmas ocorrências estão na lista.",
+  "AttributionControl.ToggleAttribution": "Mostrar créditos do mapa",
+  "Popup.Close": "Fechar",
+  "Marker.Title": "Local marcado",
+};
 
 const HOME_VIEW = {
   latitude: APUCARANA_CENTER.lat,
@@ -63,6 +72,10 @@ type Props = {
   padding?: { top?: number; bottom?: number; left?: number; right?: number };
   /** Hide the zoom and location buttons. */
   hideControls?: boolean;
+  /** Where the zoom and location buttons sit. */
+  controlsClassName?: string;
+  /** Card shown above the selected pin. */
+  popup?: { lat: number; lng: number; content: ReactNode } | null;
 };
 
 export default function OccurrenceMap({
@@ -73,8 +86,11 @@ export default function OccurrenceMap({
   marker,
   padding,
   hideControls = false,
+  controlsClassName = "top-20 right-3",
+  popup,
 }: Props) {
   const mapRef = useRef<MapRef>(null);
+  const popupOpen = Boolean(popup);
   const scheme = useColorScheme();
   const [hoveredId, setHoveredId] = useState<string | null>(null);
   const [locating, setLocating] = useState(false);
@@ -133,9 +149,11 @@ export default function OccurrenceMap({
         center: [selected.lng, selected.lat],
         zoom: Math.max(mapRef.current.getZoom(), 16),
         duration: 900,
+        // Leave room for the card above the pin.
+        offset: [0, popupOpen ? 120 : 0],
       });
     }
-  }, [selectedId, occurrences]);
+  }, [selectedId, occurrences, popupOpen]);
 
   const paddingKey = JSON.stringify(padding ?? {});
   useEffect(() => {
@@ -216,8 +234,10 @@ export default function OccurrenceMap({
           });
           setReady(true);
         }}
-        cursor={onMapClick ? "crosshair" : undefined}
+        // The simulator (which passes a marker) drops a pin with each click.
+        cursor={marker !== undefined ? "crosshair" : undefined}
         attributionControl={{ compact: true }}
+        locale={MAP_LOCALE}
         style={{ width: "100%", height: "100%" }}
       >
         {ready && (
@@ -311,6 +331,20 @@ export default function OccurrenceMap({
             />
           </Source>
         )}
+        {popup && (
+          <Popup
+            latitude={popup.lat}
+            longitude={popup.lng}
+            anchor="bottom"
+            offset={PIN.height * 1.22 + 8}
+            closeButton={false}
+            closeOnClick={false}
+            maxWidth="none"
+            className="map-card-popup"
+          >
+            {popup.content}
+          </Popup>
+        )}
         <Source id="marker" type="geojson" data={markerData}>
           <Layer
             id="marker-point"
@@ -326,14 +360,16 @@ export default function OccurrenceMap({
       </Map>
 
       {!hideControls && (
-        <div className="absolute top-20 right-3 z-10 flex flex-col gap-2">
+        <div
+          className={`absolute z-10 flex flex-col gap-2 ${controlsClassName}`}
+        >
           <div className="glass flex flex-col overflow-hidden rounded-full">
             <button
               type="button"
               aria-label="Aproximar"
               title="Aproximar"
               onClick={() => mapRef.current?.zoomIn()}
-              className="flex size-11 items-center justify-center transition-colors hover:bg-accent-tint"
+              className="lit flex size-11 items-center justify-center transition-[background-color,transform] duration-(--dur) hover:bg-accent-tint active:scale-90"
             >
               <Glyph name="plus" />
             </button>
@@ -343,7 +379,7 @@ export default function OccurrenceMap({
               aria-label="Afastar"
               title="Afastar"
               onClick={() => mapRef.current?.zoomOut()}
-              className="flex size-11 items-center justify-center transition-colors hover:bg-accent-tint"
+              className="lit flex size-11 items-center justify-center transition-[background-color,transform] duration-(--dur) hover:bg-accent-tint active:scale-90"
             >
               <Glyph name="minus" />
             </button>

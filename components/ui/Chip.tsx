@@ -19,7 +19,7 @@ export function Chip({
     <button
       type={type}
       aria-pressed={selected}
-      className={`inline-flex h-9 shrink-0 select-none items-center gap-1.5 rounded-full px-3 text-sm font-medium transition-[transform,background-color,color,box-shadow] duration-(--dur) ease-out active:scale-95 pointer-coarse:h-11 ${
+      className={`lit inline-flex h-9 shrink-0 select-none items-center gap-1.5 rounded-full px-3 text-sm font-medium transition-[transform,background-color,color,box-shadow] duration-(--dur) ease-out active:scale-95 pointer-coarse:h-11 ${
         selected
           ? "bg-accent-solid text-on-accent shadow-sm"
           : "glass text-fg hover:bg-(--glass-bg-strong)"

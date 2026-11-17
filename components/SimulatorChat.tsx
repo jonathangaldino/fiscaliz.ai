@@ -4,6 +4,9 @@ import { useMutation, useQuery } from "convex/react";
 import dynamic from "next/dynamic";
 import { useEffect, useRef, useState, useSyncExternalStore } from "react";
 import { api } from "@/convex/_generated/api";
+import { playSound } from "@/lib/sound";
+import { Button } from "./ui/Button";
+import { Glyph } from "./ui/Glyph";
 
 const OccurrenceMap = dynamic(() => import("./OccurrenceMap"), { ssr: false });
 
@@ -62,7 +65,7 @@ function Linkified({ text }: { text: string }) {
             href={part}
             target="_blank"
             rel="noreferrer"
-            className="break-all text-blue-700 underline dark:text-blue-300"
+            className="break-all font-medium text-accent underline"
           >
             {part}
           </a>
@@ -94,6 +97,20 @@ export function SimulatorChat() {
     bottomRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [chat?.length]);
 
+  // A chime when the bot answers (not for the history loaded on open).
+  const seenBotMessages = useRef<number | null>(null);
+  const botMessages = chat?.filter((m) => m.author === "bot").length;
+  useEffect(() => {
+    if (botMessages === undefined) return;
+    if (
+      seenBotMessages.current !== null &&
+      botMessages > seenBotMessages.current
+    ) {
+      playSound("receive");
+    }
+    seenBotMessages.current = botMessages;
+  }, [botMessages]);
+
   const last = chat?.at(-1);
   const waitingForBot = last?.author === "citizen";
   const buttons = last?.author === "bot" ? last.buttons : undefined;
@@ -105,6 +122,7 @@ export function SimulatorChat() {
   }) {
     if (!sessionId) return;
     setError(null);
+    playSound(payload.button ? "tap" : "send");
     try {
       await send({ sessionId, ...payload });
     } catch {
@@ -113,27 +131,63 @@ export function SimulatorChat() {
   }
 
   return (
-    <div className="flex min-h-0 flex-1 flex-col md:flex-row">
-      <section className="flex min-h-0 flex-1 flex-col md:max-w-md md:border-r md:border-zinc-200 dark:md:border-zinc-800">
-        <div className="flex items-center justify-between border-b border-zinc-200 px-4 py-2 text-sm dark:border-zinc-800">
-          <span className="text-zinc-500">
-            Simulador do WhatsApp · dados fictícios
+    <main id="conteudo" className="relative min-h-0 flex-1 overflow-hidden">
+      <div className="absolute inset-0">
+        <OccurrenceMap
+          occurrences={occurrences ?? []}
+          marker={pin}
+          onMapClick={(point) => {
+            playSound("tap");
+            setPin(point);
+          }}
+          padding={{ top: 72 }}
+        />
+      </div>
+
+      <p className="glass pointer-events-none absolute top-20 left-1/2 z-10 -translate-x-1/2 rounded-full px-4 py-2 text-sm font-medium whitespace-nowrap max-md:hidden md:left-[calc(50%+210px)]">
+        Clique no mapa para marcar o local do problema
+      </p>
+
+      <section
+        aria-label="Simulador do WhatsApp"
+        className="glass-strong absolute inset-x-0 bottom-0 z-20 flex h-[62dvh] flex-col overflow-hidden rounded-t-panel md:top-20 md:right-auto md:bottom-3 md:left-3 md:h-auto md:w-[400px] md:rounded-panel"
+      >
+        <div className="flex items-center gap-3 border-b border-line px-4 py-3">
+          <span
+            aria-hidden
+            className="flex size-10 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-[#25d366] to-[#128c7e] text-white shadow-sm"
+          >
+            <svg viewBox="0 0 24 24" className="size-5" fill="currentColor">
+              <path d="M12 3a9 9 0 0 0-7.8 13.5L3 21l4.6-1.2A9 9 0 1 0 12 3Zm0 1.8a7.2 7.2 0 1 1-3.7 13.4l-.3-.2-2.7.7.7-2.6-.2-.3A7.2 7.2 0 0 1 12 4.8Z" />
+            </svg>
           </span>
-          <button
-            type="button"
+          <div className="min-w-0 flex-1">
+            <h1 className="text-[15px] leading-tight font-semibold">
+              Fiscaliz.ai no WhatsApp
+            </h1>
+            <p className="text-xs text-muted">Simulador · dados fictícios</p>
+          </div>
+          <Button
+            variant="ghost"
+            size="sm"
             onClick={() => {
+              playSound("close");
               resetSession();
               setPin(null);
             }}
-            className="text-blue-600 underline"
           >
             Nova conversa
-          </button>
+          </Button>
         </div>
 
-        <div className="min-h-0 flex-1 space-y-2 overflow-y-auto bg-[#efeae2] p-3 dark:bg-zinc-900">
+        <div
+          role="log"
+          aria-live="polite"
+          aria-label="Mensagens"
+          className="min-h-0 flex-1 space-y-2 overflow-y-auto overscroll-contain bg-[#efeae2]/70 p-3 dark:bg-black/25"
+        >
           {chat?.length === 0 && (
-            <p className="mx-auto max-w-xs rounded-lg bg-white/80 p-3 text-center text-xs text-zinc-600 dark:bg-zinc-800 dark:text-zinc-300">
+            <p className="mx-auto max-w-xs rounded-card bg-surface/85 p-3 text-center text-xs text-muted shadow-sm">
               Descreva um problema da cidade, como &quot;tem um buraco enorme na
               rua&quot;, e marque o local clicando no mapa.
             </p>
@@ -141,56 +195,66 @@ export function SimulatorChat() {
           {chat?.map((message) => (
             <div
               key={message._id}
-              className={`max-w-[85%] whitespace-pre-line rounded-lg px-3 py-2 text-sm shadow-sm ${
+              className={`max-w-[85%] animate-[card-in_var(--dur)_var(--ease-out)] rounded-2xl px-3 py-2 text-[15px] leading-snug whitespace-pre-line text-fg shadow-sm ${
                 message.author === "citizen"
-                  ? "ml-auto bg-[#d9fdd3] dark:bg-emerald-900"
-                  : "bg-white dark:bg-zinc-800"
+                  ? "ml-auto rounded-br-md bg-[#d9fdd3] dark:bg-[#144d37]"
+                  : "rounded-bl-md bg-surface"
               }`}
             >
+              <span className="sr-only">
+                {message.author === "citizen" ? "Você: " : "Fiscaliz.ai: "}
+              </span>
               <Linkified text={message.text} />
             </div>
           ))}
           {waitingForBot && (
-            <p className="text-xs text-zinc-500" aria-live="polite">
-              digitando…
+            <p className="flex items-center gap-1 px-1 text-xs text-muted">
+              <span className="sr-only">Fiscaliz.ai está digitando</span>
+              <span aria-hidden className="flex gap-1">
+                <span className="size-1.5 animate-bounce rounded-full bg-current [animation-delay:-0.3s]" />
+                <span className="size-1.5 animate-bounce rounded-full bg-current [animation-delay:-0.15s]" />
+                <span className="size-1.5 animate-bounce rounded-full bg-current" />
+              </span>
             </p>
           )}
           <div ref={bottomRef} />
         </div>
 
         {buttons && (
-          <div className="flex gap-2 border-t border-zinc-200 p-2 dark:border-zinc-800">
+          <div className="flex gap-2 border-t border-line p-2">
             {buttons.map((button) => (
-              <button
+              <Button
                 key={button.id}
-                type="button"
+                variant="glass"
                 onClick={() => submit({ button: button.id })}
-                className="flex-1 rounded-lg border border-emerald-600 py-2 text-sm font-semibold text-emerald-700 hover:bg-emerald-50 dark:text-emerald-300 dark:hover:bg-emerald-950"
+                className="flex-1 font-semibold text-accent"
               >
                 {button.title}
-              </button>
+              </Button>
             ))}
           </div>
         )}
 
         {pin && (
-          <div className="flex items-center justify-between gap-2 border-t border-zinc-200 px-3 py-2 text-sm dark:border-zinc-800">
-            <span>📍 Local marcado no mapa</span>
-            <button
-              type="button"
+          <div className="flex items-center justify-between gap-2 border-t border-line px-3 py-2 text-sm">
+            <span className="flex items-center gap-2">
+              <Glyph name="locate" size={18} className="text-accent" />
+              Local marcado no mapa
+            </span>
+            <Button
+              size="sm"
               onClick={async () => {
                 await submit({ location: pin });
                 setPin(null);
               }}
-              className="rounded-lg bg-emerald-600 px-3 py-1 font-medium text-white"
             >
               Enviar localização
-            </button>
+            </Button>
           </div>
         )}
 
         <form
-          className="flex gap-2 border-t border-zinc-200 p-2 dark:border-zinc-800"
+          className="flex gap-2 border-t border-line p-2 pb-[max(0.5rem,env(safe-area-inset-bottom))]"
           onSubmit={async (event) => {
             event.preventDefault();
             const value = text.trim();
@@ -205,29 +269,18 @@ export function SimulatorChat() {
             maxLength={1000}
             placeholder="Mensagem"
             aria-label="Mensagem"
-            className="min-w-0 flex-1 rounded-full border border-zinc-300 px-4 py-2 text-sm dark:border-zinc-700 dark:bg-zinc-950"
+            className="h-11 min-w-0 flex-1 rounded-full border border-line bg-surface px-4 text-[15px] text-fg placeholder:text-subtle"
           />
-          <button
-            type="submit"
-            className="rounded-full bg-emerald-600 px-4 py-2 text-sm font-medium text-white disabled:opacity-50"
-            disabled={!text.trim()}
-          >
+          <Button type="submit" disabled={!text.trim()}>
             Enviar
-          </button>
+          </Button>
         </form>
-        {error && <p className="px-3 pb-2 text-xs text-red-600">{error}</p>}
+        {error && (
+          <p role="alert" className="px-3 pb-2 text-xs text-danger">
+            {error}
+          </p>
+        )}
       </section>
-
-      <section className="relative h-[45vh] md:h-auto md:flex-1">
-        <p className="absolute left-3 top-3 z-10 rounded bg-white/90 px-2 py-1 text-xs shadow dark:bg-zinc-900/90">
-          Clique no mapa para marcar o local do problema
-        </p>
-        <OccurrenceMap
-          occurrences={occurrences ?? []}
-          marker={pin}
-          onMapClick={setPin}
-        />
-      </section>
-    </div>
+    </main>
   );
 }
