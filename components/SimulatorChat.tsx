@@ -131,7 +131,7 @@ export function SimulatorChat() {
   }
 
   return (
-    <div className="relative min-h-0 flex-1 overflow-hidden">
+    <main id="conteudo" className="relative min-h-0 flex-1 overflow-hidden">
       <div className="absolute inset-0">
         <OccurrenceMap
           occurrences={occurrences ?? []}
@@ -281,6 +281,6 @@ export function SimulatorChat() {
           </p>
         )}
       </section>
-    </div>
+    </main>
   );
 }
