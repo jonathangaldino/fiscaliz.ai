@@ -3,50 +3,30 @@
 import {
   AGENCIES,
   AGENCY_SLUGS,
-  CATEGORIES,
-  CATEGORY_KEYS,
+  type AgencySlug,
 } from "@/convex/lib/categories";
+import { Glyph } from "./ui/Glyph";
 
-type Props = {
-  category: string | null;
-  agency: string | null;
-  onChange: (next: { category: string | null; agency: string | null }) => void;
-};
-
-const selectClass =
-  "min-w-0 flex-1 rounded-md border border-zinc-300 bg-white px-2 py-1.5 text-sm dark:border-zinc-700 dark:bg-zinc-950";
-
-export function Filters({ category, agency, onChange }: Props) {
+/** Agency filter. Categories are filtered with the icon bar (CategoryBar). */
+export function AgencyFilter({
+  agency,
+  onChange,
+}: {
+  agency: AgencySlug | null;
+  onChange: (agency: AgencySlug | null) => void;
+}) {
   return (
-    <div className="flex gap-2 border-b border-zinc-200 p-2 dark:border-zinc-800">
-      <label className="sr-only" htmlFor="filter-category">
-        Categoria
-      </label>
-      <select
-        id="filter-category"
-        className={selectClass}
-        value={category ?? ""}
-        onChange={(event) =>
-          onChange({ category: event.target.value || null, agency })
-        }
-      >
-        <option value="">Todas as categorias</option>
-        {CATEGORY_KEYS.map((key) => (
-          <option key={key} value={key}>
-            {CATEGORIES[key].label}
-          </option>
-        ))}
-      </select>
+    <div className="relative">
       <label className="sr-only" htmlFor="filter-agency">
-        Órgão
+        Órgão responsável
       </label>
       <select
         id="filter-agency"
-        className={selectClass}
         value={agency ?? ""}
         onChange={(event) =>
-          onChange({ category, agency: event.target.value || null })
+          onChange((event.target.value || null) as AgencySlug | null)
         }
+        className="h-9 w-full appearance-none rounded-full border border-line bg-(--glass-bg) pr-9 pl-3.5 text-sm font-medium text-fg transition-colors hover:bg-surface pointer-coarse:h-11"
       >
         <option value="">Todos os órgãos</option>
         {AGENCY_SLUGS.map((slug) => (
@@ -55,6 +35,11 @@ export function Filters({ category, agency, onChange }: Props) {
           </option>
         ))}
       </select>
+      <Glyph
+        name="chevronDown"
+        size={16}
+        className="pointer-events-none absolute top-1/2 right-3 -translate-y-1/2 text-muted"
+      />
     </div>
   );
 }

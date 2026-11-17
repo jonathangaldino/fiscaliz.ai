@@ -3,18 +3,70 @@
 import { useQuery } from "convex/react";
 import dynamic from "next/dynamic";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { api } from "@/convex/_generated/api";
-import { isAgencySlug, isCategoryKey } from "@/convex/lib/categories";
-import { Filters } from "./Filters";
+import {
+  AGENCIES,
+  CATEGORIES,
+  isAgencySlug,
+  isCategoryKey,
+  type AgencySlug,
+  type CategoryKey,
+} from "@/convex/lib/categories";
+import type { PublicOccurrence } from "@/convex/occurrences";
+import { useMediaQuery } from "@/lib/media";
+import { matchesSearch } from "@/lib/search";
+import { playSound } from "@/lib/sound";
+import { CategoryBar } from "./CategoryBar";
+import { AgencyFilter } from "./Filters";
+import { OccurrenceCard } from "./OccurrenceCard";
 import { OccurrenceList } from "./OccurrenceList";
+import { SearchField } from "./SearchField";
+import { Glyph } from "./ui/Glyph";
 
 // MapLibre needs the browser (WebGL); never render it on the server.
 const OccurrenceMap = dynamic(() => import("./OccurrenceMap"), { ssr: false });
 
+/** Width of the floating panel on desktop, plus its margin. */
+const PANEL_SPACE = 404;
+
+function searchText(o: PublicOccurrence): string {
+  const agency = o.agencySlug ? AGENCIES[o.agencySlug as AgencySlug].name : "";
+  return `${o.summary} ${o.address} ${CATEGORIES[o.category].label} ${agency}`;
+}
+
+/**
+ * After the card closes, give focus back to where the person was: the row on
+ * desktop, the sheet handle on the phone.
+ */
+function focusAfterClose(closedId: string, desktop: boolean) {
+  // Only when focus was in the card (or lost with it), not after a map click.
+  const active = document.activeElement;
+  if (
+    active &&
+    active !== document.body &&
+    !active.closest("[data-occurrence-card]")
+  ) {
+    return;
+  }
+  requestAnimationFrame(() => {
+    const target = desktop
+      ? document.querySelector<HTMLElement>(
+          `#occurrence-list [data-id="${closedId}"] button`,
+        )
+      : document.querySelector<HTMLElement>(
+          '[aria-controls="occurrence-list"]',
+        );
+    target?.focus();
+  });
+}
+
 export function Dashboard() {
   const all = useQuery(api.occurrences.listActive);
   const [selectedId, setSelectedId] = useState<string | null>(null);
+  const [search, setSearch] = useState("");
+  const [sheetOpen, setSheetOpen] = useState(false);
+  const desktop = useMediaQuery("(min-width: 768px)");
 
   // Filters live in the URL so the view can be shared as a link.
   const router = useRouter();
@@ -22,59 +74,235 @@ export function Dashboard() {
   const params = useSearchParams();
   const rawCategory = params.get("categoria");
   const rawAgency = params.get("orgao");
-  const category = rawCategory && isCategoryKey(rawCategory) ? rawCategory : null;
+  const category =
+    rawCategory && isCategoryKey(rawCategory) ? rawCategory : null;
   const agency = rawAgency && isAgencySlug(rawAgency) ? rawAgency : null;
 
-  const occurrences = useMemo(
+  // Agency and search apply first; the category counts are taken from here.
+  const scoped = useMemo(
     () =>
       all?.filter(
         (o) =>
-          (!category || o.category === category) &&
-          (!agency || o.agencySlug === agency),
+          (!agency || o.agencySlug === agency) &&
+          matchesSearch(searchText(o), search),
       ),
-    [all, category, agency],
+    [all, agency, search],
   );
 
-  function setFilters(next: { category: string | null; agency: string | null }) {
-    const search = new URLSearchParams();
-    if (next.category) search.set("categoria", next.category);
-    if (next.agency) search.set("orgao", next.agency);
-    const query = search.toString();
-    router.replace(query ? `${pathname}?${query}` : pathname, { scroll: false });
+  const counts = useMemo(() => {
+    const result: Partial<Record<CategoryKey, number>> = {};
+    for (const o of scoped ?? []) {
+      result[o.category] = (result[o.category] ?? 0) + 1;
+    }
+    return result;
+  }, [scoped]);
+
+  const occurrences = useMemo(
+    () => scoped?.filter((o) => !category || o.category === category),
+    [scoped, category],
+  );
+
+  function setFilters(next: {
+    category: CategoryKey | null;
+    agency: AgencySlug | null;
+  }) {
+    const query = new URLSearchParams();
+    if (next.category) query.set("categoria", next.category);
+    if (next.agency) query.set("orgao", next.agency);
+    const value = query.toString();
+    router.replace(value ? `${pathname}?${value}` : pathname, {
+      scroll: false,
+    });
     setSelectedId(null);
   }
 
+  function select(id: string | null) {
+    if (id === selectedId) return;
+    playSound(id ? "open" : "close");
+    setSelectedId(id);
+    if (id === null && selectedId) focusAfterClose(selectedId, desktop);
+  }
+
+  // Esc closes the card from anywhere on the page.
+  useEffect(() => {
+    if (!selectedId) return;
+    function onKeyDown(event: KeyboardEvent) {
+      if (event.key === "Escape" && !event.defaultPrevented && selectedId) {
+        playSound("close");
+        setSelectedId(null);
+        focusAfterClose(selectedId, desktop);
+      }
+    }
+    window.addEventListener("keydown", onKeyDown);
+    return () => window.removeEventListener("keydown", onKeyDown);
+  }, [selectedId, desktop]);
+
+  function setCategory(next: CategoryKey | null) {
+    playSound(next ? "toggleOn" : "toggleOff");
+    setFilters({ category: next, agency });
+  }
+
+  const selected = occurrences?.find((o) => o._id === selectedId) ?? null;
+  const card = selected && (
+    <OccurrenceCard
+      occurrence={selected}
+      onClose={() => select(null)}
+      autoFocus={!desktop}
+      className="w-[min(380px,calc(100vw-1.5rem))]"
+    />
+  );
+
+  const filtered = Boolean(category || agency || search.trim());
+  const count = occurrences?.length;
+
   return (
-    <div className="flex min-h-0 flex-1 flex-col md:flex-row">
-      <section className="relative h-[55vh] md:h-auto md:flex-1">
-        <OccurrenceMap
-          occurrences={occurrences ?? []}
-          selectedId={selectedId}
-          onSelect={setSelectedId}
+    <main id="conteudo" className="relative min-h-0 flex-1 overflow-hidden">
+      {/* Desktop: icon dock over the map, to the right of the panel. */}
+      <div
+        className="pointer-events-none absolute right-16 bottom-4 z-10 hidden justify-center md:flex"
+        style={{ left: PANEL_SPACE }}
+      >
+        <CategoryBar
+          variant="dock"
+          counts={counts}
+          selected={category}
+          onChange={setCategory}
+          className="pointer-events-auto"
         />
-      </section>
-      <aside className="flex min-h-0 flex-1 flex-col border-zinc-200 md:w-96 md:flex-none md:border-l dark:border-zinc-800">
-        <h2 className="border-b border-zinc-200 px-4 py-3 text-sm font-semibold dark:border-zinc-800">
-          Ocorrências abertas
-          {occurrences && (
-            <span className="ml-1 font-normal text-zinc-500">
-              ({occurrences.length})
+      </div>
+
+      {/* DOM order is the keyboard order: category dock, panel (search,
+          agency, list), then the map. Positions are absolute. */}
+      {/* Panel: floating column on desktop, bottom sheet on the phone. */}
+      <aside
+        aria-label="Ocorrências"
+        hidden={!desktop && Boolean(selected)}
+        className={`glass-strong absolute inset-x-0 bottom-0 z-20 flex flex-col overflow-hidden rounded-t-panel transition-[height] duration-(--dur-slow) ease-out md:top-20 md:right-auto md:bottom-3 md:left-3 md:h-auto md:w-[380px] md:rounded-panel ${
+          sheetOpen ? "h-[72dvh]" : "h-auto"
+        }`}
+      >
+        <button
+          type="button"
+          onClick={() => {
+            playSound("tap");
+            setSheetOpen((open) => !open);
+          }}
+          aria-expanded={sheetOpen}
+          aria-controls="occurrence-list"
+          className="flex w-full flex-col items-center pt-2 md:hidden"
+        >
+          <span aria-hidden className="h-1.5 w-10 rounded-full bg-fg/20" />
+          <span className="sr-only">
+            {sheetOpen ? "Recolher lista" : "Expandir lista"}
+          </span>
+        </button>
+
+        <div className="space-y-3 px-4 pt-2 pb-3 md:pt-4">
+          <div className="flex items-baseline justify-between gap-2">
+            <h1 className="text-xl font-semibold tracking-tight">
+              Ocorrências abertas
+            </h1>
+            <span
+              className="text-sm text-muted tabular-nums"
+              aria-live="polite"
+              aria-atomic
+            >
+              {count === undefined
+                ? ""
+                : count === 1
+                  ? "1 ocorrência"
+                  : `${count} ocorrências`}
             </span>
-          )}
-        </h2>
-        <Filters category={category} agency={agency} onChange={setFilters} />
-        <div className="min-h-0 flex-1 overflow-y-auto">
+          </div>
+          <SearchField value={search} onChange={setSearch} />
+        </div>
+
+        <CategoryBar
+          variant="row"
+          counts={counts}
+          selected={category}
+          onChange={setCategory}
+          className={`md:hidden ${sheetOpen ? "" : "pb-[max(0.75rem,env(safe-area-inset-bottom))]"}`}
+        />
+
+        <div
+          className={`px-4 pt-2 pb-3 md:pt-0 ${sheetOpen ? "" : "max-md:hidden"}`}
+        >
+          <AgencyFilter
+            agency={agency}
+            onChange={(next) => {
+              playSound("tap");
+              setFilters({ category, agency: next });
+            }}
+          />
+        </div>
+
+        <div
+          id="occurrence-list"
+          className={`min-h-0 flex-1 overflow-y-auto overscroll-contain border-t border-line pt-2 ${
+            sheetOpen ? "" : "max-md:hidden"
+          }`}
+        >
           {occurrences === undefined ? (
-            <p className="p-4 text-sm text-zinc-500">Carregando…</p>
+            <p className="p-4 text-sm text-muted">Carregando…</p>
           ) : (
             <OccurrenceList
               occurrences={occurrences}
               selectedId={selectedId}
-              onSelect={setSelectedId}
+              onSelect={(id) => {
+                select(id);
+                setSheetOpen(false);
+              }}
+              emptyMessage={
+                filtered
+                  ? "Nenhuma ocorrência com esses filtros."
+                  : "Nenhuma ocorrência aberta."
+              }
             />
+          )}
+          {filtered && (
+            <div className="px-4 pb-4">
+              <button
+                type="button"
+                onClick={() => {
+                  playSound("toggleOff");
+                  setSearch("");
+                  setFilters({ category: null, agency: null });
+                }}
+                className="inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-sm font-medium text-accent hover:bg-accent-tint"
+              >
+                <Glyph name="close" size={14} />
+                Limpar filtros
+              </button>
+            </div>
           )}
         </div>
       </aside>
-    </div>
+      <div className="absolute inset-0">
+        <OccurrenceMap
+          occurrences={occurrences ?? []}
+          selectedId={selectedId}
+          onSelect={select}
+          onMapClick={() => selectedId && select(null)}
+          popup={
+            desktop && selected
+              ? { lat: selected.lat, lng: selected.lng, content: card }
+              : null
+          }
+          padding={
+            desktop
+              ? { top: 72, left: PANEL_SPACE, bottom: 110 }
+              : { top: 72, bottom: 180 }
+          }
+        />
+      </div>
+
+      {/* Phone: the card takes the place of the sheet. */}
+      {!desktop && selected && (
+        <div className="absolute inset-x-3 bottom-[max(0.75rem,env(safe-area-inset-bottom))] z-30 flex justify-center">
+          {card}
+        </div>
+      )}
+    </main>
   );
 }
