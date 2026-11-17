@@ -193,3 +193,22 @@ body {
 ::selection {
   background: var(--accent-tint);
 }
+
+@keyframes card-in {
+  from {
+    opacity: 0;
+    transform: translateY(8px) scale(0.97);
+  }
+}
+
+/* Map popups carry our own glass card: drop MapLibre's box and tip. */
+.map-card-popup .maplibregl-popup-content {
+  background: transparent;
+  border-radius: 0;
+  box-shadow: none;
+  padding: 0;
+}
+
+.map-card-popup .maplibregl-popup-tip {
+  display: none;
+}

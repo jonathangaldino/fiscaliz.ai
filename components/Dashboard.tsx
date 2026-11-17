@@ -18,6 +18,7 @@ import { useMediaQuery } from "@/lib/media";
 import { matchesSearch } from "@/lib/search";
 import { CategoryBar } from "./CategoryBar";
 import { AgencyFilter } from "./Filters";
+import { OccurrenceCard } from "./OccurrenceCard";
 import { OccurrenceList } from "./OccurrenceList";
 import { SearchField } from "./SearchField";
 import { Glyph } from "./ui/Glyph";
@@ -88,6 +89,15 @@ export function Dashboard() {
     setSelectedId(null);
   }
 
+  const selected = occurrences?.find((o) => o._id === selectedId) ?? null;
+  const card = selected && (
+    <OccurrenceCard
+      occurrence={selected}
+      onClose={() => setSelectedId(null)}
+      className="w-[min(380px,calc(100vw-1.5rem))]"
+    />
+  );
+
   const filtered = Boolean(category || agency || search.trim());
   const count = occurrences?.length;
 
@@ -97,10 +107,13 @@ export function Dashboard() {
         <OccurrenceMap
           occurrences={occurrences ?? []}
           selectedId={selectedId}
-          onSelect={(id) => {
-            setSelectedId(id);
-            setSheetOpen(true);
-          }}
+          onSelect={setSelectedId}
+          onMapClick={() => setSelectedId(null)}
+          popup={
+            desktop && selected
+              ? { lat: selected.lat, lng: selected.lng, content: card }
+              : null
+          }
           padding={
             desktop
               ? { top: 72, left: PANEL_SPACE, bottom: 110 }
@@ -123,9 +136,17 @@ export function Dashboard() {
         />
       </div>
 
+      {/* Phone: the card takes the place of the sheet. */}
+      {!desktop && selected && (
+        <div className="absolute inset-x-3 bottom-[max(0.75rem,env(safe-area-inset-bottom))] z-30 flex justify-center">
+          {card}
+        </div>
+      )}
+
       {/* Panel: floating column on desktop, bottom sheet on the phone. */}
       <aside
         aria-label="Ocorrências"
+        hidden={!desktop && Boolean(selected)}
         className={`glass-strong absolute inset-x-0 bottom-0 z-20 flex flex-col overflow-hidden rounded-t-panel transition-[height] duration-(--dur-slow) ease-out md:top-20 md:right-auto md:bottom-3 md:left-3 md:h-auto md:w-[380px] md:rounded-panel ${
           sheetOpen ? "h-[72dvh]" : "h-auto"
         }`}
@@ -192,7 +213,10 @@ export function Dashboard() {
             <OccurrenceList
               occurrences={occurrences}
               selectedId={selectedId}
-              onSelect={setSelectedId}
+              onSelect={(id) => {
+                setSelectedId(id);
+                setSheetOpen(false);
+              }}
               emptyMessage={
                 filtered
                   ? "Nenhuma ocorrência com esses filtros."

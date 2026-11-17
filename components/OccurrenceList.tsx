@@ -1,4 +1,3 @@
-import Link from "next/link";
 import type { PublicOccurrence } from "@/convex/occurrences";
 import { AGENCIES, CATEGORIES, type AgencySlug } from "@/convex/lib/categories";
 import { formatAppeal, formatDate } from "@/lib/format";
@@ -76,15 +75,6 @@ export function OccurrenceList({
                 <span className="sr-only">Apelo: {formatAppeal(o.appeal)}</span>
               </span>
             </button>
-            {selected && (
-              <Link
-                href={`/ocorrencias/${o._id}`}
-                className="mt-1 ml-16 inline-flex items-center gap-1 rounded-full px-2 py-1 text-xs font-semibold text-accent hover:bg-accent-tint"
-              >
-                Ver detalhes da ocorrência
-                <Glyph name="chevronRight" size={14} />
-              </Link>
-            )}
           </li>
         );
       })}
