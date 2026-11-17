@@ -13,6 +13,7 @@ const PATHS = {
   chevronUp: "m6 15 6-6 6 6",
   chevronDown: "m6 9 6 6 6-6",
   chevronRight: "m9 6 6 6-6 6",
+  chevronLeft: "m15 6-6 6 6 6",
   sound: "M4 9v6h4l5 4V5L8 9H4Zm12.5-.5a5 5 0 0 1 0 7M19 6a8.5 8.5 0 0 1 0 12",
   mute: "M4 9v6h4l5 4V5L8 9H4Zm12 .5 5 5m0-5-5 5",
   phone:

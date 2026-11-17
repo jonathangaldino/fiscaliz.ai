@@ -10,10 +10,10 @@ export default function PrivacyPage() {
   return (
     <>
       <Header />
-      <article className="mx-auto w-full max-w-2xl space-y-6 p-6 text-sm leading-relaxed">
+      <article className="glass-strong mx-auto my-6 w-[calc(100%-2rem)] max-w-2xl space-y-6 rounded-panel p-6 text-[15px] leading-relaxed sm:p-8">
         <div className="space-y-1">
-          <h1 className="text-2xl font-semibold">Política de Privacidade</h1>
-          <p className="text-zinc-500">Atualizada em {UPDATED_AT}</p>
+          <h1 className="text-3xl font-semibold tracking-tight">Política de Privacidade</h1>
+          <p className="text-muted">Atualizada em {UPDATED_AT}</p>
         </div>
 
         <Section title="Quem somos">
