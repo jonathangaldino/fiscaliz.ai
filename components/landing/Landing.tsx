@@ -327,13 +327,13 @@ function Categories() {
       title="Os problemas da rua, cada um no seu órgão"
       lead="A IA escolhe a categoria e, com ela, a secretaria responsável, seguindo as competências oficiais da Prefeitura de Apucarana."
     >
-      <ul className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-5">
+      <ul className="grid grid-cols-2 gap-3 md:grid-cols-4">
         {REPORTABLE.map((key, index) => {
           const category = CATEGORIES[key];
           const agency = category.agency ? AGENCIES[category.agency] : null;
           return (
             <li key={key}>
-              <Reveal delay={(index % 5) * 0.04}>
+              <Reveal delay={(index % 4) * 0.04} className="h-full">
                 <div className="glass-strong lit lift group flex h-full flex-col items-center rounded-card px-3 pt-5 pb-4 text-center">
                   <CategoryIcon
                     category={key}
@@ -535,7 +535,7 @@ function CityHall() {
         <ul className="grid gap-4 sm:grid-cols-2">
           {CITY_FEATURES.map((feature, index) => (
             <li key={feature.title}>
-              <Reveal delay={(index % 2) * 0.05}>
+              <Reveal delay={(index % 2) * 0.05} className="h-full">
                 <div className="glass-strong lit h-full rounded-panel p-5">
                   <h3 className="font-semibold tracking-tight">
                     {feature.title}
