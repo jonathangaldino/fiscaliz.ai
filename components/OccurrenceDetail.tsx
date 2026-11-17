@@ -41,7 +41,7 @@ export function OccurrenceDetail({ id }: { id: string }) {
   return (
     <Page>
       <Link
-        href={`/?categoria=${occurrence.category}`}
+        href={`/mapa?categoria=${occurrence.category}`}
         className="-ml-2 inline-flex items-center gap-1 rounded-full px-2 py-1.5 text-sm font-medium text-accent hover:bg-accent-tint"
       >
         <Glyph name="chevronLeft" size={16} />

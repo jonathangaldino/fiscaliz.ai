@@ -10,7 +10,7 @@ const LINKS: {
   /** Only from this width up, to keep the bar on one line on phones. */
   wide?: boolean;
 }[] = [
-  { href: "/", label: "Mapa" },
+  { href: "/mapa", label: "Mapa" },
   { href: "/resolvidas", label: "Resolvidas" },
   { href: "/simular", label: "Simular relato", short: "Simular" },
   { href: "/confiabilidade", label: "Confiabilidade", wide: true },
