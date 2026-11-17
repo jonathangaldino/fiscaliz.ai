@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-label="Fiscaliz.ai">
+  <title>Fiscaliz.ai</title>
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#2B8CFF"/><stop offset="1" stop-color="#0A4596"/></linearGradient>
+    <linearGradient id="gl" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#fff" stop-opacity=".28"/><stop offset=".55" stop-color="#fff" stop-opacity="0"/></linearGradient>
+    <linearGradient id="ck" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#1A7BF2"/><stop offset="1" stop-color="#0A4FA8"/></linearGradient>
+  </defs>
+  <rect width="512" height="512" rx="116" fill="url(#bg)"/>
+  <rect width="512" height="512" rx="116" fill="url(#gl)"/>
+  <path d="M208 92H304A96 96 0 0 1 400 188V220A96 96 0 0 1 304 316H296L264 406Q256 424 248 406L216 316H208A96 96 0 0 1 112 220V188A96 96 0 0 1 208 92Z" fill="#000" opacity=".18" transform="translate(0 10)"/>
+  <path d="M208 92H304A96 96 0 0 1 400 188V220A96 96 0 0 1 304 316H296L264 406Q256 424 248 406L216 316H208A96 96 0 0 1 112 220V188A96 96 0 0 1 208 92Z" fill="#fff"/>
+  <path d="M198 206L238 246L316 168" fill="none" stroke="url(#ck)" stroke-width="36" stroke-linecap="round" stroke-linejoin="round"/>
+</svg>

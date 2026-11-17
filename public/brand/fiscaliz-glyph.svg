@@ -1,0 +1,5 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="96 80 320 360" role="img" aria-label="Fiscaliz.ai">
+  <title>Fiscaliz.ai</title>
+  <mask id="m"><path d="M208 92H304A96 96 0 0 1 400 188V220A96 96 0 0 1 304 316H296L264 406Q256 424 248 406L216 316H208A96 96 0 0 1 112 220V188A96 96 0 0 1 208 92Z" fill="#fff"/><path d="M198 206L238 246L316 168" fill="none" stroke="#000" stroke-width="36" stroke-linecap="round" stroke-linejoin="round"/></mask>
+  <rect x="96" y="80" width="320" height="360" fill="currentColor" mask="url(#m)"/>
+</svg>
