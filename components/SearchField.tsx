@@ -43,7 +43,7 @@ export function SearchField({
           type="button"
           onClick={() => onChange("")}
           aria-label="Limpar busca"
-          className="absolute top-1/2 right-1.5 flex size-8 -translate-y-1/2 items-center justify-center rounded-full text-muted hover:bg-accent-tint hover:text-fg"
+          className="absolute top-1/2 right-1.5 flex size-8 pointer-coarse:size-10 -translate-y-1/2 items-center justify-center rounded-full text-muted hover:bg-accent-tint hover:text-fg"
         >
           <Glyph name="close" size={16} />
         </button>

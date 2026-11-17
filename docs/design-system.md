@@ -99,3 +99,19 @@ Regras:
 - O botão de som no topo liga e desliga tudo (`aria-pressed`); a escolha fica salva no navegador.
 - O som nunca carrega informação sozinho: tudo o que ele confirma também aparece na tela.
 - Som novo: acrescentar ao `SoundName` e ao mapa `SOUNDS`, com notas curtas e ataque rápido.
+
+## Acessibilidade
+
+Meta: WCAG 2.1 AA. O que já está garantido e como manter:
+
+- **Contraste**: textos e ícones de ação com 4,5:1 ou mais sobre o vidro, no claro e no escuro (tabela no PR #44). Cor nunca é a única pista: situação, apelo e filtros sempre têm texto.
+- **Vidro**: vira superfície sólida com `prefers-reduced-transparency` e `prefers-contrast: more`.
+- **Movimento**: `prefers-reduced-motion` zera durações, tira a luz do hover e deixa a rolagem instantânea.
+- **Teclado**: link "Pular para o conteúdo"; a ordem do DOM é a ordem do teclado (topo → categorias → busca, órgão e lista → mapa); foco visível em tudo (`:focus-visible`).
+- **Card da ocorrência**: no celular o foco entra no card ao abrir; `Esc` fecha de qualquer lugar e o foco volta para a linha da lista (ou para a alça da folha no celular).
+- **Mapa**: os pins não são focáveis, mas tudo o que está no mapa também está na lista. O canvas se apresenta como "Mapa de ocorrências" e os controles do MapLibre falam português.
+- **Leitor de tela**: contagem de resultados e mensagens do simulador em regiões ao vivo; carregando e vazio com `role="status"`; erros com `role="alert"`; apelo com o texto completo ("Apelo: 14 pessoas").
+- **Toque**: alvos de 44 px em telas de toque (`pointer-coarse:`), 36 px ou mais com mouse.
+- **Som**: sempre com botão de mudo e nunca como única confirmação.
+
+Verificação: `axe-core` (regras WCAG 2.1 A/AA e boas práticas) em todas as páginas, claro e escuro, 1440 px e 390 px, sem violações.

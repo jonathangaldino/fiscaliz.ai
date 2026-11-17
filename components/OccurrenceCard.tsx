@@ -1,4 +1,7 @@
+"use client";
+
 import Link from "next/link";
+import { useEffect, useRef } from "react";
 import type { PublicOccurrence } from "@/convex/occurrences";
 import {
   AGENCIES,
@@ -19,12 +22,20 @@ import { StatusBadge } from "./ui/StatusBadge";
 export function OccurrenceCard({
   occurrence,
   onClose,
+  autoFocus = false,
   className = "",
 }: {
   occurrence: PublicOccurrence;
   onClose: () => void;
+  /** Move focus into the card when it opens (the phone, where it replaces the list). */
+  autoFocus?: boolean;
   className?: string;
 }) {
+  const closeRef = useRef<HTMLButtonElement>(null);
+  useEffect(() => {
+    if (autoFocus) closeRef.current?.focus();
+  }, [autoFocus, occurrence._id]);
+
   const category = CATEGORIES[occurrence.category];
   const agency = occurrence.agencySlug
     ? AGENCIES[occurrence.agencySlug as AgencySlug]
@@ -34,9 +45,7 @@ export function OccurrenceCard({
   return (
     <section
       aria-labelledby={titleId}
-      onKeyDown={(event) => {
-        if (event.key === "Escape") onClose();
-      }}
+      data-occurrence-card
       className={`glass-strong animate-[card-in_var(--dur-slow)_var(--ease-spring)] rounded-panel p-4 text-left ${className}`}
     >
       <div className="flex items-start gap-3">
@@ -58,6 +67,7 @@ export function OccurrenceCard({
           </h2>
         </div>
         <button
+          ref={closeRef}
           type="button"
           onClick={onClose}
           aria-label="Fechar"

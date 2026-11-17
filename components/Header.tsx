@@ -17,10 +17,9 @@ export function Header({ overlay = false }: { overlay?: boolean }) {
         <Link
           href="/"
           className="flex min-w-0 items-center gap-2.5 rounded-full"
-          aria-label="Fiscaliz.ai, ir para o mapa"
         >
           <LogoMark />
-          <span className="hidden text-[17px] font-semibold tracking-tight min-[420px]:inline">
+          <span className="text-[17px] font-semibold tracking-tight max-[419px]:sr-only">
             Fiscaliz.ai
           </span>
           <span className="hidden truncate text-sm text-muted lg:inline">

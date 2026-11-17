@@ -3,7 +3,7 @@
 import { useQuery } from "convex/react";
 import dynamic from "next/dynamic";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { api } from "@/convex/_generated/api";
 import {
   AGENCIES,
@@ -33,6 +33,32 @@ const PANEL_SPACE = 404;
 function searchText(o: PublicOccurrence): string {
   const agency = o.agencySlug ? AGENCIES[o.agencySlug as AgencySlug].name : "";
   return `${o.summary} ${o.address} ${CATEGORIES[o.category].label} ${agency}`;
+}
+
+/**
+ * After the card closes, give focus back to where the person was: the row on
+ * desktop, the sheet handle on the phone.
+ */
+function focusAfterClose(closedId: string, desktop: boolean) {
+  // Only when focus was in the card (or lost with it), not after a map click.
+  const active = document.activeElement;
+  if (
+    active &&
+    active !== document.body &&
+    !active.closest("[data-occurrence-card]")
+  ) {
+    return;
+  }
+  requestAnimationFrame(() => {
+    const target = desktop
+      ? document.querySelector<HTMLElement>(
+          `#occurrence-list [data-id="${closedId}"] button`,
+        )
+      : document.querySelector<HTMLElement>(
+          '[aria-controls="occurrence-list"]',
+        );
+    target?.focus();
+  });
 }
 
 export function Dashboard() {
@@ -94,7 +120,22 @@ export function Dashboard() {
     if (id === selectedId) return;
     playSound(id ? "open" : "close");
     setSelectedId(id);
+    if (id === null && selectedId) focusAfterClose(selectedId, desktop);
   }
+
+  // Esc closes the card from anywhere on the page.
+  useEffect(() => {
+    if (!selectedId) return;
+    function onKeyDown(event: KeyboardEvent) {
+      if (event.key === "Escape" && !event.defaultPrevented && selectedId) {
+        playSound("close");
+        setSelectedId(null);
+        focusAfterClose(selectedId, desktop);
+      }
+    }
+    window.addEventListener("keydown", onKeyDown);
+    return () => window.removeEventListener("keydown", onKeyDown);
+  }, [selectedId, desktop]);
 
   function setCategory(next: CategoryKey | null) {
     playSound(next ? "toggleOn" : "toggleOff");
@@ -106,6 +147,7 @@ export function Dashboard() {
     <OccurrenceCard
       occurrence={selected}
       onClose={() => select(null)}
+      autoFocus={!desktop}
       className="w-[min(380px,calc(100vw-1.5rem))]"
     />
   );
@@ -114,29 +156,10 @@ export function Dashboard() {
   const count = occurrences?.length;
 
   return (
-    <div className="relative min-h-0 flex-1 overflow-hidden">
-      <div className="absolute inset-0">
-        <OccurrenceMap
-          occurrences={occurrences ?? []}
-          selectedId={selectedId}
-          onSelect={select}
-          onMapClick={() => selectedId && select(null)}
-          popup={
-            desktop && selected
-              ? { lat: selected.lat, lng: selected.lng, content: card }
-              : null
-          }
-          padding={
-            desktop
-              ? { top: 72, left: PANEL_SPACE, bottom: 110 }
-              : { top: 72, bottom: 180 }
-          }
-        />
-      </div>
-
+    <main id="conteudo" className="relative min-h-0 flex-1 overflow-hidden">
       {/* Desktop: icon dock over the map, to the right of the panel. */}
       <div
-        className="pointer-events-none absolute right-16 bottom-4 hidden justify-center md:flex"
+        className="pointer-events-none absolute right-16 bottom-4 z-10 hidden justify-center md:flex"
         style={{ left: PANEL_SPACE }}
       >
         <CategoryBar
@@ -148,13 +171,8 @@ export function Dashboard() {
         />
       </div>
 
-      {/* Phone: the card takes the place of the sheet. */}
-      {!desktop && selected && (
-        <div className="absolute inset-x-3 bottom-[max(0.75rem,env(safe-area-inset-bottom))] z-30 flex justify-center">
-          {card}
-        </div>
-      )}
-
+      {/* DOM order is the keyboard order: category dock, panel (search,
+          agency, list), then the map. Positions are absolute. */}
       {/* Panel: floating column on desktop, bottom sheet on the phone. */}
       <aside
         aria-label="Ocorrências"
@@ -260,6 +278,31 @@ export function Dashboard() {
           )}
         </div>
       </aside>
-    </div>
+      <div className="absolute inset-0">
+        <OccurrenceMap
+          occurrences={occurrences ?? []}
+          selectedId={selectedId}
+          onSelect={select}
+          onMapClick={() => selectedId && select(null)}
+          popup={
+            desktop && selected
+              ? { lat: selected.lat, lng: selected.lng, content: card }
+              : null
+          }
+          padding={
+            desktop
+              ? { top: 72, left: PANEL_SPACE, bottom: 110 }
+              : { top: 72, bottom: 180 }
+          }
+        />
+      </div>
+
+      {/* Phone: the card takes the place of the sheet. */}
+      {!desktop && selected && (
+        <div className="absolute inset-x-3 bottom-[max(0.75rem,env(safe-area-inset-bottom))] z-30 flex justify-center">
+          {card}
+        </div>
+      )}
+    </main>
   );
 }
