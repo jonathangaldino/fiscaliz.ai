@@ -79,7 +79,7 @@ const reportCount = (t: T) =>
 describe("applyStep", () => {
   it("collects, confirms and registers a report end to end", async () => {
     const { t, citizenId } = await setup();
-    const before = (await t.query(api.occurrences.listOpen, {})).length;
+    const before = (await t.query(api.occurrences.listActive, {})).length;
 
     const first = await step(t, citizenId, { extraction: problem });
     expect(first.ok && first.messages[0].text).toMatch(/Onde fica/);
@@ -95,7 +95,7 @@ describe("applyStep", () => {
       /https:\/\/fiscaliza\.test\/ocorrencias\//,
     );
 
-    const open = await t.query(api.occurrences.listOpen, {});
+    const open = await t.query(api.occurrences.listActive, {});
     expect(open).toHaveLength(before + 1);
     const created = open.find((o) => o.source === "simulator");
     expect(created).toMatchObject({
@@ -312,7 +312,7 @@ describe("de-duplication and appeal", () => {
     });
 
   const simulatorOccurrences = async (t: T) =>
-    (await t.query(api.occurrences.listOpen, {})).filter((o) => o.source === "simulator");
+    (await t.query(api.occurrences.listActive, {})).filter((o) => o.source === "simulator");
 
   it("adds appeal when a second citizen reports the same problem", async () => {
     const { t, citizenId } = await setup();

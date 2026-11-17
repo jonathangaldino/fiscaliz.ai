@@ -82,7 +82,7 @@ export function SimulatorChat() {
     api.simulator.messages,
     sessionId ? { sessionId } : "skip",
   );
-  const occurrences = useQuery(api.occurrences.listOpen);
+  const occurrences = useQuery(api.occurrences.listActive);
   const send = useMutation(api.simulator.send);
 
   const [text, setText] = useState("");
@@ -101,7 +101,7 @@ export function SimulatorChat() {
   async function submit(payload: {
     text?: string;
     location?: { lat: number; lng: number };
-    button?: "yes" | "no";
+    button?: string;
   }) {
     if (!sessionId) return;
     setError(null);

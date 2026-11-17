@@ -3,6 +3,7 @@
  * payload parsing. No I/O, so they are easy to test.
  */
 import type { IncomingMessage } from "../bot/types";
+import { parseVerifyButton } from "../lib/verification";
 
 /** Constant-time check of X-Hub-Signature-256 (HMAC-SHA256 of the raw body). */
 export async function isValidSignature(
@@ -109,8 +110,13 @@ function toIncoming(message: WebhookMessage): ParsedMessage {
         ? { ...base, button: id }
         : { ...base, text: message.interactive?.button_reply?.title };
     }
-    case "button":
-      return { ...base, text: message.button?.text ?? message.button?.payload };
+    case "button": {
+      // Quick reply on a template: the payload we set when sending it.
+      const verification = parseVerifyButton(message.button?.payload);
+      return verification
+        ? { ...base, verification }
+        : { ...base, text: message.button?.text ?? message.button?.payload };
+    }
     case "audio":
       return message.audio
         ? { ...base, audioMediaId: message.audio.id }

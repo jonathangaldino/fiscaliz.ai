@@ -13,6 +13,9 @@ export function Header() {
         <Link href="/" className="hover:underline">
           Mapa
         </Link>
+        <Link href="/resolvidas" className="hover:underline">
+          Resolvidas
+        </Link>
         <Link href="/simular" className="hover:underline">
           Simular relato
         </Link>

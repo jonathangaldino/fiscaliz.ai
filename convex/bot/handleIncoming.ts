@@ -36,8 +36,19 @@ export const handleIncoming = internalAction({
         channel: message.channel,
         externalIdHash,
         phone: message.channel === "whatsapp" ? message.externalId : undefined,
+        sessionId: message.channel === "simulator" ? message.externalId : undefined,
       },
     );
+
+    // V2 answer: handled apart, the conversation is left untouched.
+    if (message.verification) {
+      const reply = await ctx.runMutation(internal.verification.vote, {
+        citizenId,
+        ...message.verification,
+      });
+      await send(ctx, message, [reply]);
+      return;
+    }
 
     // Audio becomes text before anything else, so it follows the same flow.
     let text = message.text;

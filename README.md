@@ -9,24 +9,25 @@ O Fiscaliz.ai automatiza a triagem e o roteamento de demandas urbanas de Apucara
 
 ## Demo
 
+- **WhatsApp:** [+55 11 95506-1377](https://wa.me/5511955061377), número real do bot. Mande texto, áudio ou localização.
 - **Painel:** https://fiscalizai-five.vercel.app
-- **Simulador do WhatsApp:** https://fiscalizai-five.vercel.app/simular
+- **Simulador do WhatsApp:** https://fiscalizai-five.vercel.app/simular, a mesma conversa no navegador, sem precisar de celular.
 
-### Testar pelo simulador
+### Testar
 
-O número de teste da Meta só conversa com 5 telefones cadastrados, então o simulador web reproduz a conversa do WhatsApp no navegador.
-
-1. Abra `/simular`.
-2. Escreva o problema, por exemplo: _"tem um buraco enorme na rua, quase caí de bicicleta"_.
-3. Clique no mapa para marcar o local e toque em **Enviar localização**. Também dá para escrever o endereço: _"Avenida Curitiba, 500"_.
+1. Mande uma mensagem para o número acima (ou abra `/simular`).
+2. Escreva ou grave o problema, por exemplo: _"tem um buraco enorme na rua, quase caí de bicicleta"_.
+3. Envie a localização pelo clipe do WhatsApp (no simulador, clique no mapa e toque em **Enviar localização**). Também dá para escrever o endereço: _"Avenida Curitiba, 500"_.
 4. Confira o resumo e toque em **SIM**.
 5. A resposta traz o link da ocorrência e o órgão responsável. Volte ao mapa (`/`): a ocorrência aparece sem recarregar a página.
+
+O local precisa estar em Apucarana, PR, e cada telefone pode confirmar até 5 relatos por dia.
 
 Vale testar também:
 
 - **Emergência:** _"caiu uma árvore em cima dos fios"_ → o bot indica o 193 e não registra nada.
 - **Concessionária:** _"está vazando água no meio da rua"_ → o bot indica a Sanepar.
-- **Apelo:** em outra aba anônima (outro "cidadão"), relate o mesmo problema no mesmo lugar → _"agora são 2 pessoas"_.
+- **Apelo:** de outro telefone, ou de outra aba anônima do simulador (outro "cidadão"), relate o mesmo problema no mesmo lugar → _"agora são 2 pessoas"_.
 - **Filtros:** no painel, filtre por categoria ou órgão; o link da página guarda o filtro.
 
 ## Como funciona
@@ -39,7 +40,7 @@ flowchart LR
   H --> Q[Bot: handleIncoming]
   Q -- áudio --> E[ElevenLabs Scribe]
   Q -- triagem e extração --> A[Claude Haiku 5.5]
-  Q -- endereço --> G[Google Geocoding]
+  Q -- endereço --> G[CNEFE do IBGE, Google Geocoding de reserva]
   Q --> DB[(Convex)]
   DB -- tempo real --> P[Painel Next.js]
 ```
@@ -54,7 +55,7 @@ A IA só preenche dados; quem decide o fluxo é uma máquina de estados em códi
 
 ## Stack
 
-Next.js (App Router) e Tailwind na Vercel · Convex (banco, funções, webhook, cron, tempo real) · MapLibre com tiles OpenFreeMap · Claude Haiku 5.5 · ElevenLabs Scribe · Google Geocoding · WhatsApp Cloud API oficial ([ADR 0002](./docs/adr/0002-whatsapp-cloud-api-oficial.md)) · Vitest e `convex-test`.
+Next.js (App Router) e Tailwind na Vercel · Convex (banco, funções, webhook, cron, tempo real) · MapLibre com tiles OpenFreeMap · Claude Haiku 5.5 · ElevenLabs Scribe · CNEFE do IBGE e Google Geocoding · WhatsApp Cloud API oficial ([ADR 0002](./docs/adr/0002-whatsapp-cloud-api-oficial.md)) · Vitest e `convex-test`.
 
 ## Rodar localmente
 

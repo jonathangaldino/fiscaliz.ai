@@ -1,6 +1,7 @@
 import { ConvexError, v } from "convex/values";
 import { internal } from "./_generated/api";
 import { mutation, query } from "./_generated/server";
+import { parseVerifyButton } from "./lib/verification";
 import { buttonValidator } from "./validators";
 
 // Random UUID generated in the browser. Not personal data.
@@ -17,7 +18,8 @@ export const send = mutation({
     sessionId: v.string(),
     text: v.optional(v.string()),
     location: v.optional(v.object({ lat: v.number(), lng: v.number() })),
-    button: v.optional(v.union(v.literal("yes"), v.literal("no"))),
+    // "yes" / "no", or a verification button id.
+    button: v.optional(v.string()),
   },
   returns: v.null(),
   handler: async (ctx, args) => {
@@ -27,17 +29,28 @@ export const send = mutation({
       throw new ConvexError("Mensagem vazia");
     }
 
+    const decision =
+      args.button === "yes" || args.button === "no" ? args.button : undefined;
+    const verification = parseVerifyButton(args.button);
+    if (args.button && !decision && !verification) {
+      throw new ConvexError("Botão inválido");
+    }
+
     const now = Date.now();
     await ctx.db.insert("simulatorMessages", {
       sessionId: args.sessionId,
       author: "citizen",
       text:
         text ??
-        (args.button === "yes"
-          ? "SIM"
-          : args.button === "no"
-            ? "NÃO"
-            : "📍 Local marcado no mapa"),
+        (verification
+          ? verification.answer === "yes"
+            ? "SIM, resolvido"
+            : "NÃO, continua"
+          : decision === "yes"
+            ? "SIM"
+            : decision === "no"
+              ? "NÃO"
+              : "📍 Local marcado no mapa"),
       createdAt: now,
     });
     await ctx.scheduler.runAfter(0, internal.bot.handleIncoming.handleIncoming, {
@@ -47,7 +60,8 @@ export const send = mutation({
         receivedAt: now,
         text,
         location: args.location,
-        button: args.button,
+        button: decision,
+        verification: verification ?? undefined,
       },
     });
     return null;

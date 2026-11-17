@@ -23,6 +23,7 @@ export const ensureCitizen = internalMutation({
     channel: channelValidator,
     externalIdHash: v.string(),
     phone: v.optional(v.string()),
+    sessionId: v.optional(v.string()),
   },
   returns: v.id("citizens"),
   handler: async (ctx, args) => {
@@ -32,7 +33,19 @@ export const ensureCitizen = internalMutation({
         q.eq("channel", args.channel).eq("externalIdHash", args.externalIdHash),
       )
       .unique();
-    if (existing) return existing._id;
+    if (existing) {
+      // Citizens created before V2 lack the contact the verification needs.
+      if (
+        (args.phone && !existing.phone) ||
+        (args.sessionId && !existing.sessionId)
+      ) {
+        await ctx.db.patch(existing._id, {
+          phone: args.phone ?? existing.phone,
+          sessionId: args.sessionId ?? existing.sessionId,
+        });
+      }
+      return existing._id;
+    }
     return await ctx.db.insert("citizens", args);
   },
 });

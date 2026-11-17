@@ -55,7 +55,12 @@ export default function OccurrenceMap({
         type: "Feature",
         id: o._id,
         geometry: { type: "Point", coordinates: [o.lng, o.lat] },
-        properties: { id: o._id, category: o.category, appeal: o.appeal },
+        properties: {
+          id: o._id,
+          category: o.category,
+          appeal: o.appeal,
+          status: o.status,
+        },
       })),
     }),
     [occurrences],
@@ -185,12 +190,17 @@ export default function OccurrenceMap({
               "case",
               ["==", ["get", "id"], selectedId ?? ""],
               4,
+              ["==", ["get", "status"], "verifying"],
+              4,
               2,
             ],
             "circle-stroke-color": [
               "case",
               ["==", ["get", "id"], selectedId ?? ""],
               "#111827",
+              // Amber ring: under verification.
+              ["==", ["get", "status"], "verifying"],
+              "#f59e0b",
               "#ffffff",
             ],
           }}
