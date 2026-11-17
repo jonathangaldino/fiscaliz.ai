@@ -3,22 +3,29 @@ import type { PublicOccurrence } from "@/convex/occurrences";
 import { AGENCIES, CATEGORIES, type AgencySlug } from "@/convex/lib/categories";
 import { formatAppeal, formatDate } from "@/lib/format";
 import { CategoryIcon } from "./ui/CategoryIcon";
+import { Glyph } from "./ui/Glyph";
 import { StatusBadge } from "./ui/StatusBadge";
 
 type Props = {
   occurrences: PublicOccurrence[];
   selectedId?: string | null;
   onSelect?: (id: string) => void;
+  emptyMessage?: string;
 };
 
-export function OccurrenceList({ occurrences, selectedId, onSelect }: Props) {
+export function OccurrenceList({
+  occurrences,
+  selectedId,
+  onSelect,
+  emptyMessage = "Nenhuma ocorrência aberta.",
+}: Props) {
   if (occurrences.length === 0) {
     return (
-      <p className="p-4 text-sm text-zinc-500">Nenhuma ocorrência aberta.</p>
+      <p className="px-4 py-6 text-center text-sm text-muted">{emptyMessage}</p>
     );
   }
   return (
-    <ul className="divide-y divide-zinc-200 dark:divide-zinc-800">
+    <ul className="space-y-1 px-2 pb-2">
       {occurrences.map((o) => {
         const category = CATEGORIES[o.category];
         const agency = o.agencySlug
@@ -30,40 +37,52 @@ export function OccurrenceList({ occurrences, selectedId, onSelect }: Props) {
             <button
               type="button"
               onClick={() => onSelect?.(o._id)}
-              className={`flex w-full gap-3 p-3 text-left hover:bg-zinc-100 dark:hover:bg-zinc-900 ${
-                selected ? "bg-zinc-100 dark:bg-zinc-900" : ""
+              aria-current={selected ? "true" : undefined}
+              className={`flex w-full items-start gap-3 rounded-card p-2.5 text-left transition-[background-color,box-shadow] duration-(--dur) ${
+                selected
+                  ? "bg-accent-tint ring-1 ring-(--accent)/30"
+                  : "hover:bg-(--glass-bg-strong)"
               }`}
             >
-              <CategoryIcon category={o.category} size={32} />
+              <span className="flex size-11 shrink-0 items-center justify-center rounded-control border border-line bg-surface/70">
+                <CategoryIcon category={o.category} size={30} />
+              </span>
               <span className="min-w-0 flex-1">
-                <span className="block text-xs font-medium text-zinc-500">
-                  {category.label}
+                <span className="flex items-center gap-2 text-xs font-medium text-muted">
+                  <span className="truncate">{category.label}</span>
                   {o.status === "verifying" && (
-                    <StatusBadge status="verifying" className="ml-2" />
+                    <StatusBadge status="verifying" />
                   )}
                 </span>
-                <span className="block text-sm">{o.summary}</span>
-                <span className="block truncate text-xs text-zinc-500">
+                <span className="mt-0.5 block text-[15px] leading-snug font-medium text-fg">
+                  {o.summary}
+                </span>
+                <span className="mt-0.5 block truncate text-xs text-subtle">
                   {o.address} · {formatDate(o.openedAt)}
                   {agency ? ` · ${agency.name}` : ""}
                 </span>
               </span>
               <span
-                className="shrink-0 text-right text-sm font-semibold"
+                className="flex shrink-0 flex-col items-center pt-0.5 text-fg"
                 title={`Apelo: ${formatAppeal(o.appeal)}`}
               >
-                {o.appeal}
-                <span className="block text-[10px] font-normal text-zinc-500">
-                  apelo
+                <span
+                  aria-hidden
+                  className="text-base leading-none font-semibold tabular-nums"
+                >
+                  {o.appeal}
                 </span>
+                <Glyph name="people" size={14} className="mt-1 text-subtle" />
+                <span className="sr-only">Apelo: {formatAppeal(o.appeal)}</span>
               </span>
             </button>
             {selected && (
               <Link
                 href={`/ocorrencias/${o._id}`}
-                className="block px-9 pb-3 text-xs font-medium text-blue-600 underline"
+                className="mt-1 ml-16 inline-flex items-center gap-1 rounded-full px-2 py-1 text-xs font-semibold text-accent hover:bg-accent-tint"
               >
                 Ver detalhes da ocorrência
+                <Glyph name="chevronRight" size={14} />
               </Link>
             )}
           </li>
