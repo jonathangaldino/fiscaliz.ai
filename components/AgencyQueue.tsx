@@ -51,7 +51,7 @@ export function AgencyQueue({ slug }: { slug: string }) {
           <div className="flex items-center justify-between px-3 pb-2">
             <h2 className="text-base font-semibold">Fila por apelo</h2>
             <Link
-              href={`/?orgao=${slug}`}
+              href={`/mapa?orgao=${slug}`}
               className={buttonClass({ variant: "ghost", size: "sm" })}
             >
               Ver no mapa

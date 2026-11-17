@@ -10,7 +10,8 @@ O Fiscaliz.ai automatiza a triagem e o roteamento de demandas urbanas de Apucara
 ## Demo
 
 - **WhatsApp:** [+55 11 95506-1377](https://wa.me/5511955061377), número real do bot. Mande texto, áudio ou localização.
-- **Painel:** https://fiscalizai-five.vercel.app
+- **Site:** https://fiscalizai-five.vercel.app, página que explica como usar.
+- **Mapa:** https://fiscalizai-five.vercel.app/mapa
 - **Simulador do WhatsApp:** https://fiscalizai-five.vercel.app/simular, a mesma conversa no navegador, sem precisar de celular.
 
 ### Testar
@@ -19,7 +20,7 @@ O Fiscaliz.ai automatiza a triagem e o roteamento de demandas urbanas de Apucara
 2. Escreva ou grave o problema, por exemplo: _"tem um buraco enorme na rua, quase caí de bicicleta"_.
 3. Envie a localização pelo clipe do WhatsApp (no simulador, clique no mapa e toque em **Enviar localização**). Também dá para escrever o endereço: _"Avenida Curitiba, 500"_.
 4. Confira o resumo e toque em **SIM**.
-5. A resposta traz o link da ocorrência e o órgão responsável. Volte ao mapa (`/`): a ocorrência aparece sem recarregar a página.
+5. A resposta traz o link da ocorrência e o órgão responsável. Volte ao mapa (`/mapa`): a ocorrência aparece sem recarregar a página.
 
 O local precisa estar em Apucarana, PR, e cada telefone pode confirmar até 5 relatos por dia.
 
@@ -29,6 +30,10 @@ Vale testar também:
 - **Concessionária:** _"está vazando água no meio da rua"_ → o bot indica a Sanepar.
 - **Apelo:** de outro telefone, ou de outra aba anônima do simulador (outro "cidadão"), relate o mesmo problema no mesmo lugar → _"agora são 2 pessoas"_.
 - **Filtros:** no painel, filtre por categoria ou órgão; o link da página guarda o filtro.
+
+## Marca e site
+
+A landing page (`/`) explica como relatar pelo WhatsApp, como ler o mapa e o que o Fiscaliz.ai faz pela Prefeitura, com um vídeo de 1 minuto. Marca, cores e voz em [docs/marca/](./docs/marca/); componentes e tokens em [docs/design-system.md](./docs/design-system.md).
 
 ## Como funciona
 

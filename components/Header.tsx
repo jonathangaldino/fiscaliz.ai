@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { NavLinks } from "./NavLinks";
+import { LogoMark } from "./ui/Logo";
 import { SoundToggle } from "./SoundToggle";
 
 /**
@@ -20,7 +21,7 @@ export function Header({ overlay = false }: { overlay?: boolean }) {
         >
           <LogoMark />
           <span className="text-[17px] font-semibold tracking-tight max-[419px]:sr-only">
-            Fiscaliz.ai
+            Fiscaliz<span className="text-accent">.ai</span>
           </span>
           <span className="hidden truncate text-sm text-muted lg:inline">
             Ocorrências urbanas de Apucarana, PR
@@ -32,22 +33,5 @@ export function Header({ overlay = false }: { overlay?: boolean }) {
         </div>
       </div>
     </header>
-  );
-}
-
-function LogoMark() {
-  return (
-    <span
-      aria-hidden
-      className="flex size-8 shrink-0 items-center justify-center rounded-[10px] bg-gradient-to-br from-[#2b8cff] to-[#0b4fa8] shadow-[inset_0_1px_0_rgb(255_255_255/0.35),0_2px_6px_-1px_rgb(11_79_168/0.5)]"
-    >
-      <svg viewBox="0 0 24 24" className="size-[18px]" fill="none">
-        <path
-          d="M12 21s-6.5-5.6-6.5-11a6.5 6.5 0 1 1 13 0c0 5.4-6.5 11-6.5 11Z"
-          fill="white"
-        />
-        <circle cx="12" cy="10" r="2.6" fill="#0b5fc6" />
-      </svg>
-    </span>
   );
 }

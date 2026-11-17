@@ -268,3 +268,28 @@ body {
 .map-card-popup .maplibregl-popup-tip {
   display: none;
 }
+
+/* Landing: content that fades in on scroll (components/landing/Reveal.tsx). */
+.reveal {
+  transition:
+    opacity 700ms var(--ease-out),
+    transform 700ms var(--ease-out);
+}
+
+.reveal[data-reveal="hidden"] {
+  opacity: 0;
+  transform: translateY(18px);
+}
+
+/* Landing: slow float for illustrations. */
+@keyframes float {
+  50% {
+    transform: translateY(-10px);
+  }
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .float {
+    animation: float 6s ease-in-out infinite;
+  }
+}
