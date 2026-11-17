@@ -4,7 +4,7 @@ export type ButtonVariant = "primary" | "glass" | "ghost" | "warning";
 export type ButtonSize = "sm" | "md";
 
 const base =
-  "inline-flex select-none items-center justify-center gap-2 rounded-full font-medium transition-[transform,background-color,box-shadow,opacity] duration-(--dur) ease-out active:scale-[0.97] disabled:pointer-events-none disabled:opacity-50";
+  "lit inline-flex select-none items-center justify-center gap-2 rounded-full font-medium transition-[transform,background-color,box-shadow,opacity] duration-(--dur) ease-out active:scale-[0.97] disabled:pointer-events-none disabled:opacity-50";
 
 const variants: Record<ButtonVariant, string> = {
   primary: "bg-accent-solid text-on-accent shadow-sm hover:brightness-110",

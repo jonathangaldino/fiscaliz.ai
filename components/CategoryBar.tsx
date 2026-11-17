@@ -87,14 +87,14 @@ export function CategoryBar({
             aria-pressed={active}
             onClick={() => onChange(active ? null : key)}
             title={CATEGORIES[key].label}
-            className={`group relative flex w-20 shrink-0 flex-col items-center gap-1 rounded-card px-1 pt-2 pb-1.5 transition-[background-color,transform] duration-(--dur) ease-out active:scale-95 ${
+            className={`group lit relative flex w-20 shrink-0 flex-col items-center gap-1 rounded-card px-1 pt-2 pb-1.5 transition-[background-color,transform] duration-(--dur) ease-out active:scale-95 ${
               active ? "bg-accent-tint" : "hover:bg-(--glass-bg-strong)"
             }`}
           >
             <CategoryIcon
               category={key}
               size={36}
-              className="transition-transform duration-(--dur) ease-spring group-hover:scale-110"
+              className="transition-transform duration-(--dur-slow) ease-spring group-hover:-translate-y-0.5 group-hover:scale-115 group-active:scale-95"
             />
             <span
               className={`line-clamp-1 w-full text-center text-[11px] leading-tight font-medium ${

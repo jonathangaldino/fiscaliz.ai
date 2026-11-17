@@ -360,7 +360,7 @@ export default function OccurrenceMap({
               aria-label="Aproximar"
               title="Aproximar"
               onClick={() => mapRef.current?.zoomIn()}
-              className="flex size-11 items-center justify-center transition-colors hover:bg-accent-tint"
+              className="lit flex size-11 items-center justify-center transition-[background-color,transform] duration-(--dur) hover:bg-accent-tint active:scale-90"
             >
               <Glyph name="plus" />
             </button>
@@ -370,7 +370,7 @@ export default function OccurrenceMap({
               aria-label="Afastar"
               title="Afastar"
               onClick={() => mapRef.current?.zoomOut()}
-              className="flex size-11 items-center justify-center transition-colors hover:bg-accent-tint"
+              className="lit flex size-11 items-center justify-center transition-[background-color,transform] duration-(--dur) hover:bg-accent-tint active:scale-90"
             >
               <Glyph name="minus" />
             </button>

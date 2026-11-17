@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import "./globals.css";
 import { ConvexClientProvider } from "./ConvexClientProvider";
+import { PointerLight } from "@/components/PointerLight";
 
 export const metadata: Metadata = {
   title: "Fiscaliz.ai",
@@ -12,6 +13,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
     <html lang="pt-BR" className="h-full antialiased">
       <body className="ambient flex h-full flex-col">
         <ConvexClientProvider>{children}</ConvexClientProvider>
+        <PointerLight />
       </body>
     </html>
   );

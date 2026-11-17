@@ -62,3 +62,22 @@ Um ícone 3D por categoria de `COMPETENCIAS.md`, no estilo dos emojis da Apple: 
 - Categoria nova: gerar com o mesmo prompt-base abaixo, trocando só o assunto, e salvar com o nome da chave.
 
 > A single 3D icon in the style of Apple's emoji set: glossy, soft studio lighting from the top left, rounded friendly chunky shapes, gentle 3/4 perspective, vibrant but natural colors, subtle soft contact shadow. Compact silhouette that fills most of the square and stays readable at 24 pixels. No text, no letters, no outline, no frame, no background plate. One isolated object centered, transparent background. Subject: …
+
+## Movimento e microfeedback
+
+Curto e discreto: o movimento confirma a ação, não chama atenção para si.
+
+| Efeito | Onde | Como |
+|---|---|---|
+| Luz que segue o mouse | Botões, chips, linhas de lista, dock | Utilitário `lit` + `PointerLight` no layout (um único listener para a página) |
+| Toque | Botões, chips, linhas | `active:scale-[0.97]` (linhas `0.99`) |
+| Ícone que pula | Dock e listas | `group-hover:scale-110` com `ease-spring` |
+| Elevação | Cartões clicáveis | Utilitário `lift` |
+| Entrada do card | Card da ocorrência, mensagens do simulador | `animate-[card-in_…]` |
+| Pin ativo | Mapa | Pin selecionado ou sob o mouse cresce 22% e vai para a camada de cima |
+| Lista acompanha o mapa | Painel | Pin tocado rola a lista até o item |
+
+Regras:
+- Durações só pelos tokens (`--dur-fast`, `--dur`, `--dur-slow`); com `prefers-reduced-motion` todas viram 1 ms e a luz não aparece.
+- A luz só existe com mouse (`hover: hover`); no toque não há efeito de hover.
+- Nada anima em loop, exceto o ponto do selo "Verificando".
