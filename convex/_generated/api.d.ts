@@ -13,6 +13,7 @@ import type {
   FilterApi,
   FunctionReference,
 } from "convex/server";
+import type * as addressMetrics from "../addressMetrics.js";
 import type * as agencies from "../agencies.js";
 import type * as bot_channels_index from "../bot/channels/index.js";
 import type * as bot_channels_simulator from "../bot/channels/simulator.js";
@@ -21,6 +22,7 @@ import type * as bot_conversations from "../bot/conversations.js";
 import type * as bot_dedup from "../bot/dedup.js";
 import type * as bot_extract from "../bot/extract.js";
 import type * as bot_geocode from "../bot/geocode.js";
+import type * as bot_geocodeAttempts from "../bot/geocodeAttempts.js";
 import type * as bot_handleIncoming from "../bot/handleIncoming.js";
 import type * as bot_messages from "../bot/messages.js";
 import type * as bot_register from "../bot/register.js";
@@ -54,6 +56,7 @@ import type * as whatsapp_webhook from "../whatsapp/webhook.js";
  * ```
  */
 declare const fullApi: ApiFromModules<{
+  addressMetrics: typeof addressMetrics;
   agencies: typeof agencies;
   "bot/channels/index": typeof bot_channels_index;
   "bot/channels/simulator": typeof bot_channels_simulator;
@@ -62,6 +65,7 @@ declare const fullApi: ApiFromModules<{
   "bot/dedup": typeof bot_dedup;
   "bot/extract": typeof bot_extract;
   "bot/geocode": typeof bot_geocode;
+  "bot/geocodeAttempts": typeof bot_geocodeAttempts;
   "bot/handleIncoming": typeof bot_handleIncoming;
   "bot/messages": typeof bot_messages;
   "bot/register": typeof bot_register;

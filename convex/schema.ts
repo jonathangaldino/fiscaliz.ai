@@ -5,6 +5,8 @@ import {
   categoryValidator,
   channelValidator,
   conversationStateValidator,
+  geocodeAttemptValidator,
+  geocodeOutcomeValidator,
   occurrenceStatusValidator,
   sourceValidator,
 } from "./validators";
@@ -104,4 +106,18 @@ export default defineSchema({
     target: v.string(),
     createdAt: v.number(),
   }).index("by_kind", ["kind"]),
+
+  // Address reliability metrics (issue #37). Internal: `query` and
+  // `citizenId` never leave through a public function.
+  geocodeAttempts: defineTable({
+    ...geocodeAttemptValidator.fields,
+    citizenId: v.id("citizens"),
+    createdAt: v.number(),
+    lat: v.optional(v.number()),
+    lng: v.optional(v.number()),
+    precise: v.optional(v.boolean()),
+    // Filled later: on SIM, on a new pin or address, or when the conversation ends.
+    outcome: v.optional(geocodeOutcomeValidator),
+    errorMeters: v.optional(v.number()),
+  }).index("by_citizen_outcome", ["citizenId", "outcome"]),
 });

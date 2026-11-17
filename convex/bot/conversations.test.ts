@@ -1,9 +1,11 @@
 import { convexTest } from "convex-test";
+import type { Infer } from "convex/values";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { api, internal } from "../_generated/api";
 import type { Id } from "../_generated/dataModel";
 import schema from "../schema";
 import { modules } from "../test.setup";
+import type { geocodeAttemptValidator } from "../validators";
 import type { Extraction } from "./types";
 
 const SESSION = "6f1c1a8e-3b7a-4c5e-9d1f-2a3b4c5d6e7f";
@@ -27,6 +29,15 @@ const pin = {
   precise: true,
 };
 
+// What handleIncoming measured on an address the CNEFE resolved.
+const attempt: Infer<typeof geocodeAttemptValidator> = {
+  medium: "text",
+  source: "cnefe_exact",
+  typoDistance: 0,
+  ambiguous: false,
+  ms: 3,
+};
+
 async function setup() {
   const t = convexTest(schema, modules);
   await t.mutation(internal.seed.run, {});
@@ -46,6 +57,7 @@ async function step(
     extraction?: Extraction | null;
     location?: typeof pin | null;
     decision?: "yes" | "no" | null;
+    geocode?: typeof attempt;
   },
 ) {
   const { version } = await t.query(internal.bot.conversations.load, { citizenId });
@@ -57,6 +69,7 @@ async function step(
     extraction: input.extraction ?? null,
     location: input.location ?? null,
     decision: input.decision ?? null,
+    geocode: input.geocode,
   });
 }
 
@@ -396,5 +409,105 @@ describe("de-duplication and appeal", () => {
     const open = await simulatorOccurrences(t);
     expect(open).toHaveLength(1);
     expect(open[0]._id).not.toBe(first._id);
+  });
+});
+
+describe("geocode attempts (issue #37)", () => {
+  const typed = { ...problem, address: "Rua Exemplo, 500" };
+  const attempts = (t: T) =>
+    t.run(async (ctx) => await ctx.db.query("geocodeAttempts").collect());
+
+  it("records the address and confirms it on SIM", async () => {
+    const { t, citizenId } = await setup();
+    await step(t, citizenId, { extraction: typed, location: pin, geocode: attempt });
+    expect(await attempts(t)).toMatchObject([
+      { citizenId, medium: "text", source: "cnefe_exact", lat: pin.lat, precise: true },
+    ]);
+    expect((await attempts(t))[0]).not.toHaveProperty("outcome");
+
+    await step(t, citizenId, { decision: "yes" });
+    expect(await attempts(t)).toMatchObject([{ outcome: "confirmed" }]);
+  });
+
+  it("marks a pin after the address as corrected, with the error in meters", async () => {
+    const { t, citizenId } = await setup();
+    await step(t, citizenId, { extraction: typed, location: pin, geocode: attempt });
+    // ~111 m north.
+    await step(t, citizenId, { location: { ...pin, lat: pin.lat + 0.001 } });
+    const [row] = await attempts(t);
+    expect(row.outcome).toBe("corrected_pin");
+    expect(row.errorMeters).toBeGreaterThan(100);
+    expect(row.errorMeters).toBeLessThan(120);
+  });
+
+  it("marks the previous address as corrected when another one arrives", async () => {
+    const { t, citizenId } = await setup();
+    await step(t, citizenId, { extraction: typed, location: pin, geocode: attempt });
+    await step(t, citizenId, { decision: "no" });
+    await step(t, citizenId, {
+      extraction: { ...typed, address: "Rua Outra, 10" },
+      location: { ...pin, lat: pin.lat + 0.001 },
+      geocode: { ...attempt, medium: "audio", source: "cnefe_typo", typoDistance: 1 },
+    });
+    await step(t, citizenId, { decision: "yes" });
+    expect(await attempts(t)).toMatchObject([
+      { outcome: "corrected_text" },
+      { medium: "audio", source: "cnefe_typo", outcome: "confirmed" },
+    ]);
+  });
+
+  it("keeps the text only when the address was not found", async () => {
+    const { t, citizenId } = await setup();
+    await step(t, citizenId, {
+      extraction: { ...typed, address: "Rua Que Não Existe" },
+      geocode: { ...attempt, source: "none", query: "Rua Que Não Existe" },
+    });
+    await step(t, citizenId, { location: pin });
+    await step(t, citizenId, { decision: "yes" });
+    // Nothing was shown to the citizen, so there is no outcome to set.
+    const [row] = await attempts(t);
+    expect(row).toMatchObject({ source: "none", query: "Rua Que Não Existe" });
+    expect(row).not.toHaveProperty("lat");
+    expect(row).not.toHaveProperty("outcome");
+  });
+
+  it("marks the address as abandoned when the conversation expires", async () => {
+    vi.useFakeTimers();
+    try {
+      vi.setSystemTime(NOW);
+      const { t, citizenId } = await setup();
+      await step(t, citizenId, { extraction: typed, location: pin, geocode: attempt });
+      vi.setSystemTime(NOW + 31 * 60 * 1000);
+      await t.mutation(internal.bot.conversations.expire, {});
+      expect(await attempts(t)).toMatchObject([{ outcome: "abandoned" }]);
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
+  it("aggregates by medium and source without the address text", async () => {
+    const { t, citizenId } = await setup();
+    await step(t, citizenId, {
+      extraction: { ...typed, address: "Rua Secreta 99" },
+      geocode: { ...attempt, source: "none", ambiguous: true, query: "Rua Secreta 99" },
+    });
+    await step(t, citizenId, { extraction: typed, location: pin, geocode: { ...attempt, ms: 7 } });
+    await step(t, citizenId, { decision: "yes" });
+
+    const rows = await t.query(api.addressMetrics.summary, {});
+    expect(JSON.stringify(rows)).not.toContain("Secreta");
+    expect(rows.find((r) => r.medium === "text" && r.group === "cnefe_exact")).toMatchObject({
+      count: 1,
+      closed: 1,
+      confirmed: 1,
+      msP50: 7,
+    });
+    expect(rows.find((r) => r.medium === "text" && r.group === "none")).toMatchObject({
+      count: 1,
+      ambiguous: 1,
+    });
+    expect(await t.query(internal.addressMetrics.failedQueries, {})).toEqual([
+      { query: "Rua Secreta 99", count: 1 },
+    ]);
   });
 });

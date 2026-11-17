@@ -3,10 +3,17 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 
-const LINKS: { href: string; label: string; short?: string }[] = [
+const LINKS: {
+  href: string;
+  label: string;
+  short?: string;
+  /** Only from this width up, to keep the bar on one line on phones. */
+  wide?: boolean;
+}[] = [
   { href: "/", label: "Mapa" },
   { href: "/resolvidas", label: "Resolvidas" },
   { href: "/simular", label: "Simular relato", short: "Simular" },
+  { href: "/confiabilidade", label: "Confiabilidade", wide: true },
 ];
 
 export function NavLinks() {
@@ -17,7 +24,10 @@ export function NavLinks() {
         {LINKS.map((link) => {
           const active = pathname === link.href;
           return (
-            <li key={link.href}>
+            <li
+              key={link.href}
+              className={link.wide ? "hidden md:block" : undefined}
+            >
               <Link
                 href={link.href}
                 aria-current={active ? "page" : undefined}

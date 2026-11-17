@@ -84,19 +84,38 @@ export function pickStreet<T extends IndexedStreet>(
   streets: T[],
   distance: Distance = damerauLevenshtein,
 ): T | undefined {
+  return matchStreet(address, streets, distance).street;
+}
+
+/**
+ * pickStreet plus what the reliability metrics need (issue #37): whether more
+ * than one street matched, and the largest typo distance among the words.
+ */
+export function matchStreet<T extends IndexedStreet>(
+  address: string,
+  streets: T[],
+  distance: Distance = damerauLevenshtein,
+): { street?: T; ambiguous: boolean; typoDistance: number } {
   const wanted = nameWords(address);
-  if (wanted.length === 0) return undefined;
-  const only = (matches: T[]) => (matches.length === 1 ? matches[0] : undefined);
+  if (wanted.length === 0) return { ambiguous: false, typoDistance: 0 };
 
   const exact = streets.filter((street) => wanted.every((word) => street.wordSet.has(word)));
-  if (exact.length > 0) return only(exact);
+  if (exact.length > 0) {
+    return { street: exact.length === 1 ? exact[0] : undefined, ambiguous: exact.length > 1, typoDistance: 0 };
+  }
 
-  const close = (word: string, street: T) => {
-    if (street.wordSet.has(word)) return true;
+  // Typos of `word` against the closest word of the street, or undefined past the tolerance.
+  const typos = (word: string, street: T) => {
+    if (street.wordSet.has(word)) return 0;
     const max = /^\d+$/.test(word) ? 0 : typosAllowed(word);
-    return max > 0 && street.words.some((other) => distance(word, other, max) <= max);
+    if (max === 0) return undefined;
+    const best = Math.min(...street.words.map((other) => distance(word, other, max)));
+    return best <= max ? best : undefined;
   };
-  return only(streets.filter((street) => wanted.every((word) => close(word, street))));
+  const close = streets.filter((street) => wanted.every((word) => typos(word, street) !== undefined));
+  if (close.length !== 1) return { ambiguous: close.length > 1, typoDistance: 0 };
+  const street = close[0];
+  return { street, ambiguous: false, typoDistance: Math.max(...wanted.map((word) => typos(word, street)!)) };
 }
 
 /** The last number of the address that is neither the CEP nor part of the street name ("Rua 13 de Maio"). */
