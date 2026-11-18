@@ -150,6 +150,7 @@ export const applyStep = internalMutation({
         source: args.channel,
         now,
         matchId: args.matchId ?? null,
+        startedAt: conversation?._creationTime,
       });
       // The conversation ends here.
       await closeOpenAttempts(ctx, args.citizenId, "confirmed");
