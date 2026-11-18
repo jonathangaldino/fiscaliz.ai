@@ -26,9 +26,10 @@ export async function registerReport(
     source: "whatsapp" | "simulator";
     now: number;
     matchId: Id<"occurrences"> | null;
+    startedAt?: number;
   },
 ): Promise<RegisterResult> {
-  const { draft, now, citizenId } = args;
+  const { draft, now, citizenId, startedAt } = args;
 
   const match = args.matchId ? await ctx.db.get(args.matchId) : null;
   const matchStillValid =
@@ -54,7 +55,7 @@ export async function registerReport(
     }
     const appeal = match.appeal + 1;
     await ctx.db.patch(match._id, { appeal });
-    await insertReport(ctx, match._id, citizenId, draft, now);
+    await insertReport(ctx, match._id, citizenId, draft, now, startedAt);
     return { kind: "appealed", occurrenceId: match._id, appeal };
   }
 
@@ -78,7 +79,7 @@ export async function registerReport(
     openedAt: now,
     source: args.source,
   });
-  await insertReport(ctx, occurrenceId, citizenId, draft, now);
+  await insertReport(ctx, occurrenceId, citizenId, draft, now, startedAt);
   return { kind: "created", occurrenceId };
 }
 
@@ -88,6 +89,7 @@ async function insertReport(
   citizenId: Id<"citizens">,
   draft: CompleteDraft,
   now: number,
+  startedAt: number | undefined,
 ) {
   await ctx.db.insert("reports", {
     occurrenceId,
@@ -95,5 +97,6 @@ async function insertReport(
     description: draft.description,
     occurredAt: draft.occurredAt,
     createdAt: now,
+    startedAt,
   });
 }

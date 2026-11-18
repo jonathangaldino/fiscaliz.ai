@@ -106,6 +106,8 @@ describe("applyStep", () => {
     });
 
     expect(await reportCount(t)).toBe(1);
+    const [report] = await t.run((ctx) => ctx.db.query("reports").collect());
+    expect(report.startedAt).toBeLessThanOrEqual(report.createdAt);
     const { state } = await t.query(internal.bot.conversations.load, { citizenId });
     expect(state).toBeNull();
   });

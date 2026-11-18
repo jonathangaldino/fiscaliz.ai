@@ -38,6 +38,7 @@ import type * as lib_geo from "../lib/geo.js";
 import type * as lib_streets from "../lib/streets.js";
 import type * as lib_time from "../lib/time.js";
 import type * as lib_verification from "../lib/verification.js";
+import type * as metrics from "../metrics.js";
 import type * as occurrences from "../occurrences.js";
 import type * as seed from "../seed.js";
 import type * as seedData from "../seedData.js";
@@ -81,6 +82,7 @@ declare const fullApi: ApiFromModules<{
   "lib/streets": typeof lib_streets;
   "lib/time": typeof lib_time;
   "lib/verification": typeof lib_verification;
+  metrics: typeof metrics;
   occurrences: typeof occurrences;
   seed: typeof seed;
   seedData: typeof seedData;

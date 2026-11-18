@@ -52,6 +52,8 @@ export default defineSchema({
     description: v.string(),
     occurredAt: v.number(),
     createdAt: v.number(),
+    // When the citizen's conversation began, for the time to the map (issue #54).
+    startedAt: v.optional(v.number()),
   })
     .index("by_occurrence_citizen", ["occurrenceId", "citizenId"])
     .index("by_citizen_createdAt", ["citizenId", "createdAt"]),
