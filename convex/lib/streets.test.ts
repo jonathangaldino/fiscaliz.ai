@@ -5,6 +5,7 @@ import {
   houseNumber,
   indexStreets,
   locate,
+  matchStreet,
   pickStreet,
   type Street,
 } from "./streets";
@@ -64,6 +65,36 @@ describe("pickStreet", () => {
     expect(pick("rua ane neri", [ana])).toBeUndefined();
     const primeiro: Street = { ...italo, name: "RUA 14 DE MAIO" };
     expect(pick("rua 13 de maio", [primeiro])).toBeUndefined();
+  });
+});
+
+describe("matchStreet", () => {
+  const match = (address: string, streets: Street[]) => {
+    const { street, ...rest } = matchStreet(address, indexStreets(streets));
+    return { name: street?.name, ...rest };
+  };
+
+  it("reports an exact match with distance 0", () => {
+    expect(match("R ítalo fontanini 40", [italo])).toEqual({ name: italo.name, ambiguous: false, typoDistance: 0 });
+  });
+
+  it("reports the largest typo distance among the words", () => {
+    expect(match("rua ítalo fotnanin 40", [italo])).toMatchObject({ name: italo.name, typoDistance: 2 });
+    expect(match("rua ítalo fontanino 40", [italo])).toMatchObject({ typoDistance: 1 });
+  });
+
+  it("flags more than one candidate as ambiguous", () => {
+    expect(match("curitiba 100", [curitiba("RUA"), curitiba("AVENIDA")])).toMatchObject({
+      name: undefined,
+      ambiguous: true,
+    });
+    const mario: Street = { ...italo, name: "RUA MARIO SOUZA" };
+    const maria: Street = { ...italo, name: "RUA MARIA SOUZA" };
+    expect(match("rua marie souza 10", [mario, maria])).toMatchObject({ ambiguous: true });
+  });
+
+  it("is not ambiguous when nothing matched", () => {
+    expect(match("rua inexistente", [italo])).toEqual({ name: undefined, ambiguous: false, typoDistance: 0 });
   });
 });
 

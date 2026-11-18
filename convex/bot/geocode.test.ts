@@ -55,7 +55,7 @@ describe("geocodeAddress", () => {
     ["APPROXIMATE", false],
   ])("marks %s as precise=%s", async (type, precise) => {
     mockGoogle(result(type));
-    expect(await geocodeAddress("Avenida Curitiba")).toMatchObject({
+    expect((await geocodeAddress("Avenida Curitiba")).location).toMatchObject({
       precise,
       address: "Av. Curitiba, 100 - Centro",
     });
@@ -63,12 +63,12 @@ describe("geocodeAddress", () => {
 
   it("returns null when only the city matched", async () => {
     mockGoogle(result("APPROXIMATE", ["locality", "political"]));
-    expect(await geocodeAddress("rua que não existe")).toBeNull();
+    expect((await geocodeAddress("rua que não existe")).location).toBeNull();
   });
 
   it("resolves an incomplete street name from the IBGE without calling Google", async () => {
     const fetchMock = mockGoogle(result("ROOFTOP"));
-    expect(await geocodeAddress("R ítalo fontanini 68")).toEqual({
+    expect((await geocodeAddress("R ítalo fontanini 68")).location).toEqual({
       lat: -23.559084,
       lng: -51.467367,
       address: "Rua Italo Ado Fontanini, 68",
@@ -84,19 +84,28 @@ describe("geocodeAddress", () => {
       address_components: [{ long_name: "Rua Italiano" }, { long_name: "Lot. Sao Sebastiao" }],
     });
     mockGoogle(body);
-    expect(await geocodeAddress("R itália 40")).toBeNull();
+    expect((await geocodeAddress("R itália 40")).location).toBeNull();
   });
 
   it("keeps a partial match on the same street, but not as precise", async () => {
     const body = result("ROOFTOP");
     Object.assign(body.results[0], { partial_match: true });
     mockGoogle(body);
-    expect(await geocodeAddress("Av. Curitiba, 40, centro")).toMatchObject({ precise: false });
+    expect((await geocodeAddress("Av. Curitiba, 40, centro")).location).toMatchObject({ precise: false });
   });
 
   it("returns null when nothing matched", async () => {
     mockGoogle({ status: "ZERO_RESULTS", results: [] });
-    expect(await geocodeAddress("???")).toBeNull();
+    expect((await geocodeAddress("???")).location).toBeNull();
+  });
+
+  it("reports where the location came from", async () => {
+    mockGoogle(result("ROOFTOP"));
+    expect(await geocodeAddress("R ítalo fontanini 68")).toMatchObject({ source: "cnefe_exact", typoDistance: 0 });
+    expect(await geocodeAddress("R ítalo fotnanini 68")).toMatchObject({ source: "cnefe_typo", typoDistance: 1 });
+    expect(await geocodeAddress("Avenida Curitiba")).toMatchObject({ source: "google", ambiguous: false });
+    mockGoogle({ status: "ZERO_RESULTS", results: [] });
+    expect(await geocodeAddress("???")).toMatchObject({ source: "none", location: null });
   });
 
   it("throws when the service fails", async () => {

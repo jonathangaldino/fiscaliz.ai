@@ -20,7 +20,7 @@ Este documento detalha como a V1 é construída. As decisões e seus porquês es
 - [Variáveis de ambiente](#variáveis-de-ambiente)
 - [Testes e qualidade](#testes-e-qualidade)
 - [Deploy](#deploy)
-- [Preparação para a V2](#preparação-para-a-v2)
+- [V2: verificação](#v2-verificação)
 - [Riscos](#riscos)
 
 ## Visão geral
@@ -92,7 +92,7 @@ evals/
   run.ts
 ```
 
-As rotas públicas (`/ocorrencias`, `/orgaos`, `/simular`) ficam em pt-BR porque o cidadão as vê no link. Fora isso, nomes de arquivo e de código são em inglês.
+As rotas públicas (`/ocorrencias`, `/orgaos`, `/simular`, `/confiabilidade`) ficam em pt-BR porque o cidadão as vê no link. Fora isso, nomes de arquivo e de código são em inglês.
 
 ## Modelo de dados
 
@@ -107,10 +107,12 @@ Tabelas do Convex (`convex/schema.ts`):
 | `conversations` | `citizenId`, `state` (união discriminada, ver abaixo), `updatedAt` | `by_citizen`, `by_updatedAt` |
 | `processedMessages` | `channel`, `messageId` | `by_channel_message` |
 | `anonymousCounters` | `kind` (`emergency` / `out_of_scope`), `target` (ex.: `samu`, `sanepar`), `createdAt` | `by_kind` |
+| `geocodeAttempts` | `citizenId`, `medium` (`text` / `audio`), `source` (`cnefe_exact` / `cnefe_typo` / `google` / `none`), `typoDistance`, `ambiguous`, `precise?`, `ms`, `lat?`, `lng?`, `outcome?` (`confirmed` / `corrected_pin` / `corrected_text` / `abandoned`), `errorMeters?`, `query?` (texto do endereço, só quando `none` ou ambíguo), `createdAt` | `by_citizen_outcome` |
 
 - **`appeal` é desnormalizado**: a mesma mutation que insere o primeiro relato de um cidadão numa ocorrência incrementa o campo. Assim o mapa ordena por apelo sem contar relatos a cada leitura.
 - **Um cidadão conta uma vez por ocorrência**: se ele relatar de novo a mesma ocorrência, o bot responde "você já relatou" e nada muda.
 - **`anonymousCounters` não tem telefone, texto nem local** (ADR 0001).
+- **`geocodeAttempts` mede o match de endereços** (#37): uma linha por endereço em texto ou áudio, gravada no `applyStep`. O desfecho é preenchido no SIM, quando chega pin ou outro endereço, ou quando a conversa acaba. A página `/confiabilidade` mostra só contagens; o texto que falhou sai só por `npx convex run addressMetrics:failedQueries`.
 
 ## Recebimento de mensagens
 
@@ -265,6 +267,7 @@ Aberto, sem login, somente leitura.
 | Descrição do relato | `reports.description` | Nunca |
 | Resumo público | `occurrences.summary` (reescrito pela IA, sem dados pessoais) | Sim |
 | Emergência e fora de escopo | Só tipo + data/hora em `anonymousCounters` | Só agregado |
+| Endereço que o match não achou | `geocodeAttempts.query` | Nunca; a página `/confiabilidade` só tem contagens |
 
 Como isso é garantido:
 
@@ -306,14 +309,17 @@ Como isso é garantido:
 - **Seed**: `npx convex run seed:run` uma vez no deployment de produção.
 - A demo precisa ficar no ar durante toda a avaliação (até o anúncio dos finalistas, 2 dez).
 
-## Preparação para a V2
+## V2: verificação
 
-A V1 já deixa o terreno pronto:
+Código em `convex/verification.ts`; regras puras em `convex/lib/verification.ts`.
 
-- `occurrences.status` já tem `verifying` e `resolved`; datas de verificação e resolução já existem no schema.
-- `citizens.phone` guarda o número para o bot iniciar a conversa.
-- O timeout de 48 h vira um `ctx.scheduler.runAfter` agendado ao iniciar a verificação.
-- O modelo de mensagem da Meta precisa ser submetido cedo (ADR 0002).
+1. **Início:** o botão "Iniciar verificação" na página da ocorrência chama `verification.start` (aberto a qualquer visitante, só para a demo). Ele só aparece se a ocorrência estiver aberta, tiver ao menos um relato de cidadão que dá para consultar (as do seed não têm) e não tiver voltado para Aberta nos últimos 7 dias (`reopenedAt`). A ocorrência passa para `verifying` e ganha um anel âmbar no mapa.
+2. **Pergunta:** `verification.notify` manda a pergunta a cada cidadão com relato na ocorrência. No WhatsApp vai o modelo aprovado `occurrence_verification` (pt_BR, Utilidade), com o resumo e o endereço como variáveis, dois botões de resposta e um botão de link para a ocorrência. No simulador vai a mesma pergunta com botões; para isso, `citizens.sessionId` guarda a sessão do navegador. Uma falha de envio não interrompe as demais.
+3. **Resposta:** os botões carregam `verify:<occurrenceId>:yes|no`. O webhook (`type: "button"`) e o simulador transformam isso em `message.verification`, que vai direto para `verification.vote`, sem passar pela conversa. Só conta quem tem relato na ocorrência; um segundo toque troca o voto (`verificationVotes`).
+4. **Decisão**, a cada voto: NÃO > SIM → volta para `open` e grava `reopenedAt`; SIM ≥ 30% do apelo → `resolved` e grava `resolvedAt`. Um `scheduler.runAfter` de 48 h devolve para `open` se nada decidir antes. Ao fim de cada rodada, os votos são apagados.
+5. **Histórico:** a ocorrência resolvida sai do mapa e aparece em `/resolvidas`.
+
+O modelo de mensagem tem o domínio da demo fixo no botão de link: trocar de domínio exige submeter outro modelo à Meta.
 
 ## Riscos
 

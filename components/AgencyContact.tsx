@@ -1,37 +1,56 @@
-import type { AgencyInfo } from "@/convex/lib/categories";
+import { dialablePhone, type AgencyInfo } from "@/convex/lib/categories";
+import { Glyph, type GlyphName } from "./ui/Glyph";
 
 /** Institutional contact only: never a person's name. */
 export function AgencyContact({ agency }: { agency: AgencyInfo }) {
   return (
-    <dl className="space-y-1 text-sm">
-      <div>
-        <dt className="sr-only">Órgão</dt>
-        <dd className="font-medium">{agency.name}</dd>
-      </div>
-      <div className="flex gap-2">
-        <dt className="text-zinc-500">Telefone</dt>
-        <dd>
-          <a href={`tel:${agency.phone.replace(/\D/g, "")}`} className="underline">
-            {agency.phone}
-          </a>
-        </dd>
-      </div>
-      <div className="flex gap-2">
-        <dt className="text-zinc-500">E-mail</dt>
-        <dd>
-          <a href={`mailto:${agency.email}`} className="underline">
-            {agency.email}
-          </a>
-        </dd>
-      </div>
-      <div>
-        <dt className="sr-only">Site</dt>
-        <dd>
-          <a href={agency.url} target="_blank" rel="noreferrer" className="text-blue-600 underline">
-            Site oficial da Prefeitura
-          </a>
-        </dd>
-      </div>
-    </dl>
+    <ul className="space-y-1 text-sm">
+      <ContactRow
+        icon="phone"
+        href={`tel:${dialablePhone(agency.phone)}`}
+        label="Telefone"
+      >
+        {agency.phone}
+      </ContactRow>
+      <ContactRow icon="mail" href={`mailto:${agency.email}`} label="E-mail">
+        {agency.email}
+      </ContactRow>
+      <ContactRow icon="external" href={agency.url} label="Site" external>
+        Site oficial da Prefeitura
+      </ContactRow>
+    </ul>
+  );
+}
+
+function ContactRow({
+  icon,
+  href,
+  label,
+  external = false,
+  children,
+}: {
+  icon: GlyphName;
+  href: string;
+  label: string;
+  external?: boolean;
+  children: string;
+}) {
+  return (
+    <li>
+      <a
+        href={href}
+        {...(external ? { target: "_blank", rel: "noreferrer" } : {})}
+        className="lit -mx-2 flex min-h-11 items-center gap-3 rounded-control px-2 text-fg transition-colors hover:bg-accent-tint"
+      >
+        <span className="flex size-8 shrink-0 items-center justify-center rounded-full bg-accent-tint text-accent">
+          <Glyph name={icon} size={16} />
+        </span>
+        <span className="min-w-0">
+          <span className="block text-xs text-subtle">{label}</span>
+          <span className="block truncate font-medium">{children}</span>
+        </span>
+        {external && <span className="sr-only">(abre em nova aba)</span>}
+      </a>
+    </li>
   );
 }

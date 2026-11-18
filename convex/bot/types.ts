@@ -4,6 +4,7 @@ import { CATEGORY_KEYS } from "../lib/categories";
 import type {
   conversationStateValidator,
   draftValidator,
+  geocodeSourceValidator,
   incomingMessageValidator,
   outgoingMessageValidator,
 } from "../validators";
@@ -12,6 +13,7 @@ export type Draft = Infer<typeof draftValidator>;
 export type ConversationState = Infer<typeof conversationStateValidator>;
 export type IncomingMessage = Infer<typeof incomingMessageValidator>;
 export type OutgoingMessage = Infer<typeof outgoingMessageValidator>;
+export type GeocodeSource = Infer<typeof geocodeSourceValidator>;
 
 /** A draft with everything needed to register a report. */
 export type CompleteDraft = Required<Draft>;

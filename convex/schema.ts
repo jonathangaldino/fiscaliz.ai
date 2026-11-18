@@ -5,6 +5,8 @@ import {
   categoryValidator,
   channelValidator,
   conversationStateValidator,
+  geocodeAttemptValidator,
+  geocodeOutcomeValidator,
   occurrenceStatusValidator,
   sourceValidator,
 } from "./validators";
@@ -34,6 +36,8 @@ export default defineSchema({
     openedAt: v.number(),
     verificationStartedAt: v.optional(v.number()),
     resolvedAt: v.optional(v.number()),
+    // Last time a verification failed: blocks a new one for 7 days.
+    reopenedAt: v.optional(v.number()),
     source: sourceValidator,
   })
     .index("by_category_status", ["category", "status"])
@@ -48,6 +52,8 @@ export default defineSchema({
     description: v.string(),
     occurredAt: v.number(),
     createdAt: v.number(),
+    // When the citizen's conversation began, for the time to the map (issue #54).
+    startedAt: v.optional(v.number()),
   })
     .index("by_occurrence_citizen", ["occurrenceId", "citizenId"])
     .index("by_citizen_createdAt", ["citizenId", "createdAt"]),
@@ -58,6 +64,8 @@ export default defineSchema({
     externalIdHash: v.string(),
     // WhatsApp only: V2 verification needs to message the citizen back.
     phone: v.optional(v.string()),
+    // Simulator only: random browser session id, to deliver the verification.
+    sessionId: v.optional(v.string()),
   }).index("by_channel_hash", ["channel", "externalIdHash"]),
 
   conversations: defineTable({
@@ -69,6 +77,14 @@ export default defineSchema({
   })
     .index("by_citizen", ["citizenId"])
     .index("by_updatedAt", ["updatedAt"]),
+
+  // Answers to the current verification round. Deleted when the round ends.
+  verificationVotes: defineTable({
+    occurrenceId: v.id("occurrences"),
+    citizenId: v.id("citizens"),
+    answer: v.union(v.literal("yes"), v.literal("no")),
+    createdAt: v.number(),
+  }).index("by_occurrence_citizen", ["occurrenceId", "citizenId"]),
 
   // Idempotency: Meta re-sends a webhook when it does not get a 200 in time.
   processedMessages: defineTable({
@@ -92,4 +108,18 @@ export default defineSchema({
     target: v.string(),
     createdAt: v.number(),
   }).index("by_kind", ["kind"]),
+
+  // Address reliability metrics (issue #37). Internal: `query` and
+  // `citizenId` never leave through a public function.
+  geocodeAttempts: defineTable({
+    ...geocodeAttemptValidator.fields,
+    citizenId: v.id("citizens"),
+    createdAt: v.number(),
+    lat: v.optional(v.number()),
+    lng: v.optional(v.number()),
+    precise: v.optional(v.boolean()),
+    // Filled later: on SIM, on a new pin or address, or when the conversation ends.
+    outcome: v.optional(geocodeOutcomeValidator),
+    errorMeters: v.optional(v.number()),
+  }).index("by_citizen_outcome", ["citizenId", "outcome"]),
 });

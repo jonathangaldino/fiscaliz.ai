@@ -1,22 +1,37 @@
 import Link from "next/link";
+import { NavLinks } from "./NavLinks";
+import { LogoMark } from "./ui/Logo";
+import { SoundToggle } from "./SoundToggle";
 
-export function Header() {
+/**
+ * Floating glass bar. On the map page it sits over the map (`overlay`);
+ * elsewhere it sticks to the top of the page.
+ */
+export function Header({ overlay = false }: { overlay?: boolean }) {
   return (
-    <header className="flex items-center justify-between border-b border-zinc-200 px-4 py-3 dark:border-zinc-800">
-      <Link href="/" className="flex items-baseline gap-2">
-        <span className="text-lg font-bold">Fiscaliz.ai</span>
-        <span className="hidden text-sm text-zinc-500 sm:inline">
-          Ocorrências urbanas de Apucarana, PR
-        </span>
-      </Link>
-      <nav className="flex gap-4 text-sm">
-        <Link href="/" className="hover:underline">
-          Mapa
+    <header
+      className={`pointer-events-none z-30 px-3 pt-3 ${
+        overlay ? "absolute inset-x-0 top-0" : "sticky top-0"
+      }`}
+    >
+      <div className="glass pointer-events-auto mx-auto flex h-14 max-w-6xl items-center justify-between gap-3 rounded-full pr-2 pl-3">
+        <Link
+          href="/"
+          className="flex min-w-0 items-center gap-2.5 rounded-full"
+        >
+          <LogoMark />
+          <span className="text-[17px] font-semibold tracking-tight max-[419px]:sr-only">
+            Fiscaliz<span className="text-accent">.ai</span>
+          </span>
+          <span className="hidden truncate text-sm text-muted lg:inline">
+            Ocorrências urbanas de Apucarana, PR
+          </span>
         </Link>
-        <Link href="/simular" className="hover:underline">
-          Simular relato
-        </Link>
-      </nav>
+        <div className="flex items-center gap-1">
+          <NavLinks />
+          <SoundToggle />
+        </div>
+      </div>
     </header>
   );
 }

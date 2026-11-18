@@ -7,7 +7,7 @@ export const metadata: Metadata = { title: "Simulador · Fiscaliz.ai" };
 export default function SimulatorPage() {
   return (
     <>
-      <Header />
+      <Header overlay />
       <SimulatorChat />
     </>
   );

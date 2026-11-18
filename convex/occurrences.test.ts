@@ -30,7 +30,10 @@ describe("seed", () => {
   it("loads agencies and occurrences once", async () => {
     const t = convexTest(schema, modules);
     const first = await t.mutation(internal.seed.run, {});
-    expect(first).toEqual({ agencies: 7, occurrences: SEED_OCCURRENCES.length });
+    expect(first).toEqual({
+      agencies: 7,
+      occurrences: SEED_OCCURRENCES.length,
+    });
 
     const second = await t.mutation(internal.seed.run, {});
     expect(second).toEqual({ agencies: 7, occurrences: 0 });
@@ -40,7 +43,7 @@ describe("seed", () => {
   });
 });
 
-describe("occurrences.listOpen", () => {
+describe("occurrences.listActive", () => {
   it("returns open occurrences sorted by appeal, with public fields only", async () => {
     const t = convexTest(schema, modules);
     await t.mutation(internal.seed.run, {});
@@ -59,7 +62,7 @@ describe("occurrences.listOpen", () => {
       });
     });
 
-    const list = await t.query(api.occurrences.listOpen, {});
+    const list = await t.query(api.occurrences.listActive, {});
     expect(list).toHaveLength(SEED_OCCURRENCES.length);
     expect(list.every((o) => o.status === "open")).toBe(true);
 
@@ -69,5 +72,55 @@ describe("occurrences.listOpen", () => {
     for (const item of list) {
       expect(Object.keys(item).sort()).toEqual(PUBLIC_FIELDS);
     }
+  });
+});
+
+describe("occurrences.listForExport", () => {
+  it("filters by agency, category and status", async () => {
+    const t = convexTest(schema, modules);
+    await t.mutation(internal.seed.run, {});
+    await t.run(async (ctx) => {
+      await ctx.db.insert("occurrences", {
+        category: "pavement",
+        status: "resolved",
+        lat: -23.55,
+        lng: -51.46,
+        address: "Rua X",
+        summary: "Resolvida",
+        appeal: 999,
+        openedAt: 0,
+        resolvedAt: 1,
+        source: "seed",
+      });
+    });
+
+    const all = await t.query(api.occurrences.listForExport, {});
+    expect(all).toHaveLength(SEED_OCCURRENCES.length + 1);
+    expect(all[0].appeal).toBe(999);
+
+    const resolved = await t.query(api.occurrences.listForExport, {
+      status: "resolved",
+    });
+    expect(resolved.map((o) => o.summary)).toEqual(["Resolvida"]);
+
+    const lighting = await t.query(api.occurrences.listForExport, {
+      category: "street_lighting",
+    });
+    expect(lighting.length).toBeGreaterThan(0);
+    expect(lighting.every((o) => o.category === "street_lighting")).toBe(true);
+
+    const bySlug = await t.query(api.occurrences.listForExport, {
+      agency: "servicos-publicos",
+    });
+    expect(bySlug.length).toBeGreaterThan(0);
+    expect(bySlug.every((o) => o.agencySlug === "servicos-publicos")).toBe(
+      true,
+    );
+
+    const mismatch = await t.query(api.occurrences.listForExport, {
+      agency: "servicos-publicos",
+      category: "street_lighting",
+    });
+    expect(mismatch).toEqual([]);
   });
 });

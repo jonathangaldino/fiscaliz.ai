@@ -160,3 +160,43 @@ export const dailyLimit = (limit: number) =>
   text(
     `Você já registrou ${limit} relatos hoje, o limite diário. Amanhã você pode mandar novos relatos. Obrigado por ajudar a cidade!`,
   );
+
+/**
+ * V2: the simulator copy of the WhatsApp template `occurrence_verification`.
+ * Keep the wording in sync with the template approved by Meta.
+ */
+export function verificationQuestion(
+  occurrence: { summary: string; address: string },
+  link: string,
+  buttons: { yes: string; no: string },
+): OutgoingMessage {
+  return {
+    text: [
+      "Olá! Você relatou um problema em Apucarana pelo Fiscaliz.ai:",
+      "",
+      occurrence.summary,
+      `Local: ${occurrence.address}`,
+      "",
+      "Esse problema já foi resolvido?",
+      `Ver ocorrência: ${link}`,
+    ].join("\n"),
+    buttons: [
+      { id: buttons.yes, title: "SIM, resolvido" },
+      { id: buttons.no, title: "NÃO, continua" },
+    ],
+  };
+}
+
+export const verificationCounted = () =>
+  text("Obrigado! Sua resposta foi registrada.");
+
+export const verificationResolved = (link: string) =>
+  text(
+    `Obrigado! Com as respostas de quem relatou, a ocorrência foi marcada como resolvida. ✅\n${link}`,
+  );
+
+export const verificationReopened = (link: string) =>
+  text(`Obrigado! A ocorrência continua aberta no mapa.\n${link}`);
+
+export const verificationClosed = () =>
+  text("Essa verificação já terminou. Obrigado por responder!");

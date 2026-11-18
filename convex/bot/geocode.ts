@@ -3,8 +3,8 @@
  * as the fallback. Runs inside actions only. Restricted to Apucarana, PR.
  */
 import { STREETS } from "../cnefe/4101408";
-import { displayName, houseNumber, indexStreets, locate, mentions, pickStreet } from "../lib/streets";
-import type { ResolvedLocation } from "./types";
+import { displayName, houseNumber, indexStreets, locate, matchStreet, mentions } from "../lib/streets";
+import type { GeocodeSource, ResolvedLocation } from "./types";
 
 const STREET_INDEX = indexStreets(STREETS);
 
@@ -52,21 +52,36 @@ async function call(params: Record<string, string>): Promise<GeocodeResponse> {
 /** Results that only point to the city or the state are not a location. */
 const TOO_BROAD = ["locality", "administrative_area_level_1", "administrative_area_level_2", "country"];
 
+/** Where the location came from, for the reliability metrics (issue #37). */
+export type Geocoded = {
+  location: ResolvedLocation | null;
+  source: GeocodeSource;
+  typoDistance: number;
+  ambiguous: boolean;
+};
+
 /**
- * Text address → coordinates. Returns null when nothing more specific than
- * the city was found. Throws when the service fails.
+ * Text address → coordinates. `location` is null when nothing more specific
+ * than the city was found. Throws when the service fails.
  */
-export async function geocodeAddress(
-  address: string,
-): Promise<ResolvedLocation | null> {
+export async function geocodeAddress(address: string): Promise<Geocoded> {
   // The IBGE knows "Ítalo Ado Fontanini" from "ítalo fontanini"; Google does not.
-  const street = pickStreet(address, STREET_INDEX);
+  const { street, ambiguous, typoDistance } = matchStreet(address, STREET_INDEX);
   if (street) {
     const number = houseNumber(address, street.name);
     const name = displayName(street.name);
-    return { ...locate(street, number), address: number ? `${name}, ${number}` : name };
+    return {
+      location: { ...locate(street, number), address: number ? `${name}, ${number}` : name },
+      source: typoDistance === 0 ? "cnefe_exact" : "cnefe_typo",
+      typoDistance,
+      ambiguous,
+    };
   }
+  const location = await googleGeocode(address);
+  return { location, source: location ? "google" : "none", typoDistance: 0, ambiguous };
+}
 
+async function googleGeocode(address: string): Promise<ResolvedLocation | null> {
   const body = await call({
     address,
     components: "locality:Apucarana|administrative_area:PR|country:BR",

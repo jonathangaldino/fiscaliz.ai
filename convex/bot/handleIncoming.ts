@@ -1,8 +1,9 @@
+import type { Infer } from "convex/values";
 import { internal } from "../_generated/api";
 import type { Id } from "../_generated/dataModel";
 import { internalAction, type ActionCtx } from "../_generated/server";
 import { hashCitizenId } from "../lib/citizenHash";
-import { incomingMessageValidator } from "../validators";
+import { incomingMessageValidator, type geocodeAttemptValidator } from "../validators";
 import { send } from "./channels";
 import { extract, isSameOccurrence } from "./extract";
 import { geocodeAddress, reverseGeocode } from "./geocode";
@@ -35,8 +36,19 @@ export const handleIncoming = internalAction({
         channel: message.channel,
         externalIdHash,
         phone: message.channel === "whatsapp" ? message.externalId : undefined,
+        sessionId: message.channel === "simulator" ? message.externalId : undefined,
       },
     );
+
+    // V2 answer: handled apart, the conversation is left untouched.
+    if (message.verification) {
+      const reply = await ctx.runMutation(internal.verification.vote, {
+        citizenId,
+        ...message.verification,
+      });
+      await send(ctx, message, [reply]);
+      return;
+    }
 
     // Audio becomes text before anything else, so it follows the same flow.
     let text = message.text;
@@ -61,6 +73,7 @@ export const handleIncoming = internalAction({
       let location: ResolvedLocation | null = null;
       let addressNotFound = false;
       let matchId: Id<"occurrences"> | null = null;
+      let geocode: Infer<typeof geocodeAttemptValidator> | undefined;
       try {
         const isPureDecision = state?.phase === "confirming" && decision;
         if (text && !isPureDecision) {
@@ -73,8 +86,17 @@ export const handleIncoming = internalAction({
         if (message.location) {
           location = await resolvePin(message.location);
         } else if (extraction?.kind === "urban" && extraction.address) {
-          location = await geocodeAddress(extraction.address);
-          addressNotFound = location === null;
+          const started = Date.now();
+          const { location: found, ...match } = await geocodeAddress(extraction.address);
+          location = found;
+          addressNotFound = found === null;
+          geocode = {
+            ...match,
+            medium: message.audioMediaId ? "audio" : "text",
+            ms: Date.now() - started,
+            // Only failing names are kept, to learn what the match misses.
+            query: match.source === "none" || match.ambiguous ? extraction.address : undefined,
+          };
         }
         if (state?.phase === "confirming" && decision === "yes" && !extraction) {
           matchId = await findSameOccurrence(ctx, state.draft);
@@ -95,6 +117,7 @@ export const handleIncoming = internalAction({
         decision,
         addressNotFound,
         matchId,
+        geocode,
       });
       if (result.ok) {
         await send(ctx, message, result.messages);
