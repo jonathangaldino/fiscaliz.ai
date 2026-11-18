@@ -13,7 +13,6 @@ const LINKS: {
   { href: "/mapa", label: "Mapa" },
   { href: "/resolvidas", label: "Resolvidas" },
   { href: "/simular", label: "Simular relato", short: "Simular" },
-  { href: "/metricas", label: "Métricas", wide: true },
   { href: "/confiabilidade", label: "Confiabilidade", wide: true },
 ];
 

@@ -28,14 +28,11 @@ export function AutomationMetrics() {
   const m = useQuery(api.metrics.summary, {});
 
   return (
-    <main
-      id="conteudo"
-      className="mx-auto w-full max-w-5xl space-y-6 px-4 pt-6 pb-12 sm:px-6"
-    >
+    <section aria-labelledby="automation" className="space-y-6">
       <header className="space-y-1">
-        <h1 className="text-3xl font-semibold tracking-tight">
+        <h2 id="automation" className="text-2xl font-semibold tracking-tight">
           Automação em números
-        </h1>
+        </h2>
         <p className="text-muted">
           O que o bot fez sozinho: juntou relatos repetidos, mandou cada
           ocorrência ao órgão certo e desviou o que não é da Prefeitura. Nenhuma
@@ -48,7 +45,7 @@ export function AutomationMetrics() {
       ) : (
         <>
           <Card className="space-y-3">
-            <h2 className="text-base font-semibold">Relatos viram ocorrências</h2>
+            <h3 className="text-base font-semibold">Relatos viram ocorrências</h3>
             <dl className="grid grid-cols-2 gap-3 sm:grid-cols-4">
               <Stat label="Relatos" value={String(m.reports)} />
               <Stat label="Ocorrências" value={String(m.occurrences)} />
@@ -64,7 +61,7 @@ export function AutomationMetrics() {
           </Card>
 
           <Card className="space-y-3">
-            <h2 className="text-base font-semibold">Tempo e verificação</h2>
+            <h3 className="text-base font-semibold">Tempo e verificação</h3>
             <dl className="grid grid-cols-2 gap-3 sm:grid-cols-4">
               <Stat
                 label="Até o mapa (mediana)"
@@ -80,7 +77,7 @@ export function AutomationMetrics() {
           </Card>
 
           <Card className="space-y-3">
-            <h2 className="text-base font-semibold">Desvios</h2>
+            <h3 className="text-base font-semibold">Desvios</h3>
             {m.diversions.length === 0 ? (
               <p className="text-sm text-muted">Nenhum desvio até agora.</p>
             ) : (
@@ -105,7 +102,7 @@ export function AutomationMetrics() {
           </Card>
 
           <Card className="space-y-3">
-            <h2 className="text-base font-semibold">Por órgão</h2>
+            <h3 className="text-base font-semibold">Por órgão</h3>
             <div className="overflow-x-auto rounded-card border border-line bg-surface/50">
               <table className="w-full text-left text-sm">
                 <thead className="text-xs text-subtle">
@@ -145,6 +142,6 @@ export function AutomationMetrics() {
         tempo até o mapa vai da primeira mensagem do cidadão ao registro.
         Desvios não guardam telefone, texto nem local.
       </p>
-    </main>
+    </section>
   );
 }
