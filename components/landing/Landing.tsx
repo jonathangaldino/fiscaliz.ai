@@ -78,6 +78,10 @@ function Hero() {
             encaminha para o órgão certo da Prefeitura e põe o problema num mapa
             aberto para todo mundo.
           </p>
+          <p className="mx-auto mt-3 max-w-xl text-sm text-subtle lg:mx-0">
+            O Fiscaliz.ai é um serviço independente e não é o canal oficial da
+            Prefeitura de Apucarana.
+          </p>
         </Reveal>
         <Reveal delay={0.15}>
           <div className="mt-8 flex flex-col items-center gap-3 sm:flex-row sm:justify-center lg:justify-start">
@@ -686,7 +690,7 @@ function Privacy() {
 const FAQ: { q: string; a: ReactNode }[] = [
   {
     q: "Preciso baixar algum aplicativo?",
-    a: "Não. É uma conversa no WhatsApp, com um número oficial do bot. Para olhar o mapa, basta o navegador.",
+    a: "Não. É uma conversa no WhatsApp, com o número do Fiscaliz.ai. Para olhar o mapa, basta o navegador.",
   },
   {
     q: "Posso mandar áudio?",
@@ -803,6 +807,16 @@ function Footer() {
           <Logo size={30} />
           <p className="mt-2 text-muted">
             Projeto open source do Hack Brasil 2026 para Apucarana, PR.
+          </p>
+          <p className="mt-1 text-muted">
+            Serviço independente da MUGEN Software. Não é o canal oficial da
+            Prefeitura de Apucarana.{" "}
+            <a
+              className="hover:text-fg underline"
+              href="mailto:suporte@mugensoftware.com"
+            >
+              suporte@mugensoftware.com
+            </a>
           </p>
         </div>
         <nav aria-label="Rodapé">
