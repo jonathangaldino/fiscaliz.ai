@@ -27,6 +27,26 @@ export async function upsertAgencies(
 }
 
 /**
+ * Loads only the agencies, then links occurrences created while they were missing.
+ * Run with `npx convex run seed:agencies`. Idempotent.
+ */
+export const agencies = internalMutation({
+  args: {},
+  returns: v.object({ agencies: v.number(), linked: v.number() }),
+  handler: async (ctx) => {
+    const agencyIds = await upsertAgencies(ctx);
+    let linked = 0;
+    for await (const occurrence of ctx.db.query("occurrences")) {
+      const slug = CATEGORIES[occurrence.category].agency;
+      if (occurrence.agencyId || !slug) continue;
+      await ctx.db.patch(occurrence._id, { agencyId: agencyIds[slug] });
+      linked++;
+    }
+    return { agencies: Object.keys(agencyIds).length, linked };
+  },
+});
+
+/**
  * Loads agencies and synthetic occurrences.
  * Run once per deployment: `npx convex run seed:run`.
  * Idempotent: occurrences are only inserted when no seed data exists.
