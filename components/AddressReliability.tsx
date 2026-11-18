@@ -23,14 +23,11 @@ export function AddressReliability() {
   const rows = useQuery(api.addressMetrics.summary, {});
 
   return (
-    <main
-      id="conteudo"
-      className="mx-auto w-full max-w-5xl space-y-6 px-4 pt-6 pb-12 sm:px-6"
-    >
+    <section aria-labelledby="address" className="space-y-6">
       <header className="space-y-1">
-        <h1 className="text-3xl font-semibold tracking-tight">
+        <h2 id="address" className="text-2xl font-semibold tracking-tight">
           Confiabilidade do endereço
-        </h1>
+        </h2>
         <p className="text-muted">
           Como o bot acha a rua que o cidadão escreveu ou falou, e quantas vezes
           ele confirma ou corrige o endereço.
@@ -47,9 +44,9 @@ export function AddressReliability() {
           const ambiguous = mine.reduce((sum, r) => sum + r.ambiguous, 0);
           return (
             <Card key={medium} className="space-y-3">
-              <h2 className="text-base font-semibold">
+              <h3 className="text-base font-semibold">
                 {MEDIUM_LABELS[medium]}
-              </h2>
+              </h3>
               <dl className="grid grid-cols-3 gap-3">
                 <Stat label="Endereços" value={String(total)} />
                 <Stat label="Não encontrado" value={pct(notFound, total)} />
@@ -125,6 +122,6 @@ export function AddressReliability() {
         respondeu SIM, mandou pin, mandou outro endereço ou abandonou a
         conversa. O erro é a distância até o pin, quando ele corrige com pin.
       </p>
-    </main>
+    </section>
   );
 }
