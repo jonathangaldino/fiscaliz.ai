@@ -45,3 +45,13 @@ export function Notice({ children }: { children: ReactNode }) {
     </p>
   );
 }
+
+/** One big number with its label, inside a <dl>. */
+export function Stat({ label, value }: { label: string; value: string }) {
+  return (
+    <div className="rounded-control border border-line bg-surface/60 p-4">
+      <dt className="text-xs text-subtle">{label}</dt>
+      <dd className="text-2xl font-semibold tabular-nums">{value}</dd>
+    </div>
+  );
+}

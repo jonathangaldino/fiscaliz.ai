@@ -2,7 +2,7 @@
 
 import { useQuery } from "convex/react";
 import { api } from "@/convex/_generated/api";
-import { Card, Notice } from "./ui/Page";
+import { Card, Notice, Stat } from "./ui/Page";
 
 const GROUP_LABELS = {
   cnefe_exact: "IBGE, nome exato",
@@ -126,14 +126,5 @@ export function AddressReliability() {
         conversa. O erro é a distância até o pin, quando ele corrige com pin.
       </p>
     </main>
-  );
-}
-
-function Stat({ label, value }: { label: string; value: string }) {
-  return (
-    <div className="rounded-control border border-line bg-surface/60 p-4">
-      <dt className="text-xs text-subtle">{label}</dt>
-      <dd className="text-2xl font-semibold tabular-nums">{value}</dd>
-    </div>
   );
 }
