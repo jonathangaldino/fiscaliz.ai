@@ -50,13 +50,22 @@ export function AgencyQueue({ slug }: { slug: string }) {
         <Card className="px-2 py-3">
           <div className="flex items-center justify-between px-3 pb-2">
             <h2 className="text-base font-semibold">Fila por apelo</h2>
-            <Link
-              href={`/mapa?orgao=${slug}`}
-              className={buttonClass({ variant: "ghost", size: "sm" })}
-            >
-              Ver no mapa
-              <Glyph name="chevronRight" size={16} />
-            </Link>
+            <div className="flex items-center gap-1">
+              <a
+                href={`/api/ocorrencias.csv?orgao=${slug}`}
+                download
+                className={buttonClass({ variant: "ghost", size: "sm" })}
+              >
+                Baixar dados
+              </a>
+              <Link
+                href={`/mapa?orgao=${slug}`}
+                className={buttonClass({ variant: "ghost", size: "sm" })}
+              >
+                Ver no mapa
+                <Glyph name="chevronRight" size={16} />
+              </Link>
+            </div>
           </div>
           {queue.occurrences.length === 0 ? (
             <Notice>Nenhuma ocorrência aberta.</Notice>

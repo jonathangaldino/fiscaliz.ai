@@ -1,7 +1,7 @@
 import { v, type Infer } from "convex/values";
 import { query } from "./_generated/server";
 import type { Doc } from "./_generated/dataModel";
-import { CATEGORIES } from "./lib/categories";
+import { CATEGORIES, CATEGORY_KEYS } from "./lib/categories";
 import {
   categoryValidator,
   occurrenceStatusValidator,
@@ -134,5 +134,53 @@ export const listByAgency = query({
       openCount: open.length,
       totalAppeal: open.reduce((sum, o) => sum + o.appeal, 0),
     };
+  },
+});
+
+/**
+ * Open data export (GeoJSON/CSV API): optional filters, highest appeal first,
+ * capped at MAP_LIMIT. Agency is derived from the category, so it filters by
+ * the agency's categories.
+ */
+export const listForExport = query({
+  args: {
+    agency: v.optional(v.string()),
+    category: v.optional(categoryValidator),
+    status: v.optional(occurrenceStatusValidator),
+  },
+  returns: v.array(publicOccurrenceValidator),
+  handler: async (ctx, { agency, category, status }) => {
+    const statuses = status
+      ? [status]
+      : (["open", "verifying", "resolved"] as const);
+    const categories = (category ? [category] : CATEGORY_KEYS).filter(
+      (key) => agency === undefined || CATEGORIES[key].agency === agency,
+    );
+    const filtered = Boolean(category || agency);
+    const batches = await Promise.all(
+      filtered
+        ? categories.flatMap((key) =>
+            statuses.map((s) =>
+              ctx.db
+                .query("occurrences")
+                .withIndex("by_category_status", (q) =>
+                  q.eq("category", key).eq("status", s),
+                )
+                .take(MAP_LIMIT),
+            ),
+          )
+        : statuses.map((s) =>
+            ctx.db
+              .query("occurrences")
+              .withIndex("by_status_appeal", (q) => q.eq("status", s))
+              .order("desc")
+              .take(MAP_LIMIT),
+          ),
+    );
+    return batches
+      .flat()
+      .sort((a, b) => b.appeal - a.appeal)
+      .slice(0, MAP_LIMIT)
+      .map(toPublicOccurrence);
   },
 });
