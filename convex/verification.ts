@@ -29,6 +29,10 @@ import {
 // occurrence ever gets more citizens than that.
 const MAX_REPORTS = 500;
 
+// Feature flag: WhatsApp citizens are asked only when the Convex env sets this
+// to "true" (off until Meta approves the `occurrence_verification` template).
+const whatsappEnabled = () => process.env.VERIFICATION_WHATSAPP_ENABLED === "true";
+
 /** Citizens with a report on the occurrence that the bot can message. */
 async function recipientsOf(ctx: QueryCtx, occurrenceId: Id<"occurrences">) {
   const reports = await ctx.db
@@ -38,7 +42,8 @@ async function recipientsOf(ctx: QueryCtx, occurrenceId: Id<"occurrences">) {
   const citizenIds = [...new Set(reports.map((r) => r.citizenId))];
   const citizens = await Promise.all(citizenIds.map((id) => ctx.db.get(id)));
   return citizens.filter(
-    (c): c is Doc<"citizens"> => c !== null && Boolean(c.phone ?? c.sessionId),
+    (c): c is Doc<"citizens"> =>
+      c !== null && Boolean(c.sessionId || (whatsappEnabled() && c.phone)),
   );
 }
 
@@ -111,7 +116,10 @@ export const recipients = internalQuery({
     return {
       summary: occurrence.summary,
       address: occurrence.address,
-      citizens: citizens.map(({ phone, sessionId }) => ({ phone, sessionId })),
+      citizens: citizens.map(({ phone, sessionId }) => ({
+        phone: whatsappEnabled() ? phone : undefined,
+        sessionId,
+      })),
     };
   },
 });

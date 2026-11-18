@@ -197,6 +197,16 @@ describe("verification", () => {
     await expect(t.mutation(api.verification.start, { id: seed._id })).rejects.toThrow();
   });
 
+  it("skips WhatsApp reporters unless VERIFICATION_WHATSAPP_ENABLED is true", async () => {
+    const { t, occurrenceId, citizenIds } = await setup();
+    await t.run((ctx) =>
+      ctx.db.patch(citizenIds[0], { channel: "whatsapp", sessionId: undefined, phone: "5543999990000" }),
+    );
+    expect(await t.query(api.verification.availability, { id: occurrenceId })).toBeNull();
+    vi.stubEnv("VERIFICATION_WHATSAPP_ENABLED", "true");
+    expect(await t.query(api.verification.availability, { id: occurrenceId })).not.toBeNull();
+  });
+
   it("routes a simulator verification button to the vote", async () => {
     const { t, occurrenceId } = await setup(1);
     await startAndNotify(t, occurrenceId);
