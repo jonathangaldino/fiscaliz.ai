@@ -12,7 +12,7 @@ function assertSession(sessionId: string) {
   if (!SESSION_ID.test(sessionId)) throw new ConvexError("Sessão inválida");
 }
 
-/** The citizen side of the simulator: what WhatsApp would deliver. */
+/** The citizen side of the simulator: what Telegram would deliver. */
 export const send = mutation({
   args: {
     sessionId: v.string(),

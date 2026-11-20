@@ -1,12 +1,14 @@
 /**
- * Audio messages: download from the WhatsApp Cloud API and transcribe with
- * ElevenLabs Scribe. The audio only lives in memory during this call and is
+ * Audio messages: download from Telegram (or the dormant WhatsApp Cloud API)
+ * and transcribe with ElevenLabs Scribe. The audio only lives in memory during this call and is
  * never stored.
  */
 
+import { call } from "./channels/telegram";
+
 const GRAPH_VERSION = process.env.WHATSAPP_GRAPH_VERSION ?? "v23.0";
 const SCRIBE_URL = "https://api.elevenlabs.io/v1/speech-to-text";
-// WhatsApp voice notes are short; refuse anything unreasonably large.
+// Voice notes are short; refuse anything unreasonably large.
 const MAX_AUDIO_BYTES = 16 * 1024 * 1024;
 
 function env(name: string): string {
@@ -41,6 +43,28 @@ export async function downloadWhatsAppMedia(
   return { data, mimeType: mime_type };
 }
 
+/** Telegram file_id → audio bytes, via getFile and the file endpoint. */
+export async function downloadTelegramFile(
+  fileId: string,
+): Promise<{ data: Blob; mimeType: string }> {
+  const { file_path, file_size } = (await call("getFile", { file_id: fileId })) as {
+    file_path?: string;
+    file_size?: number;
+  };
+  if (!file_path) throw new Error("Telegram file has no path");
+  if (file_size && file_size > MAX_AUDIO_BYTES) throw new Error("Audio too large");
+
+  const media = await fetch(
+    `https://api.telegram.org/file/bot${env("TELEGRAM_BOT_TOKEN")}/${file_path}`,
+    { signal: AbortSignal.timeout(20_000) },
+  );
+  if (!media.ok) throw new Error(`Media download failed: HTTP ${media.status}`);
+  const data = await media.blob();
+  if (data.size > MAX_AUDIO_BYTES) throw new Error("Audio too large");
+  // Voice notes are OGG/Opus; the file endpoint answers application/octet-stream.
+  return { data, mimeType: "audio/ogg" };
+}
+
 /** Audio → pt-BR text with ElevenLabs Scribe. */
 export async function transcribe(audio: Blob, mimeType: string): Promise<string> {
   const form = new FormData();
@@ -60,6 +84,11 @@ export async function transcribe(audio: Blob, mimeType: string): Promise<string>
   const trimmed = text?.trim();
   if (!trimmed) throw new Error("Empty transcription");
   return trimmed;
+}
+
+export async function transcribeTelegramAudio(fileId: string): Promise<string> {
+  const { data, mimeType } = await downloadTelegramFile(fileId);
+  return transcribe(data, mimeType);
 }
 
 export async function transcribeWhatsAppAudio(mediaId: string): Promise<string> {

@@ -9,7 +9,8 @@ import { extract, isSameOccurrence } from "./extract";
 import { geocodeAddress, reverseGeocode } from "./geocode";
 import * as messages from "./messages";
 import { parseDecision } from "./stateMachine";
-import { transcribeWhatsAppAudio } from "./transcribe";
+import { answerCallback } from "./channels/telegram";
+import { transcribeTelegramAudio, transcribeWhatsAppAudio } from "./transcribe";
 import type { Draft, Extraction, ResolvedLocation } from "./types";
 
 const MAX_ATTEMPTS = 3;
@@ -22,6 +23,12 @@ const MAX_ATTEMPTS = 3;
 export const handleIncoming = internalAction({
   args: { message: incomingMessageValidator },
   handler: async (ctx, { message }) => {
+    if (message.callbackQueryId) {
+      // Cosmetic: a failure here must not lose the citizen's answer.
+      await answerCallback(message.callbackQueryId).catch((error) =>
+        console.error("answerCallbackQuery failed", error),
+      );
+    }
     if (message.unsupported) {
       await send(ctx, message, [messages.unsupported()]);
       return;
@@ -35,6 +42,7 @@ export const handleIncoming = internalAction({
       {
         channel: message.channel,
         externalIdHash,
+        telegramChatId: message.channel === "telegram" ? message.externalId : undefined,
         phone: message.channel === "whatsapp" ? message.externalId : undefined,
         sessionId: message.channel === "simulator" ? message.externalId : undefined,
       },
@@ -54,7 +62,9 @@ export const handleIncoming = internalAction({
     let text = message.text;
     if (message.audioMediaId) {
       try {
-        text = await transcribeWhatsAppAudio(message.audioMediaId);
+        text = await (message.channel === "whatsapp"
+          ? transcribeWhatsAppAudio(message.audioMediaId)
+          : transcribeTelegramAudio(message.audioMediaId));
       } catch (error) {
         console.error("Audio transcription failed", error);
         await send(ctx, message, [messages.audioFailed()]);

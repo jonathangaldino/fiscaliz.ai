@@ -197,14 +197,47 @@ describe("verification", () => {
     await expect(t.mutation(api.verification.start, { id: seed._id })).rejects.toThrow();
   });
 
-  it("skips WhatsApp reporters unless VERIFICATION_WHATSAPP_ENABLED is true", async () => {
+  it("asks Telegram reporters through the Bot API", async () => {
+    vi.stubEnv("TELEGRAM_BOT_TOKEN", "tg-token");
+    const sent: unknown[] = [];
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(async (_url: string, init?: RequestInit) => {
+        sent.push(JSON.parse(String(init?.body)));
+        return new Response(JSON.stringify({ ok: true, result: {} }));
+      }),
+    );
+    const { t, occurrenceId, citizenIds } = await setup();
+    await t.run((ctx) =>
+      ctx.db.patch(citizenIds[0], {
+        channel: "telegram",
+        sessionId: undefined,
+        telegramChatId: "100200300",
+      }),
+    );
+    await startAndNotify(t, occurrenceId);
+    vi.unstubAllGlobals();
+
+    expect(sent).toHaveLength(1);
+    expect(sent[0]).toMatchObject({
+      chat_id: "100200300",
+      reply_markup: {
+        inline_keyboard: [
+          [
+            { text: "SIM, resolvido", callback_data: verifyButtonId(occurrenceId, "yes") },
+            { text: "NÃO, continua", callback_data: verifyButtonId(occurrenceId, "no") },
+          ],
+        ],
+      },
+    });
+  });
+
+  it("skips dormant WhatsApp reporters", async () => {
     const { t, occurrenceId, citizenIds } = await setup();
     await t.run((ctx) =>
       ctx.db.patch(citizenIds[0], { channel: "whatsapp", sessionId: undefined, phone: "5543999990000" }),
     );
     expect(await t.query(api.verification.availability, { id: occurrenceId })).toBeNull();
-    vi.stubEnv("VERIFICATION_WHATSAPP_ENABLED", "true");
-    expect(await t.query(api.verification.availability, { id: occurrenceId })).not.toBeNull();
   });
 
   it("routes a simulator verification button to the vote", async () => {

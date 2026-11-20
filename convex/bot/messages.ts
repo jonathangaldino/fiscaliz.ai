@@ -162,8 +162,7 @@ export const dailyLimit = (limit: number) =>
   );
 
 /**
- * V2: the simulator copy of the WhatsApp template `occurrence_verification`.
- * Keep the wording in sync with the template approved by Meta.
+ * V2: the question sent to Telegram and simulator citizens.
  */
 export function verificationQuestion(
   occurrence: { summary: string; address: string },

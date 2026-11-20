@@ -3,8 +3,8 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { internal } from "../_generated/api";
 import schema from "../schema";
 import { modules } from "../test.setup";
-import { FAKE_PHONE } from "../whatsapp/webhook.fixtures";
-import { transcribeWhatsAppAudio } from "./transcribe";
+import { FAKE_CHAT_ID } from "../telegram/webhook.fixtures";
+import { transcribeTelegramAudio, transcribeWhatsAppAudio } from "./transcribe";
 
 type Route = (url: string, init?: RequestInit) => Response | Promise<Response>;
 
@@ -27,6 +27,7 @@ const json = (body: unknown, status = 200) =>
 beforeEach(() => {
   vi.stubEnv("WHATSAPP_TOKEN", "test-token");
   vi.stubEnv("WHATSAPP_PHONE_NUMBER_ID", "123");
+  vi.stubEnv("TELEGRAM_BOT_TOKEN", "tg-token");
   vi.stubEnv("ELEVENLABS_API_KEY", "test-eleven");
 });
 afterEach(() => {
@@ -72,23 +73,51 @@ describe("transcribeWhatsAppAudio", () => {
   });
 });
 
+describe("transcribeTelegramAudio", () => {
+  it("resolves the file path and downloads it with the bot token", async () => {
+    const calls = mockFetch((url) => {
+      if (url.endsWith("/getFile")) {
+        return json({ ok: true, result: { file_path: "voice/file_1.oga", file_size: 3 } });
+      }
+      if (url === "https://api.telegram.org/file/bottg-token/voice/file_1.oga") {
+        return new Response(new Uint8Array([1, 2, 3]));
+      }
+      if (url.includes("elevenlabs")) return json({ text: "Poste apagado" });
+      return json({}, 404);
+    });
+
+    expect(await transcribeTelegramAudio("file-1")).toBe("Poste apagado");
+    const getFile = calls.find((c) => c.url.endsWith("/getFile"));
+    expect(getFile?.url).toBe("https://api.telegram.org/bottg-token/getFile");
+    expect(JSON.parse(String(getFile?.init?.body))).toEqual({ file_id: "file-1" });
+  });
+
+  it("refuses a file that is too large before downloading", async () => {
+    const calls = mockFetch(() =>
+      json({ ok: true, result: { file_path: "voice/big.oga", file_size: 17 * 1024 * 1024 } }),
+    );
+    await expect(transcribeTelegramAudio("file-1")).rejects.toThrow("Audio too large");
+    expect(calls).toHaveLength(1);
+  });
+});
+
 describe("handleIncoming with audio", () => {
   it("asks to resend or write when transcription fails, storing nothing", async () => {
     const calls = mockFetch((url) =>
-      url.endsWith("/messages") ? json({ messages: [{ id: "wamid.out" }] }) : json({}, 500),
+      url.endsWith("/sendMessage") ? json({ ok: true, result: {} }) : json({}, 500),
     );
     const t = convexTest(schema, modules);
     await t.action(internal.bot.handleIncoming.handleIncoming, {
       message: {
-        channel: "whatsapp",
-        externalId: FAKE_PHONE,
-        messageId: "wamid.audio",
+        channel: "telegram",
+        externalId: String(FAKE_CHAT_ID),
+        messageId: "7",
         receivedAt: Date.now(),
         audioMediaId: "media-1",
       },
     });
 
-    const sent = calls.filter((c) => c.url.endsWith("/messages"));
+    const sent = calls.filter((c) => c.url.endsWith("/sendMessage"));
     expect(sent).toHaveLength(1);
     expect(String(sent[0].init?.body)).toMatch(/não consegui entender o áudio/i);
 
