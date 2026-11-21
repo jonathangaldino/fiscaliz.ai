@@ -46,6 +46,7 @@ flowchart LR
   Q -- áudio --> E[ElevenLabs Scribe]
   Q -- triagem e extração --> A[Claude Haiku 5.5]
   Q -- endereço --> G[CNEFE do IBGE, Google Geocoding de reserva]
+  Q -- foto, no SIM --> B[Modal: YOLO borra rosto e placa]
   Q --> DB[(Convex)]
   DB -- tempo real --> P[Painel Next.js]
 ```
@@ -54,13 +55,14 @@ flowchart LR
 2. **Coleta:** o bot pergunta só o que falta (problema, local), mostra um resumo e pede **SIM/NÃO**.
 3. **Roteamento:** a categoria vem de uma lista fechada e define o órgão responsável, conforme o [COMPETENCIAS.md](./COMPETENCIAS.md).
 4. **De-duplicação:** ocorrências abertas da mesma categoria num raio de 50 m (150 m sem número da rua) são candidatas; a IA confirma se é o mesmo problema. Se for, o apelo sobe.
-5. **Painel:** mapa e lista por apelo, filtros por categoria e órgão, página de cada ocorrência e fila por órgão.
+5. **Foto:** o cidadão pode mandar 1 foto. No SIM ela passa por um worker no Modal que borra rostos e placas; só a cópia borrada vai para a página da ocorrência, e a original é apagada ([ADR 0010](./docs/adr/0010-fotos-anonimizadas.md)).
+6. **Painel:** mapa e lista por apelo, filtros por categoria e órgão, página de cada ocorrência e fila por órgão.
 
 A IA só preenche dados; quem decide o fluxo é uma máquina de estados em código, testada caso a caso ([ADR 0004](./docs/adr/0004-por-que-nao-langgraph.md)). Detalhes em [docs/arquitetura.md](./docs/arquitetura.md) e nas [ADRs](./docs/adr/).
 
 ## Stack
 
-Next.js (App Router) e Tailwind na Vercel · Convex (banco, funções, webhook, cron, tempo real) · MapLibre com tiles OpenFreeMap · Claude Haiku 5.5 · ElevenLabs Scribe · CNEFE do IBGE e Google Geocoding · Telegram Bot API ([ADR 0009](./docs/adr/0009-telegram-no-lugar-do-whatsapp.md)) · Vitest e `convex-test`.
+Next.js (App Router) e Tailwind na Vercel · Convex (banco, funções, webhook, cron, tempo real) · MapLibre com tiles OpenFreeMap · Claude Haiku 5.5 · ElevenLabs Scribe · Modal com YOLO (fotos) · CNEFE do IBGE e Google Geocoding · Telegram Bot API ([ADR 0009](./docs/adr/0009-telegram-no-lugar-do-whatsapp.md)) · Vitest e `convex-test`.
 
 ## Rodar localmente
 
@@ -84,7 +86,12 @@ npx convex env set PUBLIC_APP_URL http://localhost:3000
 npx convex env set TELEGRAM_BOT_TOKEN ...
 npx convex env set TELEGRAM_WEBHOOK_SECRET "$(openssl rand -hex 32)"
 npx convex env set ELEVENLABS_API_KEY ...       # áudio
+# Só para fotos (worker em workers/blur/, ADR 0010):
+npx convex env set MODAL_BLUR_URL https://<workspace>-<env>--fiscaliza-blur-blurworker-process.modal.run
+npx convex env set MODAL_BLUR_SECRET ...        # o mesmo do modal.Secret
 ```
+
+Sem `MODAL_BLUR_*`, a foto é recusada no SIM: o relato é registrado sem imagem e o bot avisa. Deploy do worker em [workers/blur/README.md](./workers/blur/README.md).
 
 O mapa e o simulador funcionam só com `ANTHROPIC_API_KEY` e `CITIZEN_HASH_SECRET`; sem a chave do Google, use o pin no mapa em vez do endereço em texto. A lista completa está em [docs/arquitetura.md](./docs/arquitetura.md#variáveis-de-ambiente).
 
@@ -140,6 +147,7 @@ Campos: `id`, `category`, `categoryLabel`, `agency`, `status`, `address`, `summa
 
 - **Dados sintéticos:** o seed e a demo usam só ocorrências inventadas em ruas reais de Apucarana. Nenhum dado pessoal real (regra 9 do regulamento).
 - **O cidadão nunca aparece no mapa.** Telefone, texto original, áudio e descrição do relato não chegam ao navegador: toda query pública declara o formato de retorno, e um teste confere que nenhum desses campos vaza.
+- **Foto só borrada:** rostos e placas são borrados antes de publicar, a original é apagada logo depois e o arquivo é recodificado sem EXIF (sem GPS do celular). Se a borragem falha, a foto não é publicada.
 - **Áudio não é guardado**; o telefone é identificado por HMAC com segredo, e só fica guardado para a verificação da V2.
 - **Contato dos órgãos é só institucional:** nome do órgão, telefone, e-mail e site oficial. Nenhum nome de pessoa.
 

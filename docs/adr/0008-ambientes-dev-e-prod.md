@@ -21,7 +21,7 @@ Decidimos separar **dois ambientes completos**, cada um com uma branch, um site 
 
 ## Variáveis de ambiente
 
-As variáveis do Convex são **as mesmas nos dois ambientes**, com os mesmos valores. Assim, o que funcionou em dev funciona em prod. As exceções são `PUBLIC_APP_URL`, que aponta para o site do próprio ambiente (os links que o bot manda em dev abrem o painel de dev, que mostra os dados de dev), e `TELEGRAM_BOT_TOKEN` / `TELEGRAM_WEBHOOK_SECRET`, porque cada ambiente tem o seu bot ([ADR 0009](./0009-telegram-no-lugar-do-whatsapp.md)).
+As variáveis do Convex são **as mesmas nos dois ambientes**, com os mesmos valores. Assim, o que funcionou em dev funciona em prod. As exceções são `PUBLIC_APP_URL`, que aponta para o site do próprio ambiente (os links que o bot manda em dev abrem o painel de dev, que mostra os dados de dev), e `TELEGRAM_BOT_TOKEN` / `TELEGRAM_WEBHOOK_SECRET`, porque cada ambiente tem o seu bot ([ADR 0009](./0009-telegram-no-lugar-do-whatsapp.md)), e `MODAL_BLUR_URL` / `MODAL_BLUR_SECRET`, porque cada ambiente tem o seu worker de fotos ([ADR 0010](./0010-fotos-anonimizadas.md)).
 
 Ao adicionar ou trocar uma variável, ela vai para os dois deployments (`npx convex env set` e `npx convex env set --prod`).
 

@@ -34,6 +34,7 @@ flowchart LR
   Q -- áudio --> E[ElevenLabs Scribe]
   Q -- extração / duplicata --> A[Claude Haiku 5.5]
   Q -- endereço --> G[Google Geocoding]
+  Q -- foto no SIM --> B[Modal<br/>YOLO rosto/placa]
   Q -- mutations --> DB[(Convex DB)]
   DB -- useQuery em tempo real --> P[Painel Next.js<br/>Vercel]
   Q -- resposta --> M
@@ -292,6 +293,8 @@ Como isso é garantido:
 | `TELEGRAM_WEBHOOK_SECRET` | Segredo do `setWebhook`, conferido em cada update. Um por ambiente |
 | `CITIZEN_HASH_SECRET` | HMAC do chat / sessão |
 | `PUBLIC_APP_URL` | Monta os links enviados ao cidadão |
+| `MODAL_BLUR_URL` | Endpoint `BlurWorker.process` do worker de fotos (ADR 0010). Um por ambiente |
+| `MODAL_BLUR_SECRET` | Bearer enviado ao worker; o mesmo valor no `modal.Secret` `fiscaliza-blur`. Um por ambiente |
 
 **Vercel**: `NEXT_PUBLIC_CONVEX_URL` e `CONVEX_DEPLOY_KEY`. O site escolhe o bot (`@stgFiscalizaiBot` ou `@FiscalizaiBot`) pela `NEXT_PUBLIC_CONVEX_URL` (`lib/contact.ts`).
 

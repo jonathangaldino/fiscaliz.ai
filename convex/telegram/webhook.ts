@@ -25,6 +25,9 @@ type TelegramMessage = {
   location?: { latitude: number; longitude: number };
   voice?: { file_id: string };
   audio?: { file_id: string };
+  // Sizes of the same photo, smallest first.
+  photo?: { file_id: string }[];
+  caption?: string;
 };
 
 type Update = {
@@ -77,6 +80,11 @@ export function parseUpdate(body: unknown): ParsedMessage | null {
     return /^\/start(\s|$)/.test(message.text)
       ? { ...base, text: "Oi" }
       : { ...base, text: message.text };
+  }
+  const largest = Array.isArray(message.photo) ? message.photo.at(-1) : undefined;
+  if (typeof largest?.file_id === "string") {
+    const caption = typeof message.caption === "string" ? message.caption : undefined;
+    return { ...base, photo: { telegramFileId: largest.file_id }, text: caption };
   }
   if (message.location) {
     return {

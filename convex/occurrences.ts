@@ -1,5 +1,5 @@
 import { v, type Infer } from "convex/values";
-import { query } from "./_generated/server";
+import { query, type QueryCtx } from "./_generated/server";
 import type { Doc } from "./_generated/dataModel";
 import { CATEGORIES, CATEGORY_KEYS } from "./lib/categories";
 import {
@@ -26,6 +26,13 @@ export const publicOccurrenceValidator = v.object({
   verificationStartedAt: v.optional(v.number()),
   resolvedAt: v.optional(v.number()),
   source: sourceValidator,
+  // Only `get` fills it (ADR 0010): the blurred photo, never the original.
+  photo: v.optional(
+    v.union(
+      v.object({ status: v.literal("processing") }),
+      v.object({ status: v.literal("ready"), url: v.string() }),
+    ),
+  ),
 });
 
 export type PublicOccurrence = Infer<typeof publicOccurrenceValidator>;
@@ -46,6 +53,15 @@ export function toPublicOccurrence(doc: Doc<"occurrences">): PublicOccurrence {
     resolvedAt: doc.resolvedAt,
     source: doc.source,
   };
+}
+
+async function publicPhoto(
+  ctx: QueryCtx,
+  doc: Doc<"occurrences">,
+): Promise<PublicOccurrence["photo"]> {
+  if (doc.photo?.status !== "ready") return doc.photo;
+  const url = await ctx.storage.getUrl(doc.photo.storageId);
+  return url ? { status: "ready", url } : undefined;
 }
 
 const MAP_LIMIT = 1000;
@@ -96,7 +112,7 @@ export const get = query({
     const occurrenceId = ctx.db.normalizeId("occurrences", id);
     if (!occurrenceId) return null;
     const doc = await ctx.db.get(occurrenceId);
-    return doc ? toPublicOccurrence(doc) : null;
+    return doc ? { ...toPublicOccurrence(doc), photo: await publicPhoto(ctx, doc) } : null;
   },
 });
 

@@ -96,7 +96,7 @@ describe("transcribeTelegramAudio", () => {
     const calls = mockFetch(() =>
       json({ ok: true, result: { file_path: "voice/big.oga", file_size: 17 * 1024 * 1024 } }),
     );
-    await expect(transcribeTelegramAudio("file-1")).rejects.toThrow("Audio too large");
+    await expect(transcribeTelegramAudio("file-1")).rejects.toThrow("File too large");
     expect(calls).toHaveLength(1);
   });
 });
