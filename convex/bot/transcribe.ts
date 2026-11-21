@@ -43,16 +43,17 @@ export async function downloadWhatsAppMedia(
   return { data, mimeType: mime_type };
 }
 
-/** Telegram file_id → audio bytes, via getFile and the file endpoint. */
+/** Telegram file_id → bytes (audio or photo), via getFile and the file endpoint. */
 export async function downloadTelegramFile(
   fileId: string,
+  maxBytes = MAX_AUDIO_BYTES,
 ): Promise<{ data: Blob; mimeType: string }> {
   const { file_path, file_size } = (await call("getFile", { file_id: fileId })) as {
     file_path?: string;
     file_size?: number;
   };
   if (!file_path) throw new Error("Telegram file has no path");
-  if (file_size && file_size > MAX_AUDIO_BYTES) throw new Error("Audio too large");
+  if (file_size && file_size > maxBytes) throw new Error("File too large");
 
   const media = await fetch(
     `https://api.telegram.org/file/bot${env("TELEGRAM_BOT_TOKEN")}/${file_path}`,
@@ -60,7 +61,7 @@ export async function downloadTelegramFile(
   );
   if (!media.ok) throw new Error(`Media download failed: HTTP ${media.status}`);
   const data = await media.blob();
-  if (data.size > MAX_AUDIO_BYTES) throw new Error("Audio too large");
+  if (data.size > maxBytes) throw new Error("File too large");
   // Voice notes are OGG/Opus; the file endpoint answers application/octet-stream.
   return { data, mimeType: "audio/ogg" };
 }

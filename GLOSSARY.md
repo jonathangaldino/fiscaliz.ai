@@ -35,6 +35,10 @@ Problema que cabe a uma concessionária (Sanepar, Copel) e não à prefeitura. C
 Situação com risco à vida, saúde ou segurança. Não vira relato nem ocorrência: o cidadão é redirecionado aos canais de emergência e só um registro anônimo (tipo e data/hora) é contado.
 _Avoid_: Urgência, ocorrência grave
 
+**Foto do relato**:
+Imagem que o cidadão manda junto com o relato. Só vai ao painel depois de anonimizada (rostos e placas borrados), e a ocorrência mostra só a primeira.
+_Avoid_: Anexo, mídia, evidência
+
 **Categoria**:
 Tipo de problema urbano de uma ocorrência, escolhido de uma lista fechada. Determina o órgão responsável.
 _Avoid_: Tipo, tag, assunto
@@ -57,6 +61,7 @@ O código é só em inglês. Cada termo acima tem um único nome no código:
 | Aberta / Verificando / Resolvida | `open` / `verifying` / `resolved` |
 | Fora de escopo | `out_of_scope` |
 | Emergência | `emergency` |
+| Foto do relato | `photo` |
 | Categoria | `category` |
 | Órgão responsável | `agency` |
 | Conversa | `conversation` |
