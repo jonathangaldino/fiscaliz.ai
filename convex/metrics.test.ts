@@ -19,7 +19,7 @@ it("counts real reports, routing, diversions and time to map, without the seed",
       agencyId: agency!._id,
       status: "resolved",
       appeal: 2,
-      source: "whatsapp",
+      source: "telegram",
     });
     await ctx.db.insert("occurrences", {
       ...base,

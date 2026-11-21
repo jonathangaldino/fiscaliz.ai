@@ -23,7 +23,7 @@ export async function registerReport(
   args: {
     citizenId: Id<"citizens">;
     draft: CompleteDraft;
-    source: "whatsapp" | "simulator";
+    source: "telegram" | "whatsapp" | "simulator";
     now: number;
     matchId: Id<"occurrences"> | null;
     startedAt?: number;

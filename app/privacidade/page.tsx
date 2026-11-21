@@ -4,7 +4,7 @@ import { Header } from "@/components/Header";
 export const metadata: Metadata = { title: "Política de Privacidade · Fiscaliz.ai" };
 
 const CONTACT_EMAIL = "jonathan@mugensoftware.com";
-const UPDATED_AT = "13 de novembro de 2026";
+const UPDATED_AT = "20 de novembro de 2026";
 
 export default function PrivacyPage() {
   return (
@@ -19,7 +19,7 @@ export default function PrivacyPage() {
 
         <Section title="Quem somos">
           <p>
-            O Fiscaliz.ai recebe relatos de problemas urbanos de Apucarana, PR, pelo WhatsApp e os
+            O Fiscaliz.ai recebe relatos de problemas urbanos de Apucarana, PR, pelo Telegram e os
             mostra num painel público para a população e a prefeitura. O serviço é operado pela
             MUGEN Software. Não vendemos dados e não mostramos anúncios.
           </p>
@@ -28,9 +28,10 @@ export default function PrivacyPage() {
         <Section title="O que coletamos">
           <ul className="list-disc space-y-1 pl-5">
             <li>
-              <strong>Número de telefone</strong>: para responder pelo WhatsApp e, depois, perguntar
-              se o problema foi resolvido. Também guardamos uma versão cifrada (HMAC) dele para
-              reconhecer relatos repetidos.
+              <strong>Identificador do chat no Telegram</strong>: um número que o Telegram atribui à
+              conversa com o bot. Serve para responder e, depois, perguntar se o problema foi
+              resolvido. Também guardamos uma versão cifrada (HMAC) dele para reconhecer relatos
+              repetidos. Não pedimos nem guardamos seu telefone, nome ou usuário do Telegram.
             </li>
             <li>
               <strong>Mensagens de texto</strong> que descrevem o problema.
@@ -45,7 +46,7 @@ export default function PrivacyPage() {
           </ul>
           <p>
             Pedidos de emergência ou fora do escopo não viram relato: guardamos apenas uma contagem
-            anônima, sem telefone, texto ou localização.
+            anônima, sem identificador, texto ou localização.
           </p>
         </Section>
 
@@ -53,14 +54,14 @@ export default function PrivacyPage() {
           <p>
             No painel aparecem só a categoria, um resumo escrito por IA sem dados pessoais, o
             endereço e a localização do problema, a situação e quantas pessoas relataram. Seu nome,
-            telefone e o texto original nunca são publicados.
+            sua conta do Telegram e o texto original nunca são publicados.
           </p>
         </Section>
 
         <Section title="Com quem compartilhamos">
           <p>Usamos estes serviços para operar o Fiscaliz.ai:</p>
           <ul className="list-disc space-y-1 pl-5">
-            <li>Meta (WhatsApp), para receber e enviar mensagens;</li>
+            <li>Telegram, para receber e enviar mensagens;</li>
             <li>Anthropic, para classificar o relato e escrever o resumo público;</li>
             <li>ElevenLabs, para transcrever áudios;</li>
             <li>Google Maps, para localizar endereços;</li>
@@ -82,7 +83,8 @@ export default function PrivacyPage() {
             <a href={`mailto:${CONTACT_EMAIL}`} className="underline">
               {CONTACT_EMAIL}
             </a>{" "}
-            informando o número de telefone usado. Ao excluir, apagamos seu telefone e seus relatos;
+            com o pedido. Para achar seus dados, vamos pedir que você mande uma mensagem ao bot no
+            Telegram. Ao excluir, apagamos o identificador do seu chat e seus relatos;
             a ocorrência pública pode continuar no painel, sem nenhum vínculo com você.
           </p>
         </Section>

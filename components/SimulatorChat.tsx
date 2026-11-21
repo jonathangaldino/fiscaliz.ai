@@ -53,7 +53,7 @@ function useSessionId(): string | null {
   );
 }
 
-// Renders links and WhatsApp-style *bold*.
+// Renders links and the bot's *bold* (Telegram gets it as <b>).
 function Linkified({ text }: { text: string }) {
   const parts = text.split(/(https?:\/\/\S+|\/ocorrencias\/\S+|\*[^*\n]+\*)/g);
   return (
@@ -149,23 +149,23 @@ export function SimulatorChat() {
       </p>
 
       <section
-        aria-label="Simulador do WhatsApp"
+        aria-label="Simulador do Telegram"
         className="glass-strong absolute inset-x-0 bottom-0 z-20 flex h-[62dvh] flex-col overflow-hidden rounded-t-panel md:top-20 md:right-auto md:bottom-3 md:left-3 md:h-auto md:w-[400px] md:rounded-panel"
       >
         <div className="flex items-center gap-3 border-b border-line px-4 py-3">
           <span
             aria-hidden
-            className="flex size-10 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-[#25d366] to-[#128c7e] text-white shadow-sm"
+            className="flex size-10 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-[#37aee2] to-[#1e88d0] text-white shadow-sm"
           >
-            <svg viewBox="0 0 24 24" className="size-5" fill="currentColor">
-              <path d="M12 3a9 9 0 0 0-7.8 13.5L3 21l4.6-1.2A9 9 0 1 0 12 3Zm0 1.8a7.2 7.2 0 1 1-3.7 13.4l-.3-.2-2.7.7.7-2.6-.2-.3A7.2 7.2 0 0 1 12 4.8Z" />
+            <svg viewBox="0 0 24 24" className="size-5 -translate-x-px" fill="currentColor">
+              <path d="M21.94 4.34 18.9 18.67c-.23 1.02-.83 1.27-1.69.79l-4.66-3.43-2.25 2.16c-.25.25-.46.46-.94.46l.34-4.74 8.62-7.79c.37-.33-.08-.52-.58-.19L7.09 12.64 2.5 11.2c-1-.31-1.02-1 .21-1.48l17.94-6.91c.83-.31 1.56.19 1.29 1.53Z" />
             </svg>
           </span>
           <div className="min-w-0 flex-1">
             <h1 className="text-[15px] leading-tight font-semibold">
-              Fiscaliz.ai no WhatsApp
+              Fiscaliz.ai no Telegram
             </h1>
-            <p className="text-xs text-muted">Simulador · dados fictícios</p>
+            <p className="text-xs text-muted">bot · simulador com dados fictícios</p>
           </div>
           <Button
             variant="ghost"
@@ -184,7 +184,7 @@ export function SimulatorChat() {
           role="log"
           aria-live="polite"
           aria-label="Mensagens"
-          className="min-h-0 flex-1 space-y-2 overflow-y-auto overscroll-contain bg-[#efeae2]/70 p-3 dark:bg-black/25"
+          className="min-h-0 flex-1 space-y-2 overflow-y-auto overscroll-contain bg-[linear-gradient(160deg,#d7e8c4cc,#b4d3a8cc_45%,#8fc1b5cc)] p-3 dark:bg-[linear-gradient(160deg,#0e1621e6,#111d2be6)]"
         >
           {chat?.length === 0 && (
             <p className="mx-auto max-w-xs rounded-card bg-surface/85 p-3 text-center text-xs text-muted shadow-sm">
@@ -197,8 +197,8 @@ export function SimulatorChat() {
               key={message._id}
               className={`max-w-[85%] animate-[card-in_var(--dur)_var(--ease-out)] rounded-2xl px-3 py-2 text-[15px] leading-snug whitespace-pre-line text-fg shadow-sm ${
                 message.author === "citizen"
-                  ? "ml-auto rounded-br-md bg-[#d9fdd3] dark:bg-[#144d37]"
-                  : "rounded-bl-md bg-surface"
+                  ? "ml-auto w-fit rounded-br-md bg-[#effdde] dark:bg-[#2b5278]"
+                  : "w-fit rounded-bl-md bg-white dark:bg-[#182533]"
               }`}
             >
               <span className="sr-only">
@@ -207,6 +207,21 @@ export function SimulatorChat() {
               <Linkified text={message.text} />
             </div>
           ))}
+          {buttons && (
+            // Inline keyboard: Telegram puts the buttons right under the message.
+            <div className="flex max-w-[85%] gap-1.5">
+              {buttons.map((button) => (
+                <button
+                  key={button.id}
+                  type="button"
+                  onClick={() => submit({ button: button.id })}
+                  className="min-h-11 flex-1 rounded-xl bg-black/25 px-3 text-sm font-semibold text-white backdrop-blur-sm transition-colors hover:bg-black/35 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent active:scale-[0.98] dark:bg-[#182533]/85 dark:hover:bg-[#22344a]"
+                >
+                  {button.title}
+                </button>
+              ))}
+            </div>
+          )}
           {waitingForBot && (
             <p className="flex items-center gap-1 px-1 text-xs text-muted">
               <span className="sr-only">Fiscaliz.ai está digitando</span>
@@ -219,21 +234,6 @@ export function SimulatorChat() {
           )}
           <div ref={bottomRef} />
         </div>
-
-        {buttons && (
-          <div className="flex gap-2 border-t border-line p-2">
-            {buttons.map((button) => (
-              <Button
-                key={button.id}
-                variant="glass"
-                onClick={() => submit({ button: button.id })}
-                className="flex-1 font-semibold text-accent"
-              >
-                {button.title}
-              </Button>
-            ))}
-          </div>
-        )}
 
         {pin && (
           <div className="flex items-center justify-between gap-2 border-t border-line px-3 py-2 text-sm">

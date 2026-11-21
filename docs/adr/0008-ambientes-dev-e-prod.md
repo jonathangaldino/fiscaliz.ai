@@ -1,6 +1,6 @@
 # Dois ambientes: dev para testar, prod para a demo
 
-A demo do Hack Brasil precisa funcionar na hora em que o júri abrir o painel ou mandar mensagem pro bot. Ao mesmo tempo, a gente continua mexendo no código, rodando benchmarks (como os do [ADR 0006](./0006-cnefe-em-arquivo-no-servidor.md) e do [ADR 0007](./0007-damerau-levenshtein-no-nome-da-rua.md)), o eval da triagem e testes de ponta a ponta pelo WhatsApp. Se tudo isso rodasse no mesmo deployment da demo, um experimento no meio do caminho podia derrubar a demo ou sujar os dados que ela mostra.
+A demo do Hack Brasil precisa funcionar na hora em que o júri abrir o painel ou mandar mensagem pro bot. Ao mesmo tempo, a gente continua mexendo no código, rodando benchmarks (como os do [ADR 0006](./0006-cnefe-em-arquivo-no-servidor.md) e do [ADR 0007](./0007-damerau-levenshtein-no-nome-da-rua.md)), o eval da triagem e testes de ponta a ponta pelo bot. Se tudo isso rodasse no mesmo deployment da demo, um experimento no meio do caminho podia derrubar a demo ou sujar os dados que ela mostra.
 
 Decidimos separar **dois ambientes completos**, cada um com uma branch, um site e um backend:
 
@@ -21,19 +21,19 @@ Decidimos separar **dois ambientes completos**, cada um com uma branch, um site 
 
 ## Variáveis de ambiente
 
-As variáveis do Convex são **as mesmas nos dois ambientes**, com os mesmos valores. Assim, o que funcionou em dev funciona em prod. A única exceção é `PUBLIC_APP_URL`, que aponta para o site do próprio ambiente: os links que o bot manda em dev abrem o painel de dev, que mostra os dados de dev.
+As variáveis do Convex são **as mesmas nos dois ambientes**, com os mesmos valores. Assim, o que funcionou em dev funciona em prod. As exceções são `PUBLIC_APP_URL`, que aponta para o site do próprio ambiente (os links que o bot manda em dev abrem o painel de dev, que mostra os dados de dev), e `TELEGRAM_BOT_TOKEN` / `TELEGRAM_WEBHOOK_SECRET`, porque cada ambiente tem o seu bot ([ADR 0009](./0009-telegram-no-lugar-do-whatsapp.md)).
 
 Ao adicionar ou trocar uma variável, ela vai para os dois deployments (`npx convex env set` e `npx convex env set --prod`).
 
 ## Fluxo de trabalho
 
-- O trabalho vai para `dev` primeiro: benchmarks, eval, seed de teste e testes com o WhatsApp rodam lá.
+- O trabalho vai para `dev` primeiro: benchmarks, eval, seed de teste e testes com o bot do Telegram rodam lá.
 - Só vai para `main` o que já foi testado em `dev`. Perto da apresentação, `main` fica congelada.
 - Dados de dev podem ser apagados ou recarregados à vontade. Os de prod são os da demo, e a demo usa só dados sintéticos (regra 9 do regulamento).
 
 ## Consequências
 
 - O `laudable-greyhound-798` também é o deployment pessoal de quem roda `npx convex dev` com essa conta. Um `npx convex dev` na máquina e um push em `dev` escrevem no mesmo lugar, e o último que publicar vence. Para um time pequeno até o fim do hackathon, isso basta. Se atrapalhar, a saída é dar à branch `dev` um deployment próprio.
-- O app da Meta tem **uma URL de webhook só**. Hoje ela aponta para o dev, para os testes. Antes da demo, a URL precisa mudar para `https://kindhearted-leopard-380.convex.site/whatsapp`, senão as mensagens do júri caem no dev.
+- ~~O app da Meta tem uma URL de webhook só.~~ Desde o [ADR 0009](./0009-telegram-no-lugar-do-whatsapp.md) cada ambiente tem seu bot do Telegram: `@stgFiscalizaiBot` com webhook em `https://laudable-greyhound-798.convex.site/telegram` e `@FiscalizaiBot` em `https://kindhearted-leopard-380.convex.site/telegram`. Mensagem do júri não cai mais no dev.
 - Branches que não são `dev` ganham um Preview da Vercel com a chave Preview antiga. Não usamos esses Previews para testar o bot.
 - O `.env` local não decide nada disso; ele só serve para rodar scripts na máquina.
