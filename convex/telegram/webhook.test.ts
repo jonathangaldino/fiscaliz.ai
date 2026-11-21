@@ -44,8 +44,23 @@ describe("parseUpdate", () => {
     expect(message?.unsupported).toBeUndefined();
   });
 
+  it("keeps the largest size of a photo and its caption", () => {
+    const message = parseUpdate(
+      messageUpdate({
+        photo: [{ file_id: "small" }, { file_id: "large" }],
+        caption: "Buraco na rua",
+      }),
+    );
+    expect(message?.photo).toEqual({ telegramFileId: "large" });
+    expect(message?.text).toBe("Buraco na rua");
+    expect(message?.unsupported).toBeUndefined();
+  });
+
   it("flags media the bot does not handle", () => {
     expect(parseUpdate(messageUpdate({ photo: [{}] }))?.unsupported).toBe(true);
+    expect(parseUpdate(messageUpdate({ document: { file_id: "f" } }))?.unsupported).toBe(
+      true,
+    );
   });
 
   it("ignores group chats", () => {

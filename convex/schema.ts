@@ -7,6 +7,7 @@ import {
   conversationStateValidator,
   geocodeAttemptValidator,
   geocodeOutcomeValidator,
+  occurrencePhotoValidator,
   occurrenceStatusValidator,
   sourceValidator,
 } from "./validators";
@@ -39,10 +40,13 @@ export default defineSchema({
     // Last time a verification failed: blocks a new one for 7 days.
     reopenedAt: v.optional(v.number()),
     source: sourceValidator,
+    // Public photo with faces and plates blurred (ADR 0010).
+    photo: v.optional(occurrencePhotoValidator),
   })
     .index("by_category_status", ["category", "status"])
     .index("by_status_appeal", ["status", "appeal"])
-    .index("by_agency_status", ["agencyId", "status"]),
+    .index("by_agency_status", ["agencyId", "status"])
+    .index("by_photo", ["photo.storageId"]),
 
   // A citizen's report on an occurrence. Never sent to the browser.
   reports: defineTable({

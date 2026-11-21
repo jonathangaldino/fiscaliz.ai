@@ -1,6 +1,8 @@
 import { ConvexError, v } from "convex/values";
 import { internal } from "./_generated/api";
-import { mutation, query } from "./_generated/server";
+import type { Id } from "./_generated/dataModel";
+import { mutation, query, type MutationCtx } from "./_generated/server";
+import { MAX_PHOTO_BYTES } from "./bot/photo";
 import { parseVerifyButton } from "./lib/verification";
 import { buttonValidator } from "./validators";
 
@@ -12,6 +14,50 @@ function assertSession(sessionId: string) {
   if (!SESSION_ID.test(sessionId)) throw new ConvexError("Sessão inválida");
 }
 
+const PHOTO_TYPES = ["image/jpeg", "image/png", "image/webp"];
+
+/** Step 1 of a photo: the browser POSTs the file here, then calls `send`. */
+export const generatePhotoUploadUrl = mutation({
+  args: { sessionId: v.string() },
+  returns: v.string(),
+  handler: async (ctx, { sessionId }) => {
+    assertSession(sessionId);
+    // shortcut: an upload never followed by `send` stays in storage; add a
+    // sweep of unreferenced files if the public simulator gets abused.
+    return await ctx.storage.generateUploadUrl();
+  },
+});
+
+/**
+ * Checks type and size. An invalid upload is deleted and the bot explains, as
+ * a message: throwing would roll the delete back.
+ */
+async function acceptPhoto(
+  ctx: MutationCtx,
+  sessionId: string,
+  storageId: Id<"_storage">,
+): Promise<boolean> {
+  const file = await ctx.db.system.get(storageId);
+  if (!file) throw new ConvexError("Foto não encontrada");
+  // A published photo must never become someone's draft (it would be deleted).
+  const published = await ctx.db
+    .query("occurrences")
+    .withIndex("by_photo", (q) => q.eq("photo.storageId", storageId))
+    .first();
+  if (published) throw new ConvexError("Foto inválida");
+  if (PHOTO_TYPES.includes(file.contentType ?? "") && file.size <= MAX_PHOTO_BYTES) {
+    return true;
+  }
+  await ctx.storage.delete(storageId);
+  await ctx.db.insert("simulatorMessages", {
+    sessionId,
+    author: "bot",
+    text: "Essa foto não serve: envie uma imagem JPEG, PNG ou WebP de até 5 MB.",
+    createdAt: Date.now(),
+  });
+  return false;
+}
+
 /** The citizen side of the simulator: what Telegram would deliver. */
 export const send = mutation({
   args: {
@@ -20,13 +66,21 @@ export const send = mutation({
     location: v.optional(v.object({ lat: v.number(), lng: v.number() })),
     // "yes" / "no", or a verification button id.
     button: v.optional(v.string()),
+    // From generatePhotoUploadUrl; `text` is its caption.
+    photoStorageId: v.optional(v.id("_storage")),
   },
   returns: v.null(),
   handler: async (ctx, args) => {
     assertSession(args.sessionId);
     const text = args.text?.trim().slice(0, MAX_TEXT_LENGTH) || undefined;
-    if (!text && !args.location && !args.button) {
+    if (!text && !args.location && !args.button && !args.photoStorageId) {
       throw new ConvexError("Mensagem vazia");
+    }
+    if (
+      args.photoStorageId &&
+      !(await acceptPhoto(ctx, args.sessionId, args.photoStorageId))
+    ) {
+      return null;
     }
 
     const decision =
@@ -41,7 +95,7 @@ export const send = mutation({
       sessionId: args.sessionId,
       author: "citizen",
       text:
-        text ??
+        (args.photoStorageId ? `📷 Foto${text ? `: ${text}` : ""}` : text) ??
         (verification
           ? verification.answer === "yes"
             ? "SIM, resolvido"
@@ -62,6 +116,7 @@ export const send = mutation({
         location: args.location,
         button: decision,
         verification: verification ?? undefined,
+        photo: args.photoStorageId ? { storageId: args.photoStorageId } : undefined,
       },
     });
     return null;

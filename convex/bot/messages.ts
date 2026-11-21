@@ -20,7 +20,7 @@ const text = (value: string): OutgoingMessage => ({ text: value });
 
 export const askProblem = () =>
   text(
-    "Olá! Eu sou o Fiscaliz.ai, um serviço independente que registra problemas urbanos de Apucarana, como buraco na rua, poste apagado ou entulho na calçada, e os encaminha à Prefeitura. Não sou o canal oficial da Prefeitura. Dúvidas: suporte@mugensoftware.com\n\nQual é o problema e onde ele está?",
+    "Olá! Eu sou o Fiscaliz.ai, um serviço independente que registra problemas urbanos de Apucarana, como buraco na rua, poste apagado ou entulho na calçada, e os encaminha à Prefeitura. Não sou o canal oficial da Prefeitura. Dúvidas: suporte@mugensoftware.com\n\nQual é o problema e onde ele está? Se quiser, mande uma foto também.",
   );
 
 export const askDescription = () =>
@@ -51,13 +51,27 @@ export const notUrban = () =>
 
 export const unsupported = () =>
   text(
-    "Eu entendo mensagens de texto, áudio e localização. Pode me contar o problema por um desses meios?",
+    "Eu entendo mensagens de texto, áudio, foto e localização. Pode me contar o problema por um desses meios?",
   );
 
 export const audioFailed = () =>
   text(
     "Não consegui entender o áudio. Pode mandar de novo ou escrever a mensagem?",
   );
+
+export const photoReceived = (replaced: boolean) =>
+  text(replaced ? "📷 Foto atualizada." : "📷 Recebi a foto.");
+
+export const photoPublished = (link: string) =>
+  text(`📷 Foto publicada, com rostos e placas borrados: ${link}`);
+
+export const photoFailed = () =>
+  text(
+    "📷 Não consegui publicar a foto. O relato continua registrado, só sem a imagem.",
+  );
+
+const PHOTO_PENDING =
+  "📷 Sua foto está sendo anonimizada (rostos e placas borrados) e aparece no link em instantes.";
 
 export const tryAgain = () =>
   text(
@@ -72,6 +86,7 @@ export function summary(draft: CompleteDraft): OutgoingMessage {
       `• Categoria: ${CATEGORIES[draft.category].label}`,
       `• Local: ${draft.address}`,
       `• Quando: ${dateTime.format(draft.occurredAt)}`,
+      draft.photo ? "• 📷 Foto anexada" : null,
       "",
       draft.precise
         ? null
@@ -90,18 +105,23 @@ export function summary(draft: CompleteDraft): OutgoingMessage {
 export function registered(
   link: string,
   agency: AgencyInfo | null,
+  photoPending = false,
 ): OutgoingMessage {
   const routing = agency
     ? `Órgão responsável: ${agency.name}.`
     : "Essa categoria ainda não tem um órgão responsável definido; a Prefeitura fará a triagem.";
   return text(
-    `Relato registrado! ✅ ${routing}\nAcompanhe no mapa: ${link}`,
+    `Relato registrado! ✅ ${routing}\nAcompanhe no mapa: ${link}${photoPending ? `\n${PHOTO_PENDING}` : ""}`,
   );
 }
 
-export function appealAdded(link: string, appeal: number): OutgoingMessage {
+export function appealAdded(
+  link: string,
+  appeal: number,
+  photoPending = false,
+): OutgoingMessage {
   return text(
-    `Esse problema já tinha sido relatado. Seu apelo foi somado: agora são ${appeal} pessoas pedindo a solução. 🙌\nAcompanhe no mapa: ${link}`,
+    `Esse problema já tinha sido relatado. Seu apelo foi somado: agora são ${appeal} pessoas pedindo a solução. 🙌\nAcompanhe no mapa: ${link}${photoPending ? `\n${PHOTO_PENDING}` : ""}`,
   );
 }
 
