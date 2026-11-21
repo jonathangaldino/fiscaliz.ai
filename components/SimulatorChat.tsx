@@ -4,13 +4,18 @@ import { useMutation, useQuery } from "convex/react";
 import dynamic from "next/dynamic";
 import { useEffect, useRef, useState, useSyncExternalStore } from "react";
 import { api } from "@/convex/_generated/api";
+import type { Id } from "@/convex/_generated/dataModel";
 import { playSound } from "@/lib/sound";
 import { Button } from "./ui/Button";
 import { Glyph } from "./ui/Glyph";
+import { IconButton } from "./ui/IconButton";
 
 const OccurrenceMap = dynamic(() => import("./OccurrenceMap"), { ssr: false });
 
 const STORAGE_KEY = "fiscaliza.simulatorSession";
+// Same limits the server enforces (convex/simulator.ts); checked here only for a quick message.
+const PHOTO_TYPES = "image/jpeg,image/png,image/webp";
+const MAX_PHOTO_BYTES = 5 * 1024 * 1024;
 const listeners = new Set<() => void>();
 let memorySession: string | null = null;
 
@@ -87,6 +92,9 @@ export function SimulatorChat() {
   );
   const occurrences = useQuery(api.occurrences.listActive);
   const send = useMutation(api.simulator.send);
+  const generatePhotoUploadUrl = useMutation(api.simulator.generatePhotoUploadUrl);
+  const fileRef = useRef<HTMLInputElement>(null);
+  const [uploading, setUploading] = useState(false);
 
   const [text, setText] = useState("");
   const [pin, setPin] = useState<{ lat: number; lng: number } | null>(null);
@@ -115,10 +123,39 @@ export function SimulatorChat() {
   const waitingForBot = last?.author === "citizen";
   const buttons = last?.author === "bot" ? last.buttons : undefined;
 
+  // Like Telegram: the photo goes with whatever is typed as its caption.
+  async function sendPhoto(file: File) {
+    if (!sessionId) return;
+    if (!PHOTO_TYPES.split(",").includes(file.type) || file.size > MAX_PHOTO_BYTES) {
+      setError("Envie uma imagem JPEG, PNG ou WebP de até 5 MB.");
+      return;
+    }
+    setError(null);
+    setUploading(true);
+    try {
+      const uploadUrl = await generatePhotoUploadUrl({ sessionId });
+      const response = await fetch(uploadUrl, {
+        method: "POST",
+        headers: { "Content-Type": file.type },
+        body: file,
+      });
+      if (!response.ok) throw new Error(`Upload failed: ${response.status}`);
+      const { storageId } = (await response.json()) as { storageId: Id<"_storage"> };
+      const caption = text.trim() || undefined;
+      setText("");
+      await submit({ text: caption, photoStorageId: storageId });
+    } catch {
+      setError("Não foi possível enviar a foto. Tente de novo.");
+    } finally {
+      setUploading(false);
+    }
+  }
+
   async function submit(payload: {
     text?: string;
     location?: { lat: number; lng: number };
     button?: string;
+    photoStorageId?: Id<"_storage">;
   }) {
     if (!sessionId) return;
     setError(null);
@@ -263,6 +300,25 @@ export function SimulatorChat() {
             await submit({ text: value });
           }}
         >
+          <input
+            ref={fileRef}
+            type="file"
+            accept={PHOTO_TYPES}
+            className="hidden"
+            onChange={(event) => {
+              const file = event.target.files?.[0];
+              event.target.value = "";
+              if (file) void sendPhoto(file);
+            }}
+          />
+          <IconButton
+            label={uploading ? "Enviando foto…" : "Anexar foto"}
+            disabled={uploading}
+            aria-busy={uploading}
+            onClick={() => fileRef.current?.click()}
+          >
+            <Glyph name="camera" size={20} />
+          </IconButton>
           <input
             value={text}
             onChange={(event) => setText(event.target.value)}
