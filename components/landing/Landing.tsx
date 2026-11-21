@@ -9,9 +9,9 @@ import {
 } from "@/convex/lib/categories";
 import {
   REPOSITORY_URL,
-  WHATSAPP_LINK,
-  WHATSAPP_NUMBER,
-  WHATSAPP_QR,
+  TELEGRAM_HANDLE,
+  TELEGRAM_LINK,
+  TELEGRAM_QR,
 } from "@/lib/contact";
 import { buttonClass } from "../ui/Button";
 import { CategoryIcon } from "../ui/CategoryIcon";
@@ -74,7 +74,7 @@ function Hero() {
         <Reveal delay={0.1}>
           <p className="mx-auto mt-6 max-w-xl text-lg leading-relaxed text-pretty text-muted sm:text-xl lg:mx-0">
             Viu um buraco, um poste apagado ou entulho na calçada? Conte pelo
-            WhatsApp, em texto ou áudio. A inteligência artificial entende,
+            Telegram, em texto ou áudio. A inteligência artificial entende,
             encaminha para o órgão certo da Prefeitura e põe o problema num mapa
             aberto para todo mundo.
           </p>
@@ -86,7 +86,7 @@ function Hero() {
         <Reveal delay={0.15}>
           <div className="mt-8 flex flex-col items-center gap-3 sm:flex-row sm:justify-center lg:justify-start">
             <a
-              href={WHATSAPP_LINK}
+              href={TELEGRAM_LINK}
               target="_blank"
               rel="noreferrer"
               className={buttonClass({
@@ -94,9 +94,9 @@ function Hero() {
                   "h-13 w-full px-6 text-base shadow-[0_10px_30px_-10px_rgb(11_95_198/0.7)] sm:w-auto",
               })}
             >
-              <WhatsAppIcon />
-              Relatar pelo WhatsApp
-              <span className="sr-only">(abre o WhatsApp)</span>
+              <TelegramIcon />
+              Relatar pelo Telegram
+              <span className="sr-only">(abre o Telegram)</span>
             </a>
             <Link
               href="/mapa"
@@ -198,7 +198,7 @@ const STEPS: { title: string; text: ReactNode; icon: GlyphName }[] = [
     title: "Conte o problema",
     text: (
       <>
-        Mande uma mensagem para <b>{WHATSAPP_NUMBER}</b>. Escreva ou grave um
+        Abra o <b>{TELEGRAM_HANDLE}</b> no Telegram e toque em Começar. Escreva ou grave um
         áudio, do jeito que você falaria com alguém:{" "}
         <i>“tem um buraco enorme na rua, quase caí de bicicleta”</i>.
       </>
@@ -209,7 +209,7 @@ const STEPS: { title: string; text: ReactNode; icon: GlyphName }[] = [
     title: "Mostre onde é",
     text: (
       <>
-        Toque no clipe 📎 e envie a <b>localização</b>, ou escreva o endereço
+        Toque no clipe 📎, escolha <b>Localização</b> e envie, ou escreva o endereço
         com rua e número. Só vale dentro de Apucarana.
       </>
     ),
@@ -234,7 +234,7 @@ function Steps() {
       id="como-relatar"
       eyebrow="Como relatar"
       title="Três mensagens. Menos de um minuto."
-      lead="Não precisa baixar aplicativo, fazer cadastro nem saber qual secretaria procurar. O Fiscaliz.ai faz essa parte."
+      lead="Basta o Telegram. Não precisa fazer cadastro nem saber qual secretaria procurar. O Fiscaliz.ai faz essa parte."
     >
       <div className="grid gap-5 lg:grid-cols-[1fr_1fr_1fr_0.95fr]">
         {STEPS.map((step, index) => (
@@ -255,36 +255,36 @@ function Steps() {
         ))}
         <Reveal delay={0.18}>
           <aside
-            aria-label="Número do WhatsApp"
-            className="relative h-full overflow-hidden rounded-panel bg-gradient-to-br from-[#2b8cff] to-[#0a4596] p-6 text-white shadow-[0_20px_50px_-20px_rgb(11_79_168/0.7)]"
+            aria-label="Bot do Fiscaliz.ai no Telegram"
+            className="relative h-full overflow-hidden rounded-panel bg-gradient-to-br from-[#229ed9] to-[#0b5a91] p-6 text-white shadow-[0_20px_50px_-20px_rgb(18_110_170/0.7)]"
           >
             <p className="text-sm font-medium text-white/80">
-              WhatsApp do Fiscaliz.ai
+              Fiscaliz.ai no Telegram
             </p>
-            <p className="mt-1 text-2xl font-semibold tracking-tight tabular-nums">
-              {WHATSAPP_NUMBER}
+            <p className="mt-1 text-2xl font-semibold tracking-tight break-all">
+              {TELEGRAM_HANDLE}
             </p>
             <div className="mt-5 hidden rounded-card bg-white p-3 lg:block">
               <svg
-                viewBox={`0 0 ${WHATSAPP_QR.size} ${WHATSAPP_QR.size}`}
+                viewBox={`0 0 ${TELEGRAM_QR.size} ${TELEGRAM_QR.size}`}
                 className="w-full text-[#0b0d0c]"
                 shapeRendering="crispEdges"
                 role="img"
-                aria-label="QR code que abre a conversa com o Fiscaliz.ai no WhatsApp"
+                aria-label="QR code que abre a conversa com o Fiscaliz.ai no Telegram"
               >
-                <path d={WHATSAPP_QR.path} fill="currentColor" />
+                <path d={TELEGRAM_QR.path} fill="currentColor" />
               </svg>
             </div>
             <p className="mt-3 hidden text-sm text-white/80 lg:block">
               Aponte a câmera do celular.
             </p>
             <a
-              href={WHATSAPP_LINK}
+              href={TELEGRAM_LINK}
               target="_blank"
               rel="noreferrer"
-              className="mt-5 inline-flex h-11 items-center gap-2 rounded-full bg-white px-5 text-sm font-semibold text-[#0a4596] transition-transform active:scale-95 lg:hidden"
+              className="mt-5 inline-flex h-11 items-center gap-2 rounded-full bg-white px-5 text-sm font-semibold text-[#0b5a91] transition-transform active:scale-95 lg:hidden"
             >
-              <WhatsAppIcon />
+              <TelegramIcon />
               Abrir conversa
             </a>
             <p className="mt-4 text-sm text-white/80">
@@ -312,7 +312,7 @@ function Video() {
       id="video"
       eyebrow="Em 1 minuto"
       title="Do aviso à solução"
-      lead="Veja o caminho de um relato: da mensagem no WhatsApp até a confirmação de que o problema foi resolvido."
+      lead="Veja o caminho de um relato: da mensagem no Telegram até a confirmação de que o problema foi resolvido."
     >
       <Reveal>
         <VideoPlayer />
@@ -641,7 +641,7 @@ function QueuePreview() {
 function Privacy() {
   const points = [
     {
-      title: "Seu nome e telefone não aparecem",
+      title: "Seu nome e sua conta não aparecem",
       text: "O mapa mostra só categoria, um resumo sem dados pessoais, o endereço do problema e quantas pessoas relataram.",
     },
     {
@@ -690,7 +690,7 @@ function Privacy() {
 const FAQ: { q: string; a: ReactNode }[] = [
   {
     q: "Preciso baixar algum aplicativo?",
-    a: "Não. É uma conversa no WhatsApp, com o número do Fiscaliz.ai. Para olhar o mapa, basta o navegador.",
+    a: `Só o Telegram, que é gratuito. A conversa é com o ${TELEGRAM_HANDLE}, sem cadastro. Para olhar o mapa, basta o navegador, e dá para testar o bot no simulador do site.`,
   },
   {
     q: "Posso mandar áudio?",
@@ -710,7 +710,7 @@ const FAQ: { q: string; a: ReactNode }[] = [
   },
   {
     q: "Tem limite de relatos?",
-    a: "Cada telefone pode confirmar até 5 relatos por dia, para evitar abuso.",
+    a: "Cada conta do Telegram pode confirmar até 5 relatos por dia, para evitar abuso.",
   },
 ];
 
@@ -766,14 +766,14 @@ function FinalCall() {
             </p>
             <div className="mt-8 flex flex-col justify-center gap-3 sm:flex-row lg:justify-start">
               <a
-                href={WHATSAPP_LINK}
+                href={TELEGRAM_LINK}
                 target="_blank"
                 rel="noreferrer"
                 className="inline-flex h-13 items-center justify-center gap-2 rounded-full bg-white px-7 text-base font-semibold text-[#0a4596] shadow-lg transition-transform hover:scale-[1.02] active:scale-[0.97]"
               >
-                <WhatsAppIcon />
-                Relatar pelo WhatsApp
-                <span className="sr-only">(abre o WhatsApp)</span>
+                <TelegramIcon />
+                Relatar pelo Telegram
+                <span className="sr-only">(abre o Telegram)</span>
               </a>
               <Link
                 href="/mapa"
@@ -858,10 +858,10 @@ function Footer() {
   );
 }
 
-function WhatsAppIcon() {
+function TelegramIcon() {
   return (
     <svg viewBox="0 0 24 24" className="size-5" fill="currentColor" aria-hidden>
-      <path d="M12.04 2a9.9 9.9 0 0 0-8.5 15l-1.4 5 5.1-1.3A9.9 9.9 0 1 0 12.04 2Zm0 18.1a8.2 8.2 0 0 1-4.2-1.2l-.3-.2-3 .8.8-2.9-.2-.3a8.2 8.2 0 1 1 6.9 3.8Zm4.5-6.1c-.2-.1-1.5-.7-1.7-.8-.2-.1-.4-.1-.6.1l-.8 1c-.1.2-.3.2-.5.1a6.7 6.7 0 0 1-3.3-2.9c-.2-.4.3-.4.8-1.3.1-.2 0-.3 0-.4l-.8-1.8c-.2-.5-.4-.4-.6-.4h-.5a1 1 0 0 0-.7.3 3 3 0 0 0-.9 2.2 5.2 5.2 0 0 0 1.1 2.7 11.8 11.8 0 0 0 4.5 4c1.7.7 2.3.8 3.2.6a2.7 2.7 0 0 0 1.8-1.2 2.2 2.2 0 0 0 .1-1.3c0-.1-.2-.2-.4-.3Z" />
+      <path d="M21.94 4.34 18.9 18.67c-.23 1.02-.83 1.27-1.69.79l-4.66-3.43-2.25 2.16c-.25.25-.46.46-.94.46l.34-4.74 8.62-7.79c.37-.33-.08-.52-.58-.19L7.09 12.64 2.5 11.2c-1-.31-1.02-1 .21-1.48l17.94-6.91c.83-.31 1.56.19 1.29 1.53Z" />
     </svg>
   );
 }

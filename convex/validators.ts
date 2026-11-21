@@ -17,12 +17,16 @@ export const occurrenceStatusValidator = v.union(
 );
 
 export const sourceValidator = v.union(
+  v.literal("telegram"),
+  // Dormant since the Meta ban (ADR 0009); kept so the old code still reads.
   v.literal("whatsapp"),
   v.literal("simulator"),
   v.literal("seed"),
 );
 
 export const channelValidator = v.union(
+  v.literal("telegram"),
+  // Dormant since the Meta ban (ADR 0009); kept so the old code still reads.
   v.literal("whatsapp"),
   v.literal("simulator"),
 );
@@ -63,8 +67,8 @@ export const outgoingMessageValidator = v.object({
 
 export const incomingMessageValidator = v.object({
   channel: channelValidator,
-  // Phone number (WhatsApp) or random session id (simulator). Never stored raw
-  // except citizens.phone for WhatsApp.
+  // Telegram chat id or random session id (simulator). Never stored raw
+  // except in citizens.telegramChatId / citizens.sessionId.
   externalId: v.string(),
   messageId: v.optional(v.string()),
   receivedAt: v.number(),
@@ -73,8 +77,10 @@ export const incomingMessageValidator = v.object({
   button: v.optional(v.union(v.literal("yes"), v.literal("no"))),
   // Answer to a V2 verification question; skips the conversation entirely.
   verification: v.optional(verificationAnswerValidator),
-  // WhatsApp voice note: transcribed in the action, never stored.
+  // Voice note (Telegram file_id): transcribed in the action, never stored.
   audioMediaId: v.optional(v.string()),
+  // Telegram button tap: answered so the client stops the loading spinner.
+  callbackQueryId: v.optional(v.string()),
   // Media types the bot does not handle (image, sticker, video...).
   unsupported: v.optional(v.boolean()),
 });
@@ -96,7 +102,7 @@ export const geocodeOutcomeValidator = v.union(
 
 /** What the action measured on one geocoded address; applyStep stores it. */
 export const geocodeAttemptValidator = v.object({
-  // How the citizen sent the address. Not `channel`, which is whatsapp/simulator.
+  // How the citizen sent the address. Not `channel`, which is telegram/simulator.
   medium: v.union(v.literal("text"), v.literal("audio")),
   source: geocodeSourceValidator,
   typoDistance: v.number(),

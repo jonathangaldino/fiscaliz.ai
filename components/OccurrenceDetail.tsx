@@ -153,7 +153,7 @@ function Verification({
       {availability.canStart ? (
         <>
           <p className="text-muted">
-            Demonstração: o bot pergunta pelo WhatsApp a quem relatou se o
+            Demonstração: o bot pergunta pelo Telegram a quem relatou se o
             problema já foi resolvido.
           </p>
           <Button

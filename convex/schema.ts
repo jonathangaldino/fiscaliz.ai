@@ -60,9 +60,11 @@ export default defineSchema({
 
   citizens: defineTable({
     channel: channelValidator,
-    // HMAC of the phone number or simulator session, keyed by CITIZEN_HASH_SECRET.
+    // HMAC of the chat id or simulator session, keyed by CITIZEN_HASH_SECRET.
     externalIdHash: v.string(),
-    // WhatsApp only: V2 verification needs to message the citizen back.
+    // Telegram only: V2 verification needs to message the citizen back.
+    telegramChatId: v.optional(v.string()),
+    // Dormant WhatsApp channel (ADR 0009).
     phone: v.optional(v.string()),
     // Simulator only: random browser session id, to deliver the verification.
     sessionId: v.optional(v.string()),
@@ -86,7 +88,7 @@ export default defineSchema({
     createdAt: v.number(),
   }).index("by_occurrence_citizen", ["occurrenceId", "citizenId"]),
 
-  // Idempotency: Meta re-sends a webhook when it does not get a 200 in time.
+  // Idempotency: Telegram re-sends an update when it does not get a 200 in time.
   processedMessages: defineTable({
     channel: channelValidator,
     messageId: v.string(),

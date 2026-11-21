@@ -2,45 +2,45 @@
 
 **Do aviso do cidadão ao órgão certo da prefeitura, sem triagem manual.**
 
-O Fiscaliz.ai automatiza a triagem e o roteamento de demandas urbanas de Apucarana, PR. O cidadão manda pelo WhatsApp, em texto, áudio ou localização, que tem um buraco na rua, um poste apagado ou entulho na calçada. Uma camada de IA entende a mensagem, pergunta só o que falta, classifica o problema, descobre o órgão responsável e põe a ocorrência num mapa público em tempo real. Vários cidadãos relatando o mesmo problema viram uma única ocorrência, que ganha **apelo**: quantas pessoas pedem aquela solução.
+O Fiscaliz.ai automatiza a triagem e o roteamento de demandas urbanas de Apucarana, PR. O cidadão manda pelo Telegram, em texto, áudio ou localização, que tem um buraco na rua, um poste apagado ou entulho na calçada. Uma camada de IA entende a mensagem, pergunta só o que falta, classifica o problema, descobre o órgão responsável e põe a ocorrência num mapa público em tempo real. Vários cidadãos relatando o mesmo problema viram uma única ocorrência, que ganha **apelo**: quantas pessoas pedem aquela solução.
 
 - **Para quem:** a Prefeitura de Apucarana, que passa a ver onde estão os problemas, quantas pessoas cada um afeta e qual secretaria deve agir.
-- **Trilha:** 07, Logística e automação, do [Hack Brasil 2026](./RULES.md). O fluxo automatizado é a triagem e o roteamento: em vez de o cidadão descobrir sozinho qual secretaria procurar, a mensagem sai do WhatsApp direto para a fila do órgão responsável.
+- **Trilha:** 07, Logística e automação, do [Hack Brasil 2026](./RULES.md). O fluxo automatizado é a triagem e o roteamento: em vez de o cidadão descobrir sozinho qual secretaria procurar, a mensagem sai do Telegram direto para a fila do órgão responsável.
 
 ## Demo
 
-- **WhatsApp:** [+55 11 95506-1377](https://wa.me/5511955061377), número real do bot. Mande texto, áudio ou localização.
+- **Telegram:** [@FiscalizaiBot](https://t.me/FiscalizaiBot), o bot real. Mande texto, áudio ou localização.
 - **Site:** https://fiscalizai-five.vercel.app, página que explica como usar.
 - **Mapa:** https://fiscalizai-five.vercel.app/mapa
-- **Simulador do WhatsApp:** https://fiscalizai-five.vercel.app/simular, a mesma conversa no navegador, sem precisar de celular.
+- **Simulador:** https://fiscalizai-five.vercel.app/simular, a mesma conversa no navegador, sem precisar de celular.
 
 ### Testar
 
-1. Mande uma mensagem para o número acima (ou abra `/simular`).
+1. Abra o bot acima e toque em **Começar** (ou abra `/simular`).
 2. Escreva ou grave o problema, por exemplo: _"tem um buraco enorme na rua, quase caí de bicicleta"_.
-3. Envie a localização pelo clipe do WhatsApp (no simulador, clique no mapa e toque em **Enviar localização**). Também dá para escrever o endereço: _"Avenida Curitiba, 500"_.
+3. Envie a localização pelo clipe 📎 → **Localização** do Telegram (no simulador, clique no mapa e toque em **Enviar localização**). Também dá para escrever o endereço: _"Avenida Curitiba, 500"_.
 4. Confira o resumo e toque em **SIM**.
 5. A resposta traz o link da ocorrência e o órgão responsável. Volte ao mapa (`/mapa`): a ocorrência aparece sem recarregar a página.
 
-O local precisa estar em Apucarana, PR, e cada telefone pode confirmar até 5 relatos por dia.
+O local precisa estar em Apucarana, PR, e cada conta do Telegram pode confirmar até 5 relatos por dia.
 
 Vale testar também:
 
 - **Emergência:** _"caiu uma árvore em cima dos fios"_ → o bot indica o 193 e não registra nada.
 - **Concessionária:** _"está vazando água no meio da rua"_ → o bot indica a Sanepar.
-- **Apelo:** de outro telefone, ou de outra aba anônima do simulador (outro "cidadão"), relate o mesmo problema no mesmo lugar → _"agora são 2 pessoas"_.
+- **Apelo:** de outra conta do Telegram, ou de outra aba anônima do simulador (outro "cidadão"), relate o mesmo problema no mesmo lugar → _"agora são 2 pessoas"_.
 - **Filtros:** no painel, filtre por categoria ou órgão; o link da página guarda o filtro.
 
 ## Marca e site
 
-A landing page (`/`) explica como relatar pelo WhatsApp, como ler o mapa e o que o Fiscaliz.ai faz pela Prefeitura, com um vídeo de 1 minuto. Marca, cores e voz em [docs/marca/](./docs/marca/); componentes e tokens em [docs/design-system.md](./docs/design-system.md).
+A landing page (`/`) explica como relatar pelo Telegram, como ler o mapa e o que o Fiscaliz.ai faz pela Prefeitura, com um vídeo de 1 minuto. Marca, cores e voz em [docs/marca/](./docs/marca/); componentes e tokens em [docs/design-system.md](./docs/design-system.md).
 
 ## Como funciona
 
 ```mermaid
 flowchart LR
-  C[Cidadão] -- WhatsApp --> M[Meta Cloud API]
-  M -- webhook --> H[Convex HTTP /whatsapp]
+  C[Cidadão] -- Telegram --> M[Telegram Bot API]
+  M -- webhook --> H[Convex HTTP /telegram]
   S[Simulador web /simular] --> Q
   H --> Q[Bot: handleIncoming]
   Q -- áudio --> E[ElevenLabs Scribe]
@@ -60,7 +60,7 @@ A IA só preenche dados; quem decide o fluxo é uma máquina de estados em códi
 
 ## Stack
 
-Next.js (App Router) e Tailwind na Vercel · Convex (banco, funções, webhook, cron, tempo real) · MapLibre com tiles OpenFreeMap · Claude Haiku 5.5 · ElevenLabs Scribe · CNEFE do IBGE e Google Geocoding · WhatsApp Cloud API oficial ([ADR 0002](./docs/adr/0002-whatsapp-cloud-api-oficial.md)) · Vitest e `convex-test`.
+Next.js (App Router) e Tailwind na Vercel · Convex (banco, funções, webhook, cron, tempo real) · MapLibre com tiles OpenFreeMap · Claude Haiku 5.5 · ElevenLabs Scribe · CNEFE do IBGE e Google Geocoding · Telegram Bot API ([ADR 0009](./docs/adr/0009-telegram-no-lugar-do-whatsapp.md)) · Vitest e `convex-test`.
 
 ## Rodar localmente
 
@@ -80,17 +80,24 @@ npx convex env set ANTHROPIC_API_KEY ...
 npx convex env set CITIZEN_HASH_SECRET "$(openssl rand -hex 32)"
 npx convex env set GOOGLE_MAPS_API_KEY ...      # endereço em texto
 npx convex env set PUBLIC_APP_URL http://localhost:3000
-# Só para o WhatsApp:
-npx convex env set WHATSAPP_TOKEN ...
-npx convex env set WHATSAPP_PHONE_NUMBER_ID ...
-npx convex env set WHATSAPP_APP_SECRET ...
-npx convex env set WHATSAPP_VERIFY_TOKEN ...
+# Só para o Telegram (um bot por ambiente, criado no @BotFather):
+npx convex env set TELEGRAM_BOT_TOKEN ...
+npx convex env set TELEGRAM_WEBHOOK_SECRET "$(openssl rand -hex 32)"
 npx convex env set ELEVENLABS_API_KEY ...       # áudio
 ```
 
 O mapa e o simulador funcionam só com `ANTHROPIC_API_KEY` e `CITIZEN_HASH_SECRET`; sem a chave do Google, use o pin no mapa em vez do endereço em texto. A lista completa está em [docs/arquitetura.md](./docs/arquitetura.md#variáveis-de-ambiente).
 
-Para o WhatsApp, cadastre `https://<deployment>.convex.site/whatsapp` como webhook no app da Meta, com o mesmo `WHATSAPP_VERIFY_TOKEN`.
+Para o Telegram, registre o webhook do bot com o mesmo segredo:
+
+```bash
+curl https://api.telegram.org/bot$TELEGRAM_BOT_TOKEN/setWebhook \
+  -d url=https://<deployment>.convex.site/telegram \
+  -d secret_token=$TELEGRAM_WEBHOOK_SECRET \
+  -d 'allowed_updates=["message","callback_query"]'
+```
+
+O canal começou no WhatsApp, até a Meta banir a conta. O código continua em `convex/whatsapp/`, sem rota; a última versão que rodava está na release [`whatsapp-final`](https://github.com/jonathangaldino/fiscaliz.ai/releases/tag/whatsapp-final) ([ADR 0009](./docs/adr/0009-telegram-no-lugar-do-whatsapp.md)).
 
 ### Scripts
 

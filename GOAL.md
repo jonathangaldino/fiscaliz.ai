@@ -1,3 +1,5 @@
+> **Nota (20/11/2026):** o canal começou no WhatsApp, mas a Meta baniu a conta. Desde então o bot roda no Telegram ([ADR 0009](./docs/adr/0009-telegram-no-lugar-do-whatsapp.md)). O texto abaixo é o objetivo original e cita o WhatsApp.
+
 Estamos participando do hackbrasil.com, o maior hackaton do Brasil. As regras estão dentro de [RULES.md](./rules.md). Queremos enquadrar nossa submissão na trilha 07: logísitca e automação.
 
 ## V1

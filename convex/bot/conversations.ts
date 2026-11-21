@@ -22,6 +22,7 @@ export const ensureCitizen = internalMutation({
   args: {
     channel: channelValidator,
     externalIdHash: v.string(),
+    telegramChatId: v.optional(v.string()),
     phone: v.optional(v.string()),
     sessionId: v.optional(v.string()),
   },
@@ -36,10 +37,12 @@ export const ensureCitizen = internalMutation({
     if (existing) {
       // Citizens created before V2 lack the contact the verification needs.
       if (
+        (args.telegramChatId && !existing.telegramChatId) ||
         (args.phone && !existing.phone) ||
         (args.sessionId && !existing.sessionId)
       ) {
         await ctx.db.patch(existing._id, {
+          telegramChatId: args.telegramChatId ?? existing.telegramChatId,
           phone: args.phone ?? existing.phone,
           sessionId: args.sessionId ?? existing.sessionId,
         });

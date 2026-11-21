@@ -9,7 +9,7 @@ export const REVERIFY_LOCK_MS = 7 * 24 * 60 * 60 * 1000;
 
 export type VerificationAnswer = "yes" | "no";
 
-/** Button id / WhatsApp quick-reply payload: `verify:<occurrenceId>:yes|no`. */
+/** Button id / Telegram callback_data: `verify:<occurrenceId>:yes|no`. */
 export function verifyButtonId(occurrenceId: string, answer: VerificationAnswer) {
   return `verify:${occurrenceId}:${answer}`;
 }

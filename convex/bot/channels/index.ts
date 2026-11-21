@@ -1,5 +1,6 @@
 import { internal } from "../../_generated/api";
 import type { ActionCtx } from "../../_generated/server";
+import { sendTelegram } from "./telegram";
 import { sendWhatsApp } from "./whatsapp";
 import type { IncomingMessage, OutgoingMessage } from "../types";
 
@@ -20,6 +21,10 @@ export async function send(
         messages: replies,
       });
       return;
+    case "telegram":
+      await sendTelegram(message.externalId, replies);
+      return;
+    // Dormant (ADR 0009): no route delivers WhatsApp messages anymore.
     case "whatsapp":
       await sendWhatsApp(message.externalId, replies);
       return;

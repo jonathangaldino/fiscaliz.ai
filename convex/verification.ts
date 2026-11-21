@@ -17,7 +17,7 @@ import {
   type QueryCtx,
 } from "./_generated/server";
 import * as messages from "./bot/messages";
-import { sendVerificationTemplate } from "./bot/channels/whatsapp";
+import { sendTelegram } from "./bot/channels/telegram";
 import {
   VERIFICATION_TIMEOUT_MS,
   verificationAvailableAt,
@@ -29,10 +29,6 @@ import {
 // occurrence ever gets more citizens than that.
 const MAX_REPORTS = 500;
 
-// Feature flag: WhatsApp citizens are asked only when the Convex env sets this
-// to "true" (off until Meta approves the `occurrence_verification` template).
-const whatsappEnabled = () => process.env.VERIFICATION_WHATSAPP_ENABLED === "true";
-
 /** Citizens with a report on the occurrence that the bot can message. */
 async function recipientsOf(ctx: QueryCtx, occurrenceId: Id<"occurrences">) {
   const reports = await ctx.db
@@ -43,7 +39,7 @@ async function recipientsOf(ctx: QueryCtx, occurrenceId: Id<"occurrences">) {
   const citizens = await Promise.all(citizenIds.map((id) => ctx.db.get(id)));
   return citizens.filter(
     (c): c is Doc<"citizens"> =>
-      c !== null && Boolean(c.sessionId || (whatsappEnabled() && c.phone)),
+      c !== null && Boolean(c.sessionId || c.telegramChatId),
   );
 }
 
@@ -106,7 +102,10 @@ export const recipients = internalQuery({
     summary: v.string(),
     address: v.string(),
     citizens: v.array(
-      v.object({ phone: v.optional(v.string()), sessionId: v.optional(v.string()) }),
+      v.object({
+        telegramChatId: v.optional(v.string()),
+        sessionId: v.optional(v.string()),
+      }),
     ),
   }),
   handler: async (ctx, { occurrenceId }) => {
@@ -116,8 +115,8 @@ export const recipients = internalQuery({
     return {
       summary: occurrence.summary,
       address: occurrence.address,
-      citizens: citizens.map(({ phone, sessionId }) => ({
-        phone: whatsappEnabled() ? phone : undefined,
+      citizens: citizens.map(({ telegramChatId, sessionId }) => ({
+        telegramChatId,
         sessionId,
       })),
     };
@@ -138,19 +137,16 @@ export const notify = internalAction({
       no: verifyButtonId(occurrenceId, "no"),
     };
     const link = messages.occurrenceLink(process.env.PUBLIC_APP_URL ?? "", occurrenceId);
+    const question = messages.verificationQuestion({ summary, address }, link, buttons);
     let failed = 0;
     for (const citizen of citizens) {
       try {
-        if (citizen.phone) {
-          await sendVerificationTemplate(
-            citizen.phone,
-            { id: occurrenceId, summary, address },
-            buttons,
-          );
+        if (citizen.telegramChatId) {
+          await sendTelegram(citizen.telegramChatId, [question]);
         } else if (citizen.sessionId) {
           await ctx.runMutation(internal.bot.channels.simulator.deliver, {
             sessionId: citizen.sessionId,
-            messages: [messages.verificationQuestion({ summary, address }, link, buttons)],
+            messages: [question],
           });
         }
       } catch (error) {

@@ -17,6 +17,7 @@ import type * as addressMetrics from "../addressMetrics.js";
 import type * as agencies from "../agencies.js";
 import type * as bot_channels_index from "../bot/channels/index.js";
 import type * as bot_channels_simulator from "../bot/channels/simulator.js";
+import type * as bot_channels_telegram from "../bot/channels/telegram.js";
 import type * as bot_channels_whatsapp from "../bot/channels/whatsapp.js";
 import type * as bot_conversations from "../bot/conversations.js";
 import type * as bot_dedup from "../bot/dedup.js";
@@ -25,6 +26,7 @@ import type * as bot_geocode from "../bot/geocode.js";
 import type * as bot_geocodeAttempts from "../bot/geocodeAttempts.js";
 import type * as bot_handleIncoming from "../bot/handleIncoming.js";
 import type * as bot_messages from "../bot/messages.js";
+import type * as bot_processed from "../bot/processed.js";
 import type * as bot_register from "../bot/register.js";
 import type * as bot_stateMachine from "../bot/stateMachine.js";
 import type * as bot_transcribe from "../bot/transcribe.js";
@@ -43,9 +45,9 @@ import type * as occurrences from "../occurrences.js";
 import type * as seed from "../seed.js";
 import type * as seedData from "../seedData.js";
 import type * as simulator from "../simulator.js";
+import type * as telegram_webhook from "../telegram/webhook.js";
 import type * as validators from "../validators.js";
 import type * as verification from "../verification.js";
-import type * as whatsapp_processed from "../whatsapp/processed.js";
 import type * as whatsapp_webhook from "../whatsapp/webhook.js";
 
 /**
@@ -61,6 +63,7 @@ declare const fullApi: ApiFromModules<{
   agencies: typeof agencies;
   "bot/channels/index": typeof bot_channels_index;
   "bot/channels/simulator": typeof bot_channels_simulator;
+  "bot/channels/telegram": typeof bot_channels_telegram;
   "bot/channels/whatsapp": typeof bot_channels_whatsapp;
   "bot/conversations": typeof bot_conversations;
   "bot/dedup": typeof bot_dedup;
@@ -69,6 +72,7 @@ declare const fullApi: ApiFromModules<{
   "bot/geocodeAttempts": typeof bot_geocodeAttempts;
   "bot/handleIncoming": typeof bot_handleIncoming;
   "bot/messages": typeof bot_messages;
+  "bot/processed": typeof bot_processed;
   "bot/register": typeof bot_register;
   "bot/stateMachine": typeof bot_stateMachine;
   "bot/transcribe": typeof bot_transcribe;
@@ -87,9 +91,9 @@ declare const fullApi: ApiFromModules<{
   seed: typeof seed;
   seedData: typeof seedData;
   simulator: typeof simulator;
+  "telegram/webhook": typeof telegram_webhook;
   validators: typeof validators;
   verification: typeof verification;
-  "whatsapp/processed": typeof whatsapp_processed;
   "whatsapp/webhook": typeof whatsapp_webhook;
 }>;
 export declare const api: FilterApi<
