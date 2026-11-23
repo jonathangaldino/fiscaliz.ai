@@ -25,8 +25,10 @@ SECRET="$(openssl rand -hex 32)"
 modal secret create fiscaliza-blur BLUR_SECRET="$SECRET" --env dev
 modal deploy workers/blur/app.py --env dev
 
-# A URL que o deploy imprime e o mesmo segredo vão para o Convex do mesmo ambiente:
-npx convex env set MODAL_BLUR_URL https://...modal.run
+# A URL do endpoint termina em .modal.run (não é a página do dashboard, que dá HTTP 405).
+# Se perder a do deploy:
+#   uv run --with modal python -c "import modal; print(modal.Cls.from_name('fiscaliza-blur', 'BlurWorker', environment_name='dev')().process.get_web_url())"
+npx convex env set MODAL_BLUR_URL https://<workspace>-dev--fiscaliza-blur-blurworker-process.<região>.modal.run
 npx convex env set MODAL_BLUR_SECRET "$SECRET"
 ```
 
