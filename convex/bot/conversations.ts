@@ -9,11 +9,13 @@ import { startOfDayInBrasilia } from "../lib/time";
 import {
   channelValidator,
   conversationStateValidator,
+  draftPhotoValidator,
   geocodeAttemptValidator,
   outgoingMessageValidator,
 } from "../validators";
 import { closeOpenAttempts } from "./geocodeAttempts";
 import * as messages from "./messages";
+import { claimPhoto, discardPhotos } from "./photo";
 import { registerReport } from "./register";
 import { DAILY_REPORT_LIMIT, nextStep } from "./stateMachine";
 import { extractionSchema, type ResolvedLocation } from "./types";
@@ -98,6 +100,7 @@ export const applyStep = internalMutation({
     matchId: v.optional(v.union(v.id("occurrences"), v.null())),
     // Set when this message carried an address in text or audio.
     geocode: v.optional(geocodeAttemptValidator),
+    photo: v.optional(draftPhotoValidator),
   },
   returns: v.union(
     v.object({ ok: v.literal(true), messages: v.array(outgoingMessageValidator) }),
@@ -129,7 +132,16 @@ export const applyStep = internalMutation({
       location: args.location as ResolvedLocation | null,
       decision: args.decision,
       addressNotFound: args.addressNotFound ?? false,
+      photo: args.photo,
     });
+
+    // A photo the next state no longer holds (replaced, abandoned) is deleted.
+    // On SIM, claimPhoto takes over the draft's photo.
+    await discardPhotos(
+      ctx,
+      [conversation?.state.draft.photo, args.photo],
+      step.type === "register" ? step.draft.photo : step.state?.draft.photo,
+    );
 
     // A new address or a pin replaces the one shown before (issue #37).
     if (args.geocode) {
@@ -155,6 +167,9 @@ export const applyStep = internalMutation({
         matchId: args.matchId ?? null,
         startedAt: conversation?._creationTime,
       });
+      const photoPending = step.draft.photo
+        ? await claimPhoto(ctx, result, step.draft.photo, args.citizenId)
+        : false;
       // The conversation ends here.
       await closeOpenAttempts(ctx, args.citizenId, "confirmed");
       if (conversation) await ctx.db.delete(conversation._id);
@@ -164,9 +179,13 @@ export const applyStep = internalMutation({
       );
       const reply =
         result.kind === "created"
-          ? messages.registered(link, agencyForCategory(step.draft.category))
+          ? messages.registered(
+              link,
+              agencyForCategory(step.draft.category),
+              photoPending,
+            )
           : result.kind === "appealed"
-            ? messages.appealAdded(link, result.appeal)
+            ? messages.appealAdded(link, result.appeal, photoPending)
             : messages.alreadyReported(link);
       return { ok: true as const, messages: [reply] };
     }
@@ -214,6 +233,7 @@ export const expire = internalMutation({
       .take(500);
     for (const conversation of stale) {
       await closeOpenAttempts(ctx, conversation.citizenId, "abandoned");
+      await discardPhotos(ctx, [conversation.state.draft.photo]);
       await ctx.db.delete(conversation._id);
     }
     return stale.length;

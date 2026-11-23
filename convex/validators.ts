@@ -31,6 +31,21 @@ export const channelValidator = v.union(
   v.literal("simulator"),
 );
 
+/**
+ * The citizen's original photo, before anonymization. Telegram keeps the file
+ * (we hold only its id); the simulator upload sits in Convex storage until SIM.
+ */
+export const draftPhotoValidator = v.union(
+  v.object({ telegramFileId: v.string() }),
+  v.object({ storageId: v.id("_storage") }),
+);
+
+/** Photo on an occurrence: only the anonymized copy is ever stored here. */
+export const occurrencePhotoValidator = v.union(
+  v.object({ status: v.literal("processing") }),
+  v.object({ status: v.literal("ready"), storageId: v.id("_storage") }),
+);
+
 /** What the conversation has gathered so far. Every field is optional. */
 export const draftValidator = v.object({
   category: v.optional(categoryValidator),
@@ -42,6 +57,7 @@ export const draftValidator = v.object({
   // Whether the location is precise (pin or street number): sets the dedup radius.
   precise: v.optional(v.boolean()),
   occurredAt: v.optional(v.number()),
+  photo: v.optional(draftPhotoValidator),
 });
 
 export const conversationStateValidator = v.union(
@@ -79,9 +95,11 @@ export const incomingMessageValidator = v.object({
   verification: v.optional(verificationAnswerValidator),
   // Voice note (Telegram file_id): transcribed in the action, never stored.
   audioMediaId: v.optional(v.string()),
+  // One photo per report (ADR 0010).
+  photo: v.optional(draftPhotoValidator),
   // Telegram button tap: answered so the client stops the loading spinner.
   callbackQueryId: v.optional(v.string()),
-  // Media types the bot does not handle (image, sticker, video...).
+  // Media types the bot does not handle (file, sticker, video...).
   unsupported: v.optional(v.boolean()),
 });
 

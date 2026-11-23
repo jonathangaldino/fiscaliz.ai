@@ -42,8 +42,10 @@ export function mergeDraft(
   extraction: Extraction | null,
   location: ResolvedLocation | null,
   receivedAt: number,
+  photo?: Draft["photo"],
 ): Draft {
   const next: Draft = { ...draft };
+  if (photo) next.photo = photo;
   if (extraction?.kind === "urban") {
     if (extraction.category) next.category = extraction.category;
     if (extraction.description) {
@@ -93,6 +95,12 @@ const reply = (
   ...out: OutgoingMessage[]
 ): Step => ({ type: "reply", state, messages: out });
 
+/** Opens the reply with "got the photo" when this message carried one. */
+function withPhotoNote(step: Step, photo: StepInput["photo"], replaced: boolean): Step {
+  if (!photo || step.type !== "reply" || step.state === null) return step;
+  return { ...step, messages: [messages.photoReceived(replaced), ...step.messages] };
+}
+
 /**
  * Rules checked before any transition, in any state, in this order:
  * 1. emergency  → redirect to 190/192/193/199, end the conversation
@@ -141,13 +149,22 @@ function priorityRules(
 }
 
 export function nextStep(state: ConversationState | null, input: StepInput): Step {
-  const { extraction, location, decision, receivedAt, reportsToday } = input;
+  return withPhotoNote(
+    collect(state, input),
+    input.photo,
+    state?.draft.photo !== undefined,
+  );
+}
+
+function collect(state: ConversationState | null, input: StepInput): Step {
+  const { extraction, location, decision, receivedAt, reportsToday, photo } = input;
 
   const priority = priorityRules(extraction, reportsToday);
   if (priority) return priority;
 
-  // Confirmation answers only count while a summary is on screen.
-  if (state?.phase === "confirming" && isComplete(state.draft)) {
+  // Confirmation answers only count while a summary is on screen. A new
+  // photo re-shows the summary first, so the citizen confirms what they see.
+  if (state?.phase === "confirming" && isComplete(state.draft) && !photo) {
     if (decision === "yes") return { type: "register", draft: state.draft };
     if (decision === "no") {
       return reply(
@@ -163,18 +180,21 @@ export function nextStep(state: ConversationState | null, input: StepInput): Ste
   if (extraction && extraction.kind !== "urban" && !location) {
     // A greeting or an off-topic first message gets the welcome, which
     // already explains what the bot does.
+    const kept: ConversationState | null = photo
+      ? { phase: state?.phase ?? "collecting", draft: { ...previous, photo } }
+      : state;
     return reply(
-      state,
+      kept,
       isFirstMessage ? messages.askProblem() : messages.notUrban(),
     );
   }
 
   if (location && !isInsideApucarana(location)) {
-    const draft = mergeDraft(previous, extraction, null, receivedAt);
+    const draft = mergeDraft(previous, extraction, null, receivedAt, photo);
     return reply({ phase: "collecting", draft }, messages.outsideCity());
   }
 
-  const draft = mergeDraft(previous, extraction, location, receivedAt);
+  const draft = mergeDraft(previous, extraction, location, receivedAt, photo);
 
   if (input.addressNotFound && draft.lat === undefined) {
     return reply({ phase: "collecting", draft }, messages.addressNotFound());

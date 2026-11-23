@@ -113,6 +113,7 @@ export const handleIncoming = internalAction({
         }
       } catch (error) {
         console.error("External service failed", error);
+        await discardPhoto(ctx, message.photo);
         await send(ctx, message, [messages.tryAgain()]);
         return;
       }
@@ -128,6 +129,7 @@ export const handleIncoming = internalAction({
         addressNotFound,
         matchId,
         geocode,
+        photo: message.photo,
       });
       if (result.ok) {
         await send(ctx, message, result.messages);
@@ -135,9 +137,15 @@ export const handleIncoming = internalAction({
       }
       // Another message changed the conversation meanwhile: start over.
     }
+    await discardPhoto(ctx, message.photo);
     await send(ctx, message, [messages.tryAgain()]);
   },
 });
+
+/** A simulator upload that never reached applyStep would be orphaned in storage. */
+async function discardPhoto(ctx: ActionCtx, photo: Draft["photo"]) {
+  if (photo) await ctx.runMutation(internal.bot.photo.discard, { photo });
+}
 
 async function resolvePin(pin: {
   lat: number;

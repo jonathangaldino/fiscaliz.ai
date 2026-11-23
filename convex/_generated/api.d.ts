@@ -26,6 +26,7 @@ import type * as bot_geocode from "../bot/geocode.js";
 import type * as bot_geocodeAttempts from "../bot/geocodeAttempts.js";
 import type * as bot_handleIncoming from "../bot/handleIncoming.js";
 import type * as bot_messages from "../bot/messages.js";
+import type * as bot_photo from "../bot/photo.js";
 import type * as bot_processed from "../bot/processed.js";
 import type * as bot_register from "../bot/register.js";
 import type * as bot_stateMachine from "../bot/stateMachine.js";
@@ -72,6 +73,7 @@ declare const fullApi: ApiFromModules<{
   "bot/geocodeAttempts": typeof bot_geocodeAttempts;
   "bot/handleIncoming": typeof bot_handleIncoming;
   "bot/messages": typeof bot_messages;
+  "bot/photo": typeof bot_photo;
   "bot/processed": typeof bot_processed;
   "bot/register": typeof bot_register;
   "bot/stateMachine": typeof bot_stateMachine;

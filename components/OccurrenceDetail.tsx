@@ -67,6 +67,24 @@ export function OccurrenceDetail({ id }: { id: string }) {
           </div>
         </header>
 
+        {occurrence.photo?.status === "ready" && (
+          // eslint-disable-next-line @next/next/no-img-element -- Convex storage URL, already a re-encoded JPEG
+          <img
+            src={occurrence.photo.url}
+            alt={`Foto enviada por quem relatou: ${occurrence.summary}`}
+            className="max-h-[28rem] w-full rounded-card border border-line object-cover"
+          />
+        )}
+        {occurrence.photo?.status === "processing" && (
+          <p
+            role="status"
+            className="flex items-center gap-2 rounded-control border border-dashed border-line bg-surface/60 px-3 py-6 text-sm text-muted"
+          >
+            📷 Foto em processamento: rostos e placas estão sendo borrados antes
+            de publicar.
+          </p>
+        )}
+
         <dl className="grid grid-cols-2 gap-2 sm:grid-cols-3">
           <Fact label="Apelo">{formatAppeal(occurrence.appeal)}</Fact>
           <Fact label="Aberta em">{formatDateTime(occurrence.openedAt)}</Fact>

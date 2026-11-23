@@ -3,6 +3,7 @@ import { z } from "zod/v4";
 import { CATEGORY_KEYS } from "../lib/categories";
 import type {
   conversationStateValidator,
+  draftPhotoValidator,
   draftValidator,
   geocodeSourceValidator,
   incomingMessageValidator,
@@ -14,9 +15,10 @@ export type ConversationState = Infer<typeof conversationStateValidator>;
 export type IncomingMessage = Infer<typeof incomingMessageValidator>;
 export type OutgoingMessage = Infer<typeof outgoingMessageValidator>;
 export type GeocodeSource = Infer<typeof geocodeSourceValidator>;
+export type DraftPhoto = Infer<typeof draftPhotoValidator>;
 
-/** A draft with everything needed to register a report. */
-export type CompleteDraft = Required<Draft>;
+/** A draft with everything needed to register a report. The photo is optional. */
+export type CompleteDraft = Required<Omit<Draft, "photo">> & Pick<Draft, "photo">;
 
 export const EMERGENCY_TARGETS = [
   "police",
@@ -83,6 +85,8 @@ export type StepInput = {
   addressNotFound: boolean;
   /** Reports the citizen confirmed today (Brasília). */
   reportsToday: number;
+  /** Photo sent in this message; replaces the one in the draft. */
+  photo?: DraftPhoto;
 };
 
 export type AnonymousCounter =
