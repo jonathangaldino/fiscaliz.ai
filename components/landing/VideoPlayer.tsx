@@ -12,8 +12,8 @@ import { LogoMark } from "../ui/Logo";
 const CDN =
   "https://d2ol7oe51mr4n9.cloudfront.net/user_3IH6s2x6op5CIWGya8iR1hp8f6B";
 export const EXPLAINER = {
-  src: `${CDN}/c659ec1a-3b7b-44d3-8271-5f96e40e283d.mp4`,
-  poster: `${CDN}/fc53efd7-7048-4a98-b73f-e741469f9f47.jpg`,
+  src: `${CDN}/e64a014b-49b3-43e0-aca5-a1ad7f1d1234.mp4`,
+  poster: `${CDN}/4a89bcbe-b54c-4526-8a2b-da2cde355677.jpg`,
   captions: "/video/explicativo.pt-BR.vtt",
   duration: "1 min",
 };
