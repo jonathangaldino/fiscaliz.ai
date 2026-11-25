@@ -57,7 +57,7 @@ def title(canvas, t, line1, line2, x=150, y=380, start=0.2):
 # ----------------------------------------------------------------- scenes
 def scene2(t, D):
     c = BG_LIGHT.copy()
-    title(c, t, "Mande pelo WhatsApp", "Texto, áudio ou localização.")
+    title(c, t, "Mande pelo Telegram", "Texto, áudio ou localização.")
     a = ease_out(seg(t, 0.0, 0.9))
     cx = 1330 + (1 - a) * 500
     # phone state by time
@@ -162,7 +162,75 @@ def scene6(t, D):
         c.alpha_composite(layer)
     return c
 
-SCENES = {2: scene2, 3: scene3, 4: scene4, 5: scene5, 6: scene6}
+# Scene 2b: photo with faces and plates blurred. photo.png is the Higgsfield
+# image job 945708b1-d399-43cf-b00c-81441b34d8aa (gpt_image_2_6, 1168x880).
+PHOTO_W = 820
+_ph = {}
+def photo_layers():
+    if not _ph:
+        src = Image.open(f"{L}/photo.png").convert("RGB")
+        k = PHOTO_W / src.width
+        sharp = src.resize((PHOTO_W, round(src.height * k)), Image.LANCZOS)
+        blur = sharp.filter(ImageFilter.GaussianBlur(14))
+        # face and plate boxes in source pixels -> scaled
+        boxes = [("Rosto", (978, 84, 1036, 162)), ("Placa", (586, 371, 702, 421))]
+        boxes = [(n, tuple(round(v * k) for v in b)) for n, b in boxes]
+        rmask = Image.new("L", sharp.size, 0)
+        ImageDraw.Draw(rmask).rounded_rectangle([0, 0, sharp.width - 1, sharp.height - 1], 28, fill=255)
+        _ph.update(sharp=sharp.convert("RGBA"), blur=blur.convert("RGBA"), boxes=boxes, round=rmask)
+    return _ph
+
+def scene_photo(t, D):
+    c = BG_LIGHT.copy()
+    title(c, t, "Foto com privacidade", "Rostos e placas borrados na hora.")
+    P = photo_layers(); pw, ph = P["sharp"].size
+    a = ease_out(seg(t, 0.0, 0.9))
+    cx, cy = 1390 + (1 - a) * 500, 560
+    card = P["sharp"].copy()
+    scan0, scan1 = 2.4, 3.8
+    sy = ease_io(seg(t, scan0, scan1)) * ph
+    ov = Image.new("RGBA", card.size); od = ImageDraw.Draw(ov)
+    for name, (x0, y0, x1, y1) in P["boxes"]:
+        pad = 8; bx = (x0 - pad, y0 - pad, x1 + pad, y1 + pad)
+        g = ease_out(seg(sy, y1, y1 + 60)) if t < scan1 + 0.2 else 1.0
+        if t >= scan1: g = 1.0 if sy >= y1 else g
+        if g <= 0: continue
+        m = Image.new("L", card.size, 0)
+        ImageDraw.Draw(m).rounded_rectangle(bx, 10, fill=round(255 * g))
+        card = Image.composite(P["blur"], card, m)
+        # outline + label chip
+        od.rounded_rectangle(bx, 10, outline=(255, 255, 255, round(235 * g)), width=3)
+        f = ImageFont.truetype(FONT_SB, 20)
+        tw = f.getlength(name); lx, ly = bx[0], bx[1] - 36
+        if ly < 6: ly = bx[3] + 8
+        od.rounded_rectangle((lx, ly, lx + tw + 24, ly + 30), 15, fill=(10, 95, 198, round(235 * g)))
+        od.text((lx + 12, ly + 15), name, font=f, fill=(255, 255, 255, round(255 * g)), anchor="lm")
+    if scan0 <= t <= scan1 + 0.15:
+        la = 1 - seg(t, scan1, scan1 + 0.15)
+        for i in range(26):
+            od.line([(0, sy - i), (pw, sy - i)], fill=(43, 140, 255, round(110 * la * (1 - i / 26))))
+        od.line([(0, sy), (pw, sy)], fill=(120, 190, 255, round(255 * la)), width=3)
+    card.alpha_composite(ov)
+    card.putalpha(P["round"])
+    # shadow
+    sh = Image.new("RGBA", (pw + 120, ph + 120), (0, 0, 0, 0))
+    ImageDraw.Draw(sh).rounded_rectangle((60, 75, pw + 60, ph + 75), 28, fill=(16, 40, 80, 70))
+    sh = sh.filter(ImageFilter.GaussianBlur(26))
+    place(c, sh, cx, cy, 1.0, a)
+    place(c, card, cx, cy, 1.0, a)
+    # done badge
+    if t > scan1 + 0.3:
+        b = ease_out(seg(t, scan1 + 0.3, scan1 + 0.9))
+        f = ImageFont.truetype(FONT_SB, 26); txt = "Anonimizada"
+        tw = f.getlength(txt); bw, bh = tw + 76, 54
+        badge = Image.new("RGBA", (round(bw), bh)); bd = ImageDraw.Draw(badge)
+        bd.rounded_rectangle((0, 0, bw - 1, bh - 1), 27, fill=(22, 163, 74, 255))
+        bd.line([(22, 27), (30, 35), (44, 19)], fill=(255, 255, 255, 255), width=4, joint="curve")
+        bd.text((56, 27), txt, font=f, fill=(255, 255, 255, 255), anchor="lm")
+        place(c, badge, cx, cy + ph / 2 + 8, 0.9 + 0.1 * spring(b), b)
+    return c
+
+SCENES = {22: scene_photo, 2: scene2, 3: scene3, 4: scene4, 5: scene5, 6: scene6}
 
 if __name__ == "__main__":
     n, D = int(sys.argv[1]), float(sys.argv[2])
