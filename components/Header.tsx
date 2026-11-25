@@ -17,17 +17,18 @@ export function Header({ overlay = false }: { overlay?: boolean }) {
       <div className="glass pointer-events-auto mx-auto flex h-14 max-w-6xl items-center justify-between gap-3 rounded-full pr-2 pl-3">
         <Link
           href="/"
-          className="flex min-w-0 items-center gap-2.5 rounded-full"
+          className="flex shrink-0 items-center gap-2.5 rounded-full"
         >
           <LogoMark />
-          <span className="text-[17px] font-semibold tracking-tight max-[419px]:sr-only">
+          {/* Below 460px the menu takes the bar and the mark stands alone. */}
+          <span className="text-[17px] font-semibold tracking-tight whitespace-nowrap max-[459px]:sr-only">
             Fiscaliz<span className="text-accent">.ai</span>
           </span>
           <span className="hidden truncate text-sm text-muted lg:inline">
             Ocorrências urbanas de Apucarana, PR
           </span>
         </Link>
-        <div className="flex items-center gap-1">
+        <div className="flex items-center gap-1 max-[459px]:flex-1 max-[459px]:justify-end">
           <NavLinks />
           <SoundToggle />
         </div>
