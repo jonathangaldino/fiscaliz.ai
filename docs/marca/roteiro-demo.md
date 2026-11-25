@@ -1,6 +1,6 @@
 # Roteiro: vídeo da demo (júri do Hack Brasil)
 
-Vídeo da submissão ([assistir, 2:28](https://d2ol7oe51mr4n9.cloudfront.net/user_3IH6s2x6op5CIWGya8iR1hp8f6B/d4a48e29-b2e6-4c60-ad25-23770787d99c.mp4)): até **3 minutos**, link HTTPS sem login, de preferência em inglês ([RULES.md](../../RULES.md)). Diferente do [vídeo conceito](./roteiro-video.md), este mostra o produto funcionando de verdade: tudo o que aparece nas telas foi gravado no ambiente de dev (`fiscalizai-dev.vercel.app`), com o bot real respondendo.
+Vídeo da submissão ([inglês, 2:28](https://d2ol7oe51mr4n9.cloudfront.net/user_3IH6s2x6op5CIWGya8iR1hp8f6B/9fd12a51-4a51-409d-9a2b-4cf0c2ec5e6a.mp4); [versão em português, 2:41](https://d2ol7oe51mr4n9.cloudfront.net/user_3IH6s2x6op5CIWGya8iR1hp8f6B/9945b228-86ed-4f57-ac52-6803ae44c46c.mp4)): até **3 minutos**, link HTTPS sem login, de preferência em inglês ([RULES.md](../../RULES.md)). Diferente do [vídeo conceito](./roteiro-video.md), este mostra o produto funcionando de verdade: tudo o que aparece nas telas foi gravado no ambiente de dev (`fiscalizai-dev.vercel.app`), com o bot real respondendo.
 
 - **Público**: avaliadores técnicos. Além do fluxo do cidadão, o vídeo mostra os casos difíceis que o sistema trata e os números que dá para conferir.
 - **Idioma**: narração e legendas em inglês. A interface fica em pt-BR; rótulos curtos em inglês explicam cada tela.
@@ -30,4 +30,5 @@ Vídeo da submissão ([assistir, 2:28](https://d2ol7oe51mr4n9.cloudfront.net/use
 ## Produção
 
 - Scripts de gravação (`clips.js`) e montagem (`render_demo.py`, `assemble_demo.py`) no branch `tmp/video-layers`, pasta `demo/`. Cada cena tem um mapa de tempo (trechos em velocidade real, acelerados ou congelados) para casar a tela com a fala.
-- Legendas em inglês queimadas no vídeo e também em `public/video/demo.en.vtt`.
+- Legendas queimadas no vídeo e também em `public/video/demo.en.vtt` e `public/video/demo.pt-BR.vtt`.
+- **Versão em português**: as mesmas gravações e mapas de tempo, com narração (mesma voz), legendas e textos de tela em pt-BR. Como as falas em português são mais longas, algumas cenas seguram o último quadro por mais tempo (2:41 no total). Scripts em `demo/pt/` no branch `tmp/video-layers`.

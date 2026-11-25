@@ -13,7 +13,7 @@ O Fiscaliz.ai automatiza a triagem e o roteamento de demandas urbanas de Apucara
 - **Site:** https://fiscalizai-five.vercel.app, página que explica como usar.
 - **Mapa:** https://fiscalizai-five.vercel.app/mapa
 - **Simulador:** https://fiscalizai-five.vercel.app/simular, a mesma conversa no navegador, sem precisar de celular.
-- **Vídeo da demo (2:28, em inglês):** [assistir](https://d2ol7oe51mr4n9.cloudfront.net/user_3IH6s2x6op5CIWGya8iR1hp8f6B/d4a48e29-b2e6-4c60-ad25-23770787d99c.mp4). Roteiro em [docs/marca/roteiro-demo.md](./docs/marca/roteiro-demo.md).
+- **Vídeo da demo:** [em inglês, 2:28](https://d2ol7oe51mr4n9.cloudfront.net/user_3IH6s2x6op5CIWGya8iR1hp8f6B/9fd12a51-4a51-409d-9a2b-4cf0c2ec5e6a.mp4) (versão da submissão) · [em português, 2:41](https://d2ol7oe51mr4n9.cloudfront.net/user_3IH6s2x6op5CIWGya8iR1hp8f6B/9945b228-86ed-4f57-ac52-6803ae44c46c.mp4). Roteiro em [docs/marca/roteiro-demo.md](./docs/marca/roteiro-demo.md).
 
 ### Testar
 
