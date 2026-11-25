@@ -86,7 +86,10 @@ def scene3(t, D):
             tx, ty = 560, 560
             x = x + (tx - x) * ease_io(focus); y = y + (ty - y) * ease_io(focus)
             s = appear * (1 + 1.4 * ease_io(focus))
-            place(c, img(f"{k}.webp", 0.85), x, y, s, min(1, appear))
+            # HD source (the 128 px icon upscaled 4x on Higgsfield, job e21c3fb3/6b10dbd0
+            # on white and black, matted): scale it once, no upsampling.
+            if s > 0.01:
+                place(c, img("pavement_hd.png", round(0.2125 * s, 3)), x, y, 1.0, min(1, appear))
         else:
             alpha = min(1, appear) * (1 - ease_io(focus))
             place(c, img(f"{k}.webp", 0.85), x, y, appear, alpha)

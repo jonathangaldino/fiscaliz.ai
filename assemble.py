@@ -24,8 +24,8 @@ def dur(f): return float(subprocess.check_output(["ffprobe", "-v", "error", "-sh
 # End card overlay (scene 7)
 ov = Image.new("RGBA", (1920, 1080))
 d = ImageDraw.Draw(ov)
-sb = ImageFont.truetype("fonts/Inter-SemiBold.ttf", 84); md = ImageFont.truetype("fonts/Inter-Medium.ttf", 36)
-d.text((960, 810), "Você aponta. A cidade resolve.", font=sb, fill=(255, 255, 255, 255), anchor="mm")
+sb = ImageFont.truetype("fonts/Inter-SemiBold.ttf", 72); md = ImageFont.truetype("fonts/Inter-Medium.ttf", 36)
+d.text((960, 945), "Você aponta. A cidade resolve.", font=sb, fill=(255, 255, 255, 255), anchor="mm")
 ov.save("endcard.png")
 run("ffmpeg", "-y", "-loglevel", "error", "-i", "ai7.mp4", "-loop", "1", "-i", "endcard.png", "-filter_complex",
     "[0:v]scale=1920:1080,fps=30,setsar=1[b];[1:v]format=rgba,fade=in:st=1.4:d=0.8:alpha=1[o];[b][o]overlay=0:0:shortest=1,format=yuv420p",
