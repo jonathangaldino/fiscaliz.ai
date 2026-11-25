@@ -12,7 +12,12 @@ export function HackathonBanner() {
     >
       <p className="mx-auto flex max-w-6xl items-start justify-center gap-2 text-[13px] leading-snug sm:items-center sm:text-sm">
         <Glyph name="warning" size={16} className="mt-px sm:mt-0" />
-        <span>
+        {/* Short copy on phones so the strip stays at two lines. */}
+        <span className="sm:hidden">
+          <strong className="font-semibold">Projeto do Hack Brasil 2026.</strong>{" "}
+          Proposta independente, não é canal oficial da Prefeitura.
+        </span>
+        <span className="hidden sm:inline">
           <strong className="font-semibold">Projeto do Hack Brasil 2026.</strong>{" "}
           É uma proposta independente, sem vínculo com a Prefeitura de
           Apucarana, e não é um canal oficial de atendimento.
