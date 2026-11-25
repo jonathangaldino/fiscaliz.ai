@@ -135,9 +135,9 @@ def ring(canvas, t, t_in, cx, cy, r, label):
 # ------------------------------------------------------------ captions
 NARR = json.load(open("narration.json"))
 def caption(canvas, shot, t):
-    vo = shot.get("vo")
+    vo = shot.get("vo") or shot.get("cap_vo")  # cap_vo: a line that started in the previous shot
     if not vo or shot.get("no_captions"): return
-    start = shot.get("vo_at", 0.4); cues = NARR[vo]["cues"]
+    start = shot.get("vo_at", 0.4) if shot.get("vo") else shot["cap_at"]; cues = NARR[vo]["cues"]
     cur = next((c for c in cues if start + c[0] <= t < start + c[1]), None)
     if not cur: return
     f = font("Medium", 34); words = cur[2].split(); lines, line = [], ""

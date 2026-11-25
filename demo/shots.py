@@ -53,5 +53,7 @@ S = [
   "kicker": "09 · Closing the loop", "title": "The citizen confirms the fix"},
  {"kind": "outro", "movie": "ai7.mp4", "speed": 1.0, "dur": 6.6, "vo": "n11", "vo_at": 0.9, "no_captions": True},
 ]
+# The public-map line (n08) runs into the phone shot: keep its captions there.
+S[9]["cap_vo"] = "n08"; S[9]["cap_at"] = round(S[8]["vo_at"] - (S[8]["dur"] - 0.4), 3)
 json.dump(S, open("shots.json", "w"), indent=1)
 print(len(S), round(sum(s["dur"] for s in S) - 0.4 * (len(S) - 1), 1))
