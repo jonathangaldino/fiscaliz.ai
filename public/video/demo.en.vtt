@@ -1,0 +1,172 @@
+WEBVTT
+
+00:00:00.700 --> 00:00:02.110
+In Apucarana, Brazil,
+
+00:00:02.110 --> 00:00:05.401
+a pothole or a broken streetlight usually means a
+
+00:00:05.401 --> 00:00:06.676
+phone call, a form,
+
+00:00:06.676 --> 00:00:09.564
+and guessing which department is in charge.
+
+00:00:09.564 --> 00:00:11.930
+Fiscaliz.ai removes the guessing.
+
+00:00:12.600 --> 00:00:15.373
+A citizen just sends a message on Telegram.
+
+00:00:15.373 --> 00:00:17.887
+No app to install, no sign-up, no form.
+
+00:00:17.887 --> 00:00:19.821
+Here we use the web simulator,
+
+00:00:19.821 --> 00:00:21.756
+which runs the exact same bot.
+
+00:00:21.756 --> 00:00:25.710
+They describe the problem in their own words, typo and all.
+
+00:00:25.900 --> 00:00:27.863
+Claude Haiku extracts the problem,
+
+00:00:27.863 --> 00:00:29.365
+the category and the time.
+
+00:00:29.365 --> 00:00:32.483
+The street is matched against the census address file,
+
+00:00:32.483 --> 00:00:34.735
+misspellings included, in milliseconds.
+
+00:00:34.735 --> 00:00:36.872
+The bot only asks for what's missing,
+
+00:00:36.872 --> 00:00:38.870
+then shows a summary to confirm.
+
+00:00:39.300 --> 00:00:40.893
+One tap, and it's registered,
+
+00:00:40.893 --> 00:00:42.597
+routed to the right department,
+
+00:00:42.597 --> 00:00:44.230
+and live on the public map.
+
+00:00:45.100 --> 00:00:46.872
+Citizens can attach a photo.
+
+00:00:46.872 --> 00:00:48.708
+Before anything is published,
+
+00:00:48.708 --> 00:00:51.746
+a YOLO model blurs every face and license plate,
+
+00:00:51.746 --> 00:00:53.518
+and the original is deleted.
+
+00:00:53.518 --> 00:00:56.010
+Only the anonymized copy goes public.
+
+00:01:02.600 --> 00:01:06.256
+When someone else reports the same problem, in different
+
+00:01:06.256 --> 00:01:08.084
+words, there's no duplicate.
+
+00:01:08.084 --> 00:01:10.630
+Nearby open occurrences are candidates,
+
+00:01:10.630 --> 00:01:13.242
+and the AI confirms it's the same issue.
+
+00:01:13.242 --> 00:01:14.874
+The appeal grows instead:
+
+00:01:14.874 --> 00:01:17.570
+now two people are asking for this fix.
+
+00:01:18.600 --> 00:01:20.032
+Guardrails come first.
+
+00:01:20.032 --> 00:01:23.612
+An emergency is sent straight to the emergency numbers,
+
+00:01:23.612 --> 00:01:25.044
+and nothing is stored.
+
+00:01:25.044 --> 00:01:27.712
+A water leak goes to the utility company.
+
+00:01:27.712 --> 00:01:29.405
+The AI only fills in data;
+
+00:01:29.405 --> 00:01:32.008
+a tested state machine decides the flow.
+
+00:01:32.008 --> 00:01:33.180
+In our evaluation,
+
+00:01:33.180 --> 00:01:35.198
+it got 53 of 54 messages right,
+
+00:01:35.198 --> 00:01:37.170
+and missed zero emergencies.
+
+00:01:38.000 --> 00:01:40.061
+The map is public and real-time:
+
+00:01:40.061 --> 00:01:42.444
+new reports appear without reloading.
+
+00:01:42.444 --> 00:01:44.441
+Each category has its own icon,
+
+00:01:44.441 --> 00:01:48.047
+and you can search and filter by category or department,
+
+00:01:48.047 --> 00:01:49.207
+right in the link.
+
+00:01:49.207 --> 00:01:52.770
+The same interface works on desktop and on the phone.
+
+00:01:53.400 --> 00:01:54.292
+For City Hall,
+
+00:01:54.292 --> 00:01:56.523
+each department gets its own queue,
+
+00:01:56.523 --> 00:01:59.009
+ranked by how many people are affected.
+
+00:01:59.009 --> 00:02:02.388
+The reliability page shows the automation in numbers,
+
+00:02:02.388 --> 00:02:05.470
+and the open data downloads as GeoJSON or CSV.
+
+00:02:10.000 --> 00:02:10.915
+After the repair,
+
+00:02:10.915 --> 00:02:13.444
+the bot asks the people who reported it whether
+
+00:02:13.444 --> 00:02:14.897
+the problem is really gone.
+
+00:02:14.897 --> 00:02:17.533
+Their answers close the occurrence, or reopen it.
+
+00:02:17.533 --> 00:02:19.190
+The citizen closes the loop.
+
+00:02:22.300 --> 00:02:24.612
+Fiscaliz.ai. You point it out.
+
+00:02:24.612 --> 00:02:26.150
+The city fixes it.
