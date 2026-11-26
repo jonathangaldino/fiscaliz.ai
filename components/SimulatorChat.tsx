@@ -101,8 +101,11 @@ export function SimulatorChat() {
   const [error, setError] = useState<string | null>(null);
   const bottomRef = useRef<HTMLDivElement>(null);
 
+  // Scroll only the message list: scrollIntoView would also scroll the page,
+  // which on phones pushed the whole sheet up and left a blank strip below.
   useEffect(() => {
-    bottomRef.current?.scrollIntoView({ behavior: "smooth" });
+    const list = bottomRef.current?.parentElement;
+    list?.scrollTo({ top: list.scrollHeight, behavior: "smooth" });
   }, [chat?.length]);
 
   // A chime when the bot answers (not for the history loaded on open).
