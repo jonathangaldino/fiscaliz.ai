@@ -19,8 +19,8 @@ const LINKS: {
 export function NavLinks() {
   const pathname = usePathname();
   return (
-    <nav aria-label="Principal">
-      <ul className="flex items-center gap-1">
+    <nav aria-label="Principal" className="max-[459px]:flex-1">
+      <ul className="flex items-center gap-1 max-[459px]:justify-around">
         {LINKS.map((link) => {
           const active = pathname === link.href;
           return (

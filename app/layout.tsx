@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from "next";
 import "./globals.css";
 import { ConvexClientProvider } from "./ConvexClientProvider";
 import { PointerLight } from "@/components/PointerLight";
+import { HackathonBanner } from "@/components/HackathonBanner";
 
 export const metadata: Metadata = {
   title: "Fiscaliz.ai",
@@ -26,6 +27,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
         >
           Pular para o conteúdo
         </a>
+        <HackathonBanner />
         <ConvexClientProvider>{children}</ConvexClientProvider>
         <PointerLight />
       </body>
