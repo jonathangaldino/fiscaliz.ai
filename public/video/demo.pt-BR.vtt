@@ -1,0 +1,160 @@
+WEBVTT
+
+00:00:00.700 --> 00:00:01.670
+Em Apucarana,
+
+00:00:01.670 --> 00:00:06.592
+um buraco na rua ou um poste apagado costumam virar um telefonema,
+
+00:00:06.592 --> 00:00:10.993
+um formulário e um chute sobre qual secretaria cuida disso.
+
+00:00:10.993 --> 00:00:13.530
+O Fiscaliz.ai acaba com o chute.
+
+00:00:14.030 --> 00:00:17.194
+O cidadão só manda uma mensagem no Telegram.
+
+00:00:17.194 --> 00:00:21.077
+Sem instalar aplicativo, sem cadastro, sem formulário.
+
+00:00:21.077 --> 00:00:23.378
+Aqui usamos o simulador do site,
+
+00:00:23.378 --> 00:00:25.680
+que roda exatamente o mesmo bot.
+
+00:00:25.680 --> 00:00:28.340
+Ele descreve o problema do seu jeito,
+
+00:00:28.340 --> 00:00:30.360
+até com erro de digitação.
+
+00:00:30.780 --> 00:00:32.983
+O Claude Haiku extrai o problema,
+
+00:00:32.983 --> 00:00:35.053
+a categoria e quando aconteceu.
+
+00:00:35.053 --> 00:00:38.123
+A rua é encontrada no cadastro de endereços do
+
+00:00:38.123 --> 00:00:41.194
+Censo, mesmo escrita errado, em milissegundos.
+
+00:00:41.194 --> 00:00:43.731
+O bot só pergunta o que falta e mostra
+
+00:00:43.731 --> 00:00:45.550
+um resumo para confirmar.
+
+00:00:45.940 --> 00:00:48.476
+Um toque, e o relato está registrado,
+
+00:00:48.476 --> 00:00:51.710
+encaminhado ao órgão certo e no mapa público.
+
+00:00:52.450 --> 00:00:54.106
+Dá para mandar uma foto.
+
+00:00:54.106 --> 00:00:56.106
+Antes de qualquer publicação,
+
+00:00:56.106 --> 00:00:59.280
+um modelo YOLO borra rostos e placas de carro,
+
+00:00:59.280 --> 00:01:00.866
+e a original é apagada.
+
+00:01:00.866 --> 00:01:03.500
+Só a cópia anonimizada fica pública.
+
+00:01:09.950 --> 00:01:14.415
+Quando outra pessoa relata o mesmo problema, com outras palavras,
+
+00:01:14.415 --> 00:01:16.063
+não nasce uma duplicata.
+
+00:01:16.063 --> 00:01:19.498
+As ocorrências abertas por perto viram candidatas,
+
+00:01:19.498 --> 00:01:21.902
+e a IA confirma que é o mesmo caso.
+
+00:01:21.902 --> 00:01:23.894
+Em vez disso, o apelo cresce:
+
+00:01:23.894 --> 00:01:26.860
+agora são duas pessoas pedindo a solução.
+
+00:01:27.380 --> 00:01:29.110
+A segurança vem primeiro.
+
+00:01:29.110 --> 00:01:32.985
+Uma emergência vai direto para os números de emergência,
+
+00:01:32.985 --> 00:01:34.230
+e nada é guardado.
+
+00:01:34.230 --> 00:01:37.483
+Um vazamento de água vai para a concessionária.
+
+00:01:37.483 --> 00:01:39.074
+A IA só preenche dados;
+
+00:01:39.074 --> 00:01:42.742
+quem decide o fluxo é uma máquina de estados testada.
+
+00:01:42.742 --> 00:01:44.056
+Na nossa avaliação,
+
+00:01:44.056 --> 00:01:49.050
+ela acertou 53 de 54 mensagens e não deixou passar nenhuma emergência.
+
+00:01:49.510 --> 00:01:51.763
+O mapa é público e em tempo real:
+
+00:01:51.763 --> 00:01:55.176
+os relatos novos aparecem sem recarregar a página.
+
+00:01:55.176 --> 00:01:57.293
+Cada categoria tem o seu ícone,
+
+00:01:57.293 --> 00:02:00.228
+e dá para buscar e filtrar por categoria ou
+
+00:02:00.228 --> 00:02:02.003
+por órgão, direto no link.
+
+00:02:02.003 --> 00:02:05.840
+A mesma interface funciona no computador e no celular.
+
+00:02:06.520 --> 00:02:07.845
+Para a Prefeitura,
+
+00:02:07.845 --> 00:02:09.758
+cada órgão tem a sua fila,
+
+00:02:09.758 --> 00:02:12.775
+ordenada pelo número de pessoas afetadas.
+
+00:02:12.775 --> 00:02:16.969
+A página de confiabilidade mostra a automação em números,
+
+00:02:16.969 --> 00:02:20.210
+e os dados abertos saem em GeoJSON ou CSV.
+
+00:02:23.120 --> 00:02:24.480
+Depois do conserto,
+
+00:02:24.480 --> 00:02:28.560
+o bot pergunta a quem relatou se o problema acabou mesmo.
+
+00:02:28.560 --> 00:02:31.781
+As respostas fecham a ocorrência, ou reabrem.
+
+00:02:31.781 --> 00:02:34.150
+Quem fecha o ciclo é o cidadão.
+
+00:02:35.420 --> 00:02:39.030
+Fiscaliz.ai. Você aponta. A cidade resolve.
