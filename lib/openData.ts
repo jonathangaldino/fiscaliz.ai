@@ -1,4 +1,5 @@
 import type { PublicOccurrence } from "../convex/occurrences";
+import { computePriority } from "../convex/lib/priority";
 import {
   CATEGORIES,
   isAgencySlug,
@@ -42,7 +43,9 @@ export function parseFilters(
 const iso = (ms: number | undefined) =>
   ms === undefined ? null : new Date(ms).toISOString();
 
-function row(o: PublicOccurrence, origin: string) {
+function row(o: PublicOccurrence, origin: string, now: number) {
+  // A resolved occurrence has left the queue: no priority.
+  const priority = o.status === "resolved" ? null : computePriority(o, now);
   return {
     id: o._id,
     category: o.category,
@@ -52,19 +55,31 @@ function row(o: PublicOccurrence, origin: string) {
     address: o.address,
     summary: o.summary,
     appeal: o.appeal,
+    priority: priority?.score ?? null,
+    priorityLevel: priority?.level ?? null,
+    roadClass: priority?.roadClass ?? null,
+    targetDays: priority?.targetDays ?? null,
     openedAt: iso(o.openedAt),
     resolvedAt: iso(o.resolvedAt),
+    // Only a forecast the agency committed to; `forecastEnd` is exclusive.
+    forecastPrecision: o.forecast?.precision ?? null,
+    forecastStart: iso(o.forecast?.start),
+    forecastEnd: iso(o.forecast?.end),
     url: `${origin}/ocorrencias/${o._id}`,
   };
 }
 
-export function toGeoJSON(occurrences: PublicOccurrence[], origin: string) {
+export function toGeoJSON(
+  occurrences: PublicOccurrence[],
+  origin: string,
+  now = Date.now(),
+) {
   return {
     type: "FeatureCollection",
     features: occurrences.map((o) => ({
       type: "Feature",
       geometry: { type: "Point", coordinates: [o.lng, o.lat] },
-      properties: row(o, origin),
+      properties: row(o, origin, now),
     })),
   };
 }
@@ -78,10 +93,17 @@ const CSV_COLUMNS = [
   "address",
   "summary",
   "appeal",
+  "priority",
+  "priorityLevel",
+  "roadClass",
+  "targetDays",
   "lat",
   "lng",
   "openedAt",
   "resolvedAt",
+  "forecastPrecision",
+  "forecastStart",
+  "forecastEnd",
   "url",
 ] as const;
 
@@ -90,10 +112,14 @@ function csvCell(value: unknown): string {
   return /[",\r\n]/.test(text) ? `"${text.replaceAll('"', '""')}"` : text;
 }
 
-export function toCsv(occurrences: PublicOccurrence[], origin: string): string {
+export function toCsv(
+  occurrences: PublicOccurrence[],
+  origin: string,
+  now = Date.now(),
+): string {
   const lines = occurrences.map((o) => {
     const values: Record<string, unknown> = {
-      ...row(o, origin),
+      ...row(o, origin, now),
       lat: o.lat,
       lng: o.lng,
     };

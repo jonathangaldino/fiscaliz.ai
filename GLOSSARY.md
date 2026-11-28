@@ -20,6 +20,26 @@ _Avoid_: Chamado, ticket, incidente, problema
 Quantidade de cidadãos distintos com relato em uma ocorrência. Conta pessoas, não mensagens.
 _Avoid_: Upvote, voto, curtida, prioridade
 
+**Prioridade**:
+Ordem sugerida de atendimento de uma ocorrência, de 0 a 100, calculada por gravidade, tempo em aberto, classe da via, apelo e tendência de piora. Não é o apelo.
+_Avoid_: Urgência, ranking, score (no texto do painel)
+
+**Classe da via**:
+Função da via onde está a ocorrência: arterial, coletora, local ou rural. Deduzida do endereço.
+_Avoid_: Tipo de rua, movimento
+
+**Prazo de referência**:
+Dias em que uma ocorrência de certa categoria, em certa classe de via, deveria ser atendida. É parâmetro da prioridade, não promessa ao cidadão.
+_Avoid_: SLA, prazo legal, previsão
+
+**Capacidade do órgão**:
+Quantas ocorrências um órgão atende por semana. Na demo, valor ilustrativo.
+_Avoid_: Produtividade, vazão
+
+**Previsão**:
+Janela de tempo em que uma ocorrência deve ser atendida: um dia, uma semana, um mês ou um trimestre, conforme a confiança. O órgão sempre vê a estimativa; o cidadão só vê a previsão que o órgão assumiu.
+_Avoid_: Prazo (é o prazo de referência), promessa, data de entrega
+
 **Verificação**:
 Consulta aos cidadãos de uma ocorrência sobre se o problema foi corrigido. A ocorrência só é dada como resolvida quando ao menos 30% deles confirmam.
 _Avoid_: Validação, fechamento, votação
@@ -57,6 +77,11 @@ O código é só em inglês. Cada termo acima tem um único nome no código:
 | Relato | `report` |
 | Ocorrência | `occurrence` |
 | Apelo | `appeal` |
+| Prioridade | `priority` |
+| Classe da via | `roadClass` |
+| Prazo de referência | `targetDays` |
+| Capacidade do órgão | `weeklyCapacity` |
+| Previsão | `forecast` |
 | Verificação | `verification` |
 | Aberta / Verificando / Resolvida | `open` / `verifying` / `resolved` |
 | Fora de escopo | `out_of_scope` |
