@@ -4,6 +4,7 @@ import { useQuery } from "convex/react";
 import Link from "next/link";
 import { api } from "@/convex/_generated/api";
 import { AGENCIES, isAgencySlug } from "@/convex/lib/categories";
+import { PICKUP_ITEM_LABEL } from "@/convex/lib/pickup";
 import { formatAppeal, formatDate } from "@/lib/format";
 import { AgencyContact } from "./AgencyContact";
 import { OccurrenceRow } from "./OccurrenceRow";
@@ -102,7 +103,43 @@ export function AgencyQueue({ slug }: { slug: string }) {
           )}
         </Card>
       )}
+
+      {slug === "servicos-publicos" && <PickupQueue />}
     </Page>
+  );
+}
+
+/** Furniture pickup points waiting for the truck (ADR 0011), oldest first. */
+function PickupQueue() {
+  const points = useQuery(api.pickups.listWaiting);
+  if (points === undefined) return null;
+  const oldestFirst = [...points].sort((a, b) => a.openedAt - b.openedAt);
+  return (
+    <Card className="px-2 py-3">
+      <h2 className="px-3 pb-2 text-base font-semibold">
+        Recolhimento de móveis ({points.length})
+      </h2>
+      {oldestFirst.length === 0 ? (
+        <Notice>Nenhum ponto aguardando o caminhão.</Notice>
+      ) : (
+        <ol className="space-y-0.5">
+          {oldestFirst.map((p) => (
+            <li key={p._id} className="flex items-baseline justify-between gap-3 rounded-control px-3 py-2">
+              <span className="min-w-0">
+                <span className="block font-medium text-fg">{p.address}</span>
+                <span className="block text-sm text-muted">
+                  {p.items.map((item) => PICKUP_ITEM_LABEL[item]).join(", ")} · desde{" "}
+                  {formatDate(p.openedAt)}
+                </span>
+              </span>
+              <span className="shrink-0 text-sm text-muted tabular-nums">
+                {p.requests === 1 ? "1 pedido" : `${p.requests} pedidos`}
+              </span>
+            </li>
+          ))}
+        </ol>
+      )}
+    </Card>
   );
 }
 

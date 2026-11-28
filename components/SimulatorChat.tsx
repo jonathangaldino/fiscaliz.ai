@@ -91,6 +91,7 @@ export function SimulatorChat() {
     sessionId ? { sessionId } : "skip",
   );
   const occurrences = useQuery(api.occurrences.listActive);
+  const pickups = useQuery(api.pickups.listWaiting);
   const send = useMutation(api.simulator.send);
   const generatePhotoUploadUrl = useMutation(api.simulator.generatePhotoUploadUrl);
   const fileRef = useRef<HTMLInputElement>(null);
@@ -175,6 +176,7 @@ export function SimulatorChat() {
       <div className="absolute inset-0">
         <OccurrenceMap
           occurrences={occurrences ?? []}
+          pickups={pickups ?? []}
           marker={pin}
           onMapClick={(point) => {
             playSound("tap");

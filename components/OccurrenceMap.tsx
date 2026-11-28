@@ -15,8 +15,9 @@ import Map, {
   type MapRef,
 } from "react-map-gl/maplibre";
 import type { PublicOccurrence } from "@/convex/occurrences";
+import type { PublicPickupPoint } from "@/convex/pickups";
 import { APUCARANA_CENTER } from "@/convex/lib/geo";
-import { PIN, pinImages, VERIFYING_BADGE_ID } from "@/lib/mapPins";
+import { PICKUP_PIN_ID, PIN, pinImages, VERIFYING_BADGE_ID } from "@/lib/mapPins";
 import { useColorScheme } from "@/lib/media";
 import { Glyph } from "./ui/Glyph";
 import { IconButton } from "./ui/IconButton";
@@ -65,6 +66,9 @@ type Props = {
   occurrences: PublicOccurrence[];
   selectedId?: string | null;
   onSelect?: (id: string) => void;
+  /** Furniture pickup points, a layer of their own (ADR 0011). */
+  pickups?: PublicPickupPoint[];
+  onSelectPickup?: (id: string) => void;
   /** Click on an empty spot of the map (used by the simulator to drop a pin). */
   onMapClick?: (point: { lat: number; lng: number }) => void;
   marker?: { lat: number; lng: number } | null;
@@ -82,6 +86,8 @@ export default function OccurrenceMap({
   occurrences,
   selectedId,
   onSelect,
+  pickups = [],
+  onSelectPickup,
   onMapClick,
   marker,
   padding,
@@ -114,6 +120,18 @@ export default function OccurrenceMap({
     [occurrences],
   );
 
+  const pickupData = useMemo<GeoJSON.FeatureCollection>(
+    () => ({
+      type: "FeatureCollection",
+      features: pickups.map((p) => ({
+        type: "Feature",
+        geometry: { type: "Point", coordinates: [p.lng, p.lat] },
+        properties: { id: p._id },
+      })),
+    }),
+    [pickups],
+  );
+
   const markerData = useMemo<GeoJSON.FeatureCollection>(
     () => ({
       type: "FeatureCollection",
@@ -143,7 +161,9 @@ export default function OccurrenceMap({
 
   useEffect(() => {
     if (!selectedId) return;
-    const selected = occurrences.find((o) => o._id === selectedId);
+    const selected =
+      occurrences.find((o) => o._id === selectedId) ??
+      pickups.find((p) => p._id === selectedId);
     if (selected) {
       mapRef.current?.flyTo({
         center: [selected.lng, selected.lat],
@@ -153,7 +173,7 @@ export default function OccurrenceMap({
         offset: [0, popupOpen ? 120 : 0],
       });
     }
-  }, [selectedId, occurrences, popupOpen]);
+  }, [selectedId, occurrences, pickups, popupOpen]);
 
   const paddingKey = JSON.stringify(padding ?? {});
   useEffect(() => {
@@ -180,6 +200,10 @@ export default function OccurrenceMap({
       );
       const [lng, lat] = (feature.geometry as GeoJSON.Point).coordinates;
       mapRef.current?.easeTo({ center: [lng, lat], zoom: zoom ?? 16 });
+      return;
+    }
+    if (feature.layer.id === "pickup-pins") {
+      onSelectPickup?.(feature.properties.id as string);
       return;
     }
     onSelect?.(feature.properties.id as string);
@@ -218,7 +242,7 @@ export default function OccurrenceMap({
         ref={mapRef}
         initialViewState={HOME_VIEW}
         mapStyle={MAP_STYLE[scheme]}
-        interactiveLayerIds={["clusters", "occurrence-pins", "active-pins"]}
+        interactiveLayerIds={["clusters", "occurrence-pins", "active-pins", "pickup-pins"]}
         onClick={handleClick}
         onMouseMove={handleHover}
         onMouseLeave={() => setHoveredId(null)}
@@ -325,6 +349,21 @@ export default function OccurrenceMap({
                 "icon-image": ["concat", "pin-", ["get", "category"]],
                 "icon-anchor": "bottom",
                 "icon-size": ["*", appealSize, 1.22],
+                "icon-allow-overlap": true,
+                "icon-ignore-placement": true,
+              }}
+            />
+          </Source>
+        )}
+        {ready && (
+          <Source id="pickups" type="geojson" data={pickupData}>
+            <Layer
+              id="pickup-pins"
+              type="symbol"
+              layout={{
+                "icon-image": PICKUP_PIN_ID,
+                "icon-anchor": "bottom",
+                "icon-size": ["case", ["==", ["get", "id"], selectedId ?? ""], 1.22, 0.9],
                 "icon-allow-overlap": true,
                 "icon-ignore-placement": true,
               }}

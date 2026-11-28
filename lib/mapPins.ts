@@ -15,6 +15,9 @@ const SHADOW = 6;
 
 export const pinImageId = (category: CategoryKey) => `pin-${category}`;
 export const VERIFYING_BADGE_ID = "badge-verifying";
+/** Furniture pickup point (ADR 0011): cleaning icon, its own ring color. */
+export const PICKUP_PIN_ID = "pin-pickup";
+export const PICKUP_COLOR = "#7c3aed";
 
 type PinImage = { data: ImageData; pixelRatio: number };
 let cache: Promise<Map<string, PinImage>> | null = null;
@@ -94,6 +97,10 @@ export function pinImages(): Promise<Map<string, PinImage>> {
         });
       }),
     );
+    images.set(PICKUP_PIN_ID, {
+      data: drawPin(await loadImage(CATEGORY_ICON.urban_cleaning), PICKUP_COLOR),
+      pixelRatio: RATIO,
+    });
     images.set(VERIFYING_BADGE_ID, {
       data: drawVerifyingBadge(),
       pixelRatio: RATIO,
