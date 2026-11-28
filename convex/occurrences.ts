@@ -4,6 +4,7 @@ import type { Doc } from "./_generated/dataModel";
 import { CATEGORIES, CATEGORY_KEYS } from "./lib/categories";
 import {
   categoryValidator,
+  committedForecastValidator,
   occurrenceStatusValidator,
   sourceValidator,
 } from "./validators";
@@ -26,6 +27,8 @@ export const publicOccurrenceValidator = v.object({
   verificationStartedAt: v.optional(v.number()),
   resolvedAt: v.optional(v.number()),
   source: sourceValidator,
+  // The forecast the agency committed to (ADR 0012). Estimates never go here.
+  forecast: v.optional(committedForecastValidator),
   // Only `get` fills it (ADR 0010): the blurred photo, never the original.
   photo: v.optional(
     v.union(
@@ -52,6 +55,7 @@ export function toPublicOccurrence(doc: Doc<"occurrences">): PublicOccurrence {
     verificationStartedAt: doc.verificationStartedAt,
     resolvedAt: doc.resolvedAt,
     source: doc.source,
+    forecast: doc.forecast,
   };
 }
 

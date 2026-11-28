@@ -48,6 +48,7 @@ Em `components/ui/`:
 | `IconButton` | Botão redondo só com ícone; `label` é obrigatório e vira `aria-label`. |
 | `Chip` | Pílula de filtro com `aria-pressed`. |
 | `StatusBadge` | Situação da ocorrência; o texto carrega o sentido, a cor só reforça. |
+| `PriorityBadge` | Faixa de prioridade (Crítica, Alta, Média, Baixa), com a pontuação opcional. Mesma regra: o nome da faixa carrega o sentido. |
 
 `Header` é a barra de vidro flutuante; na página do mapa usa `overlay` para ficar por cima do mapa.
 

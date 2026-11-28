@@ -61,6 +61,10 @@ function row(o: PublicOccurrence, origin: string, now: number) {
     targetDays: priority?.targetDays ?? null,
     openedAt: iso(o.openedAt),
     resolvedAt: iso(o.resolvedAt),
+    // Only a forecast the agency committed to; `forecastEnd` is exclusive.
+    forecastPrecision: o.forecast?.precision ?? null,
+    forecastStart: iso(o.forecast?.start),
+    forecastEnd: iso(o.forecast?.end),
     url: `${origin}/ocorrencias/${o._id}`,
   };
 }
@@ -97,6 +101,9 @@ const CSV_COLUMNS = [
   "lng",
   "openedAt",
   "resolvedAt",
+  "forecastPrecision",
+  "forecastStart",
+  "forecastEnd",
   "url",
 ] as const;
 

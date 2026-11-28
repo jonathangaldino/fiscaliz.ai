@@ -34,7 +34,12 @@ export function OccurrenceRow({
             {rank}
           </span>
         )}
-        <span className="flex size-12 shrink-0 items-center justify-center rounded-control border border-line bg-surface/70">
+        <span
+          className={`size-12 shrink-0 items-center justify-center rounded-control border border-line bg-surface/70 ${
+            // A row with pills needs the width on a phone.
+            badges ? "hidden min-[420px]:flex" : "flex"
+          }`}
+        >
           <CategoryIcon
             category={o.category}
             size={34}
@@ -42,10 +47,9 @@ export function OccurrenceRow({
           />
         </span>
         <span className="min-w-0 flex-1">
-          <span className="flex flex-wrap items-center gap-x-2 gap-y-1 text-xs font-medium text-muted">
+          <span className="flex items-center gap-2 text-xs font-medium text-muted">
             <span className="truncate">{CATEGORIES[o.category].label}</span>
             {o.status === "verifying" && <StatusBadge status="verifying" />}
-            {badges}
           </span>
           <span className="mt-0.5 block text-[15px] leading-snug font-medium">
             {o.summary}
@@ -53,12 +57,19 @@ export function OccurrenceRow({
           <span className="mt-0.5 block truncate text-xs text-subtle">
             {meta}
           </span>
+          {badges && (
+            <span className="mt-1.5 flex flex-wrap items-center gap-1.5 whitespace-nowrap">
+              {badges}
+            </span>
+          )}
         </span>
         {aside}
         <Glyph
           name="chevronRight"
           size={18}
-          className="text-subtle transition-transform duration-(--dur) group-hover:translate-x-0.5"
+          className={`text-subtle transition-transform duration-(--dur) group-hover:translate-x-0.5 ${
+            badges ? "hidden sm:block" : ""
+          }`}
         />
       </Link>
     </li>

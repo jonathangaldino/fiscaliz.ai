@@ -71,6 +71,7 @@ convex/
   http.ts                     # webhook do Telegram
   occurrences.ts              # queries públicas do painel
   agencies.ts
+  forecast.ts                 # estimativa, compromisso e aviso da previsão (ADR 0012)
   simulator.ts                # mutations/queries do simulador
   crons.ts                    # expiração de conversas
   seed.ts                     # dados sintéticos de Apucarana
@@ -108,7 +109,7 @@ Tabelas do Convex (`convex/schema.ts`):
 | Tabela | Campos principais | Índices |
 |---|---|---|
 | `agencies` | `slug`, `name`, `phone`, `email`, `url` (só contato institucional) | `by_slug` |
-| `occurrences` | `category`, `agencyId?` ("Outros" não tem órgão), `status` (`open` / `verifying` / `resolved`), `lat`, `lng`, `address`, `summary` (texto público reescrito pela IA), `appeal`, `openedAt`, `verificationStartedAt?`, `resolvedAt?`, `source` (`telegram` / `simulator` / `seed`; `whatsapp` é legado) | `by_category_status`, `by_status_appeal`, `by_agency_status` |
+| `occurrences` | `category`, `agencyId?` ("Outros" não tem órgão), `status` (`open` / `verifying` / `resolved`), `lat`, `lng`, `address`, `summary` (texto público reescrito pela IA), `appeal`, `openedAt`, `verificationStartedAt?`, `resolvedAt?`, `forecast?` (janela de previsão assumida pelo órgão: `precision`, `start`, `end`, `committedAt`), `source` (`telegram` / `simulator` / `seed`; `whatsapp` é legado) | `by_category_status`, `by_status_appeal`, `by_agency_status` |
 | `reports` | `occurrenceId`, `citizenId`, `description` (interna, nunca vai ao navegador), `occurredAt`, `createdAt` | `by_occurrence_citizen`, `by_citizen_createdAt` |
 | `citizens` | `channel`, `externalIdHash` (HMAC do chat do Telegram ou da sessão do simulador), `telegramChatId?` (a V2 precisa dele), `sessionId?` (simulador), `phone?` (legado do WhatsApp) | `by_channel_hash` |
 | `conversations` | `citizenId`, `state` (união discriminada, ver abaixo), `updatedAt` | `by_citizen`, `by_updatedAt` |
@@ -261,6 +262,7 @@ Aberto, sem login, somente leitura.
   - Filtros por categoria e órgão guardados na URL (`?categoria=...&orgao=...`), para o link ser compartilhável.
 - **`/ocorrencias/[id]`**: resumo público, categoria, endereço, apelo, datas, prioridade com os pontos de cada fator e contato institucional do órgão.
 - **`/orgaos/[slug]`**: fila de ocorrências abertas do órgão, ordenada por prioridade (ou por apelo, ou pelas mais antigas), e contadores (abertas, apelo total, acima do prazo de referência).
+- **Previsão**: a fila do órgão mostra o plano do ano (saldo, quantas ocorrências cabem, o que fica para o ano seguinte) e a estimativa de cada ocorrência, calculados por `planQueue` (`convex/lib/forecast.ts`) com valores ilustrativos. Na página da ocorrência, o botão **Assumir previsão** (demonstração, como o da verificação) grava a janela em `occurrences.forecast`, e só então ela fica pública e o bot avisa quem relatou ([ADR 0012](./adr/0012-previsao-por-orcamento-e-capacidade.md)).
 - **Prioridade**: calculada no navegador por `computePriority` (`convex/lib/priority.ts`), porque muda com o passar dos dias. Fórmula e fontes em [priorizacao.md](./priorizacao.md) e no [ADR 0011](./adr/0011-prioridade-por-criterios-objetivos.md).
 - **Tempo real**: `useQuery` do Convex; ocorrência criada no Telegram aparece no mapa sem recarregar.
 - **Contato de órgão**: só nome, telefone, e-mail e link oficial. Nenhum nome de pessoa.
