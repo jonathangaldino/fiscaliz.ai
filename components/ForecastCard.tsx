@@ -85,54 +85,42 @@ export function ForecastEstimate({
   return (
     <Card className="space-y-3 text-sm">
       <h2 className="text-base font-semibold">Previsão de atendimento</h2>
-      {estimate.window ? (
-        <>
-          <p className="text-fg">
-            Estimativa do órgão:{" "}
-            <strong className="font-semibold">
-              {describeWindow(estimate.window)}
-            </strong>{" "}
-            ({position}). Ainda não foi informada a quem relatou.
-          </p>
-          <p className="text-muted">
-            Demonstração: ao assumir, a previsão fica pública nesta página e o
-            bot avisa quem relatou.
-          </p>
-          <Button
-            disabled={pending}
-            aria-busy={pending}
-            onClick={async () => {
-              setPending(true);
-              setError(null);
-              try {
-                await commit({ id });
-                playSound("success");
-              } catch (e) {
-                setError(
-                  e instanceof ConvexError
-                    ? String(e.data)
-                    : "Não foi possível assumir a previsão.",
-                );
-              } finally {
-                setPending(false);
-              }
-            }}
-          >
-            {pending ? "Assumindo…" : "Assumir previsão"}
-          </Button>
-          {error && (
-            <p role="alert" className="text-sm text-danger">
-              {error}
-            </p>
-          )}
-        </>
-      ) : (
-        <p className="text-muted">
-          {estimate.status === "over_budget"
-            ? `O custo estimado não cabe no saldo de ${estimate.fiscalYear} do órgão`
-            : `A equipe do órgão só chegaria nesta ocorrência depois do fim de ${estimate.fiscalYear}`}{" "}
-          ({position}). Sem previsão neste ano: ela fica para o plano de{" "}
-          {estimate.fiscalYear + 1}.
+      <p className="text-fg">
+        Estimativa pela fila do órgão:{" "}
+        <strong className="font-semibold">
+          {describeWindow(estimate.window)}
+        </strong>{" "}
+        ({position}). Ainda não foi informada a quem relatou.
+      </p>
+      <p className="text-muted">
+        Demonstração: ao assumir, a previsão fica pública nesta página e o
+        bot avisa quem relatou.
+      </p>
+      <Button
+        disabled={pending}
+        aria-busy={pending}
+        onClick={async () => {
+          setPending(true);
+          setError(null);
+          try {
+            await commit({ id });
+            playSound("success");
+          } catch (e) {
+            setError(
+              e instanceof ConvexError
+                ? String(e.data)
+                : "Não foi possível assumir a previsão.",
+            );
+          } finally {
+            setPending(false);
+          }
+        }}
+      >
+        {pending ? "Assumindo…" : "Assumir previsão"}
+      </Button>
+      {error && (
+        <p role="alert" className="text-sm text-danger">
+          {error}
         </p>
       )}
     </Card>

@@ -92,7 +92,7 @@ convex/
   lib/
     categories.ts             # fonte única de categorias → órgão (de COMPETENCIAS.md)
     priority.ts               # prioridade de 0 a 100 por fatores objetivos (ADR 0011)
-    forecast.ts               # previsão por orçamento e capacidade do órgão (ADR 0012)
+    forecast.ts               # previsão pela fila e pela capacidade do órgão (ADR 0012)
     geo.ts                    # haversine, point-in-polygon
     apucarana.geo.json        # limite do município (IBGE 4101408)
 evals/
@@ -262,7 +262,7 @@ Aberto, sem login, somente leitura.
   - Filtros por categoria e órgão guardados na URL (`?categoria=...&orgao=...`), para o link ser compartilhável.
 - **`/ocorrencias/[id]`**: resumo público, categoria, endereço, apelo, datas, prioridade com os pontos de cada fator e contato institucional do órgão.
 - **`/orgaos/[slug]`**: fila de ocorrências abertas do órgão, ordenada por prioridade (ou por apelo, ou pelas mais antigas), e contadores (abertas, apelo total, acima do prazo de referência).
-- **Previsão**: a fila do órgão mostra o plano do ano (saldo, quantas ocorrências cabem, o que fica para o ano seguinte) e a estimativa de cada ocorrência, calculados por `planQueue` (`convex/lib/forecast.ts`) com valores ilustrativos. Na página da ocorrência, o botão **Assumir previsão** (demonstração, como o da verificação) grava a janela em `occurrences.forecast`, e só então ela fica pública e o bot avisa quem relatou ([ADR 0012](./adr/0012-previsao-por-orcamento-e-capacidade.md)).
+- **Previsão**: a fila do órgão mostra a estimativa de cada ocorrência, calculada por `planQueue` (`convex/lib/forecast.ts`) a partir da posição na fila e de uma capacidade semanal ilustrativa. Na página da ocorrência, o botão **Assumir previsão** (demonstração, como o da verificação) grava a janela em `occurrences.forecast`, e só então ela fica pública e o bot avisa quem relatou ([ADR 0012](./adr/0012-previsao-por-fila-e-capacidade.md)).
 - **Prioridade**: calculada no navegador por `computePriority` (`convex/lib/priority.ts`), porque muda com o passar dos dias. Fórmula e fontes em [priorizacao.md](./priorizacao.md) e no [ADR 0011](./adr/0011-prioridade-por-criterios-objetivos.md).
 - **Tempo real**: `useQuery` do Convex; ocorrência criada no Telegram aparece no mapa sem recarregar.
 - **Contato de órgão**: só nome, telefone, e-mail e link oficial. Nenhum nome de pessoa.

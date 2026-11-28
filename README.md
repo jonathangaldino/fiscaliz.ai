@@ -59,7 +59,7 @@ flowchart LR
 5. **Foto:** o cidadão pode mandar 1 foto. No SIM ela passa por um worker no Modal que borra rostos e placas; só a cópia borrada vai para a página da ocorrência, e a original é apagada ([ADR 0010](./docs/adr/0010-fotos-anonimizadas.md)).
 6. **Painel:** mapa e lista por apelo, filtros por categoria e órgão, página de cada ocorrência e fila por órgão.
 7. **Prioridade:** a fila do órgão é ordenada por critérios objetivos (gravidade, tempo em aberto, classe da via, apelo e tendência de piora), e cada ocorrência mostra de onde vieram os pontos. Ver [docs/priorizacao.md](./docs/priorizacao.md).
-8. **Previsão:** com o orçamento e a capacidade do órgão (valores ilustrativos na demo), a fila mostra o que cabe no ano e uma janela de atendimento que afina de trimestre para dia. O cidadão só é avisado quando o órgão assume a previsão.
+8. **Previsão:** pela posição na fila e pela capacidade semanal do órgão (ilustrativa na demo), cada ocorrência ganha uma janela de atendimento que afina de trimestre para dia. O cidadão só é avisado quando o órgão assume a previsão.
 
 A IA só preenche dados; quem decide o fluxo é uma máquina de estados em código, testada caso a caso ([ADR 0004](./docs/adr/0004-por-que-nao-langgraph.md)). Detalhes em [docs/arquitetura.md](./docs/arquitetura.md) e nas [ADRs](./docs/adr/).
 
