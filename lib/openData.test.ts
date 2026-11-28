@@ -52,6 +52,22 @@ describe("serializers", () => {
     );
   });
 
+  it("exports the priority of open occurrences only", () => {
+    const now = 20 * 24 * 60 * 60 * 1000;
+    const open = toGeoJSON([occurrence], "https://x.test", now).features[0]
+      .properties;
+    expect(open.priorityLevel).toBe("high");
+    expect(open.roadClass).toBe("local");
+    expect(open.targetDays).toBe(10);
+    const resolved = { ...occurrence, status: "resolved" } as PublicOccurrence;
+    const closed = toGeoJSON([resolved], "https://x.test", now).features[0]
+      .properties;
+    expect(closed.priority).toBeNull();
+    expect(toCsv([occurrence], "https://x.test", now).split("\r\n")[0]).toContain(
+      "appeal,priority,priorityLevel,roadClass,targetDays,lat",
+    );
+  });
+
   it("quotes CSV cells with commas, quotes and newlines", () => {
     const [header, line] = toCsv([occurrence], "https://x.test").split("\r\n");
     expect(header.startsWith("id,category,")).toBe(true);

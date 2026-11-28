@@ -10,6 +10,7 @@ export function OccurrenceRow({
   occurrence: o,
   meta,
   rank,
+  badges,
   aside,
 }: {
   occurrence: PublicOccurrence;
@@ -17,6 +18,8 @@ export function OccurrenceRow({
   meta: string;
   /** Position in a ranked list. */
   rank?: number;
+  /** Pills next to the category name. */
+  badges?: React.ReactNode;
   /** Right column (appeal, date). */
   aside?: React.ReactNode;
 }) {
@@ -39,9 +42,10 @@ export function OccurrenceRow({
           />
         </span>
         <span className="min-w-0 flex-1">
-          <span className="flex items-center gap-2 text-xs font-medium text-muted">
+          <span className="flex flex-wrap items-center gap-x-2 gap-y-1 text-xs font-medium text-muted">
             <span className="truncate">{CATEGORIES[o.category].label}</span>
             {o.status === "verifying" && <StatusBadge status="verifying" />}
+            {badges}
           </span>
           <span className="mt-0.5 block text-[15px] leading-snug font-medium">
             {o.summary}
