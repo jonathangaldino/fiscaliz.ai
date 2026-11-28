@@ -17,6 +17,7 @@ import {
   type QueryCtx,
 } from "./_generated/server";
 import * as messages from "./bot/messages";
+import { answerPickup } from "./pickups";
 import { sendTelegram } from "./bot/channels/telegram";
 import {
   VERIFICATION_TIMEOUT_MS,
@@ -187,6 +188,9 @@ export const vote = internalMutation({
   },
   returns: v.object({ text: v.string() }),
   handler: async (ctx, args) => {
+    // Pickup questions reuse the button format (ADR 0011).
+    const pointId = ctx.db.normalizeId("pickupPoints", args.occurrenceId);
+    if (pointId) return answerPickup(ctx, pointId, args.citizenId, args.answer);
     const occurrenceId = ctx.db.normalizeId("occurrences", args.occurrenceId);
     const occurrence = occurrenceId ? await ctx.db.get(occurrenceId) : null;
     if (!occurrence || occurrence.status !== "verifying") {

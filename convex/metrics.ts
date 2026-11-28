@@ -52,6 +52,8 @@ export const summary = query({
 
     const diversions = new Map<string, { kind: "emergency" | "out_of_scope"; target: string; count: number }>();
     for (const { kind, target } of counters) {
+      // Pickups stay out of the occurrence metrics (ADR 0011).
+      if (kind === "pickup_refused") continue;
       const key = `${kind}:${target}`;
       const row = diversions.get(key) ?? { kind, target, count: 0 };
       row.count += 1;

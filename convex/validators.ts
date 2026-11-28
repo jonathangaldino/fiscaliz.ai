@@ -1,5 +1,6 @@
 import { v } from "convex/values";
 import { CATEGORY_KEYS } from "./lib/categories";
+import { PICKUP_ITEMS } from "./lib/pickup";
 
 const literals = <T extends string>(values: readonly T[]) =>
   values.map((value) => v.literal(value)) as unknown as [
@@ -9,6 +10,14 @@ const literals = <T extends string>(values: readonly T[]) =>
   ];
 
 export const categoryValidator = v.union(...literals(CATEGORY_KEYS));
+
+export const pickupItemValidator = v.union(...literals(PICKUP_ITEMS));
+
+export const pickupPointStatusValidator = v.union(
+  v.literal("waiting"),
+  v.literal("collected"),
+  v.literal("expired"),
+);
 
 export const occurrenceStatusValidator = v.union(
   v.literal("open"),
@@ -58,6 +67,13 @@ export const draftValidator = v.object({
   precise: v.optional(v.boolean()),
   occurredAt: v.optional(v.number()),
   photo: v.optional(draftPhotoValidator),
+  // Pickup request (ADR 0011) instead of a report.
+  intent: v.optional(v.literal("pickup")),
+  items: v.optional(v.array(pickupItemValidator)),
+  // Apartment, block...: internal only, never on the map.
+  complement: v.optional(v.string()),
+  // Street + number of a typed address; absent for a pin.
+  addressKey: v.optional(v.string()),
 });
 
 export const conversationStateValidator = v.union(

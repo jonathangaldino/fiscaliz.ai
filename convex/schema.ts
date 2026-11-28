@@ -9,6 +9,8 @@ import {
   geocodeOutcomeValidator,
   occurrencePhotoValidator,
   occurrenceStatusValidator,
+  pickupItemValidator,
+  pickupPointStatusValidator,
   sourceValidator,
 } from "./validators";
 
@@ -47,6 +49,44 @@ export default defineSchema({
     .index("by_status_appeal", ["status", "appeal"])
     .index("by_agency_status", ["agencyId", "status"])
     .index("by_photo", ["photo.storageId"]),
+
+  // Furniture pickup (ADR 0011): one point per street + number, shown on the map.
+  pickupPoints: defineTable({
+    status: pickupPointStatusValidator,
+    lat: v.number(),
+    lng: v.number(),
+    // Geocoded street and number, never the complement.
+    address: v.string(),
+    // Absent when the point came from a pin without a number.
+    addressKey: v.optional(v.string()),
+    items: v.array(pickupItemValidator),
+    // Denormalized count of requests on this point.
+    requests: v.number(),
+    openedAt: v.number(),
+    // When the bot asked the requesters whether the truck came.
+    askedAt: v.optional(v.number()),
+    closedAt: v.optional(v.number()),
+    source: sourceValidator,
+    photo: v.optional(occurrencePhotoValidator),
+  }).index("by_status", ["status"]),
+
+  // A citizen's pickup request. Never sent to the browser.
+  pickupRequests: defineTable({
+    pointId: v.id("pickupPoints"),
+    citizenId: v.id("citizens"),
+    // Fiscaliz.ai protocol, not the city's: "00042/2026".
+    protocol: v.string(),
+    complement: v.optional(v.string()),
+    description: v.string(),
+    items: v.array(pickupItemValidator),
+    createdAt: v.number(),
+  }).index("by_point_citizen", ["pointId", "citizenId"]),
+
+  // Last protocol number handed out in each year.
+  protocolCounters: defineTable({
+    year: v.number(),
+    last: v.number(),
+  }).index("by_year", ["year"]),
 
   // A citizen's report on an occurrence. Never sent to the browser.
   reports: defineTable({
@@ -110,7 +150,12 @@ export default defineSchema({
   // Emergencies and out-of-scope requests are never reports (ADR 0001):
   // only the kind, target and time. No phone, text or location.
   anonymousCounters: defineTable({
-    kind: v.union(v.literal("emergency"), v.literal("out_of_scope")),
+    kind: v.union(
+      v.literal("emergency"),
+      v.literal("out_of_scope"),
+      // Debris or loose wood the pickup service does not take (ADR 0011).
+      v.literal("pickup_refused"),
+    ),
     target: v.string(),
     createdAt: v.number(),
   }).index("by_kind", ["kind"]),

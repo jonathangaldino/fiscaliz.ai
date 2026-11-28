@@ -15,6 +15,8 @@ const problem: Extraction = {
   kind: "urban",
   emergencyTarget: null,
   outOfScopeTarget: null,
+  pickupItems: null,
+  complement: null,
   category: "street_lighting",
   description: "O poste da frente de casa está apagado",
   address: null,
@@ -159,7 +161,8 @@ describe("photo in the conversation", () => {
       });
       return claimPhoto(
         ctx,
-        { kind: "appealed", occurrenceId: occurrence._id, appeal: 2 },
+        occurrence._id,
+        "http://app/ocorrencias/x",
         { storageId: photo },
         citizenId,
       );
@@ -187,7 +190,8 @@ describe("anonymize", () => {
     const calls = mockModal(() => Response.json({ ok: true, storageId: blurred }));
 
     await t.action(internal.bot.photo.anonymize, {
-      occurrenceId,
+      targetId: occurrenceId,
+      link: "http://app/ocorrencias/x",
       citizenId,
       photo: { storageId: original },
     });
@@ -210,7 +214,8 @@ describe("anonymize", () => {
     const calls = mockModal(() => new Response("boom", { status: 500 }));
 
     await t.action(internal.bot.photo.anonymize, {
-      occurrenceId,
+      targetId: occurrenceId,
+      link: "http://app/ocorrencias/x",
       citizenId,
       photo: { storageId: original },
     });

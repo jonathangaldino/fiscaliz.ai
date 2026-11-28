@@ -4,9 +4,11 @@
  */
 import { CATEGORIES } from "../lib/categories";
 import { isInsideApucarana } from "../lib/geo";
+import { mergeItems, PICKUP_ITEM_LABEL } from "../lib/pickup";
 import * as messages from "./messages";
 import type {
   CompleteDraft,
+  CompletePickupDraft,
   ConversationState,
   Draft,
   Extraction,
@@ -46,6 +48,20 @@ export function mergeDraft(
 ): Draft {
   const next: Draft = { ...draft };
   if (photo) next.photo = photo;
+  if (extraction?.kind === "pickup") {
+    next.intent = "pickup";
+    next.items = mergeItems(draft.items ?? [], extraction.pickupItems ?? []);
+    if (extraction.description) {
+      next.description = draft.description
+        ? `${draft.description}\n${extraction.description}`
+        : extraction.description;
+    }
+    if (extraction.complement) next.complement = extraction.complement;
+    // The request needs a description; the item labels carry no personal data.
+    if (!next.description && next.items.length > 0) {
+      next.description = next.items.map((item) => PICKUP_ITEM_LABEL[item]).join(", ");
+    }
+  }
   if (extraction?.kind === "urban") {
     if (extraction.category) next.category = extraction.category;
     if (extraction.description) {
@@ -66,6 +82,7 @@ export function mergeDraft(
     next.lng = location.lng;
     next.address = location.address;
     next.precise = location.precise;
+    next.addressKey = location.addressKey;
   }
   // The public summary is required; fall back to the category label, which
   // never carries personal data.
@@ -79,6 +96,7 @@ export function mergeDraft(
 
 export function isComplete(draft: Draft): draft is CompleteDraft {
   return (
+    draft.intent === undefined &&
     draft.category !== undefined &&
     draft.description !== undefined &&
     draft.summary !== undefined &&
@@ -87,6 +105,19 @@ export function isComplete(draft: Draft): draft is CompleteDraft {
     draft.lng !== undefined &&
     draft.precise !== undefined &&
     draft.occurredAt !== undefined
+  );
+}
+
+/** A pickup needs the items and a street number or a pin (ADR 0011). */
+export function isCompletePickup(draft: Draft): draft is CompletePickupDraft {
+  return (
+    draft.intent === "pickup" &&
+    (draft.items?.length ?? 0) > 0 &&
+    draft.description !== undefined &&
+    draft.address !== undefined &&
+    draft.lat !== undefined &&
+    draft.lng !== undefined &&
+    (draft.addressKey !== undefined || draft.precise === true)
   );
 }
 
@@ -127,6 +158,14 @@ function priorityRules(
       },
     };
   }
+  if (extraction?.kind === "pickup_refused") {
+    return {
+      type: "reply",
+      state: null,
+      messages: [messages.pickupRefused()],
+      counter: { kind: "pickup_refused", target: "debris" },
+    };
+  }
   if (extraction?.kind === "out_of_scope") {
     return {
       type: "reply",
@@ -164,6 +203,12 @@ function collect(state: ConversationState | null, input: StepInput): Step {
 
   // Confirmation answers only count while a summary is on screen. A new
   // photo re-shows the summary first, so the citizen confirms what they see.
+  if (state?.phase === "confirming" && isCompletePickup(state.draft) && !photo) {
+    if (decision === "yes") return { type: "register_pickup", draft: state.draft };
+    if (decision === "no") {
+      return reply({ phase: "collecting", draft: state.draft }, messages.askCorrection());
+    }
+  }
   if (state?.phase === "confirming" && isComplete(state.draft) && !photo) {
     if (decision === "yes") return { type: "register", draft: state.draft };
     if (decision === "no") {
@@ -177,7 +222,7 @@ function collect(state: ConversationState | null, input: StepInput): Step {
   const previous = state?.draft ?? {};
   const isFirstMessage = state === null;
 
-  if (extraction && extraction.kind !== "urban" && !location) {
+  if (extraction && extraction.kind !== "urban" && extraction.kind !== "pickup" && !location) {
     // A greeting or an off-topic first message gets the welcome, which
     // already explains what the bot does.
     const kept: ConversationState | null = photo
@@ -200,6 +245,8 @@ function collect(state: ConversationState | null, input: StepInput): Step {
     return reply({ phase: "collecting", draft }, messages.addressNotFound());
   }
 
+  if (draft.intent === "pickup") return pickupStep(draft);
+
   if (isComplete(draft)) {
     return reply({ phase: "confirming", draft }, messages.summary(draft));
   }
@@ -216,4 +263,17 @@ function collect(state: ConversationState | null, input: StepInput): Step {
   }
   if (missingProblem) return reply(next, messages.askDescription());
   return reply(next, messages.askLocation());
+}
+
+/** What a pickup request still needs: the items, then the address with a number. */
+function pickupStep(draft: Draft): Step {
+  if (isCompletePickup(draft)) {
+    return reply({ phase: "confirming", draft }, messages.pickupSummary(draft));
+  }
+  const next: ConversationState = { phase: "collecting", draft };
+  if (!draft.items?.length || draft.description === undefined) {
+    return reply(next, messages.askPickupItems());
+  }
+  if (draft.lat === undefined) return reply(next, messages.askPickupLocation());
+  return reply(next, messages.askPickupNumber());
 }

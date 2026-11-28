@@ -3,8 +3,10 @@
  * consistent and reviewers can read the whole conversation at once.
  */
 import { CATEGORIES, type AgencyInfo } from "../lib/categories";
+import { PICKUP_ITEM_LABEL, type PickupItem } from "../lib/pickup";
 import type {
   CompleteDraft,
+  CompletePickupDraft,
   EmergencyTarget,
   OutgoingMessage,
   OutOfScopeTarget,
@@ -20,7 +22,7 @@ const text = (value: string): OutgoingMessage => ({ text: value });
 
 export const askProblem = () =>
   text(
-    "Olá! Eu sou o Fiscaliz.ai, um serviço independente que registra problemas urbanos de Apucarana, como buraco na rua, poste apagado ou entulho na calçada, e os encaminha à Prefeitura. Não sou o canal oficial da Prefeitura. Dúvidas: suporte@mugensoftware.com\n\nQual é o problema e onde ele está? Se quiser, mande uma foto também.",
+    "Olá! Eu sou o Fiscaliz.ai, um serviço independente que registra problemas urbanos de Apucarana, como buraco na rua, poste apagado ou entulho na calçada, e os encaminha à Prefeitura. Não sou o canal oficial da Prefeitura. Dúvidas: suporte@mugensoftware.com\n\nQual é o problema e onde ele está? Se quiser, mande uma foto também.\n\nVai jogar fora móveis, colchão, sofá ou eletrodoméstico? Também registro o pedido de recolhimento.",
   );
 
 export const askDescription = () =>
@@ -67,7 +69,7 @@ export const photoPublished = (link: string) =>
 
 export const photoFailed = () =>
   text(
-    "📷 Não consegui publicar a foto. O relato continua registrado, só sem a imagem.",
+    "📷 Não consegui publicar a foto. O registro continua feito, só sem a imagem.",
   );
 
 const PHOTO_PENDING =
@@ -129,6 +131,10 @@ export function alreadyReported(link: string): OutgoingMessage {
   return text(
     `Você já relatou esse problema, e seu apelo já está contado. Obrigado!\nAcompanhe no mapa: ${link}`,
   );
+}
+
+export function mapLink(appUrl: string): string {
+  return `${appUrl.replace(/\/$/, "")}/mapa`;
 }
 
 export function occurrenceLink(appUrl: string, occurrenceId: string): string {
@@ -219,3 +225,98 @@ export const verificationReopened = (link: string) =>
 
 export const verificationClosed = () =>
   text("Essa verificação já terminou. Obrigado por responder!");
+
+// Furniture pickup (ADR 0011). The service is the city's; the protocol is ours.
+
+const PICKUP_RULES = [
+  "Deixe os itens na calçada. A partir de agora o caminhão da Secretaria de Serviços Públicos pode passar a qualquer momento; com chuva, pode atrasar.",
+  "Recolhemos: móveis, colchões, sofás, eletrodomésticos e eletroeletrônicos.",
+  "Não recolhemos: madeira que não seja de móvel nem qualquer outro entulho.",
+].join("\n");
+
+const itemList = (items: readonly PickupItem[]) =>
+  items.map((item) => PICKUP_ITEM_LABEL[item]).join(", ");
+
+export const askPickupItems = () =>
+  text(
+    "Posso registrar o pedido de recolhimento. O que você vai descartar? Móveis, colchões, sofás, eletrodomésticos ou eletroeletrônicos.",
+  );
+
+export const askPickupLocation = () =>
+  text(
+    "Qual é o endereço onde os itens vão ficar? Escreva a rua com o número (e o complemento, se tiver) ou mande a localização pelo clipe 📎 (no simulador, clique no mapa).",
+  );
+
+export const askPickupNumber = () =>
+  text(
+    "Encontrei a rua, mas preciso do número para o caminhão parar no lugar certo. Pode mandar o número ou a localização pelo clipe 📎?",
+  );
+
+export const pickupRefused = () =>
+  text(
+    "Esse serviço não recolhe madeira que não seja de móvel nem outro tipo de entulho. Para entulho de obra, procure uma empresa de caçamba. Não registrei sua mensagem.",
+  );
+
+export function pickupSummary(draft: CompletePickupDraft): OutgoingMessage {
+  return {
+    text: [
+      "Confere o pedido de recolhimento:",
+      `• Itens: ${itemList(draft.items)}`,
+      `• Local: ${draft.address}${draft.complement ? ` (${draft.complement})` : ""}`,
+      draft.photo ? "• 📷 Foto anexada" : null,
+      "",
+      "Posso registrar?",
+    ]
+      .filter((line) => line !== null)
+      .join("\n"),
+    buttons: [
+      { id: "yes", title: "SIM" },
+      { id: "no", title: "NÃO" },
+    ],
+  };
+}
+
+export function pickupRegistered(
+  protocol: string,
+  already: boolean,
+  photoPending = false,
+): OutgoingMessage {
+  const head = already
+    ? `Você já tem um pedido de recolhimento nesse endereço. Seu protocolo Fiscaliz.ai continua o ${protocol}.`
+    : `Pedido de recolhimento registrado! ✅ Seu protocolo Fiscaliz.ai é o ${protocol}.`;
+  return text(
+    [
+      head,
+      "Esse número é do Fiscaliz.ai, não é um protocolo oficial da Prefeitura.",
+      "",
+      PICKUP_RULES,
+      photoPending ? `\n${PHOTO_PENDING}` : null,
+    ]
+      .filter((line) => line !== null)
+      .join("\n"),
+  );
+}
+
+export function pickupQuestion(
+  point: { address: string },
+  buttons: { yes: string; no: string },
+): OutgoingMessage {
+  return {
+    text: `Olá! Você pediu pelo Fiscaliz.ai o recolhimento de móveis em ${point.address}.\n\nO caminhão já passou e recolheu?`,
+    buttons: [
+      { id: buttons.yes, title: "SIM, recolheram" },
+      { id: buttons.no, title: "NÃO, ainda não" },
+    ],
+  };
+}
+
+export const pickupCollected = () =>
+  text("Obrigado! Marcamos o recolhimento como feito e o ponto saiu do mapa. ✅");
+
+export const pickupStillWaiting = () =>
+  text("Obrigado! O ponto continua no mapa, aguardando o caminhão.");
+
+export const pickupExpired = (address: string) =>
+  text(
+    `Seu pedido de recolhimento em ${address} completou 15 dias sem confirmação e saiu do mapa. Se os itens ainda estiverem na calçada, faça um novo pedido.`,
+  );

@@ -3,6 +3,7 @@ import { internal } from "../_generated/api";
 import type { Id } from "../_generated/dataModel";
 import { internalAction, type ActionCtx } from "../_generated/server";
 import { hashCitizenId } from "../lib/citizenHash";
+import { pickupAddressKey } from "../lib/pickup";
 import { incomingMessageValidator, type geocodeAttemptValidator } from "../validators";
 import { send } from "./channels";
 import { extract, isSameOccurrence } from "./extract";
@@ -95,10 +96,14 @@ export const handleIncoming = internalAction({
         }
         if (message.location) {
           location = await resolvePin(message.location);
-        } else if (extraction?.kind === "urban" && extraction.address) {
+        } else if (
+          (extraction?.kind === "urban" || extraction?.kind === "pickup") &&
+          extraction.address
+        ) {
           const started = Date.now();
           const { location: found, ...match } = await geocodeAddress(extraction.address);
-          location = found;
+          // A typed street + number groups pickup requests (ADR 0011).
+          location = found && { ...found, addressKey: pickupAddressKey(found.address) };
           addressNotFound = found === null;
           geocode = {
             ...match,
@@ -108,7 +113,12 @@ export const handleIncoming = internalAction({
             query: match.source === "none" || match.ambiguous ? extraction.address : undefined,
           };
         }
-        if (state?.phase === "confirming" && decision === "yes" && !extraction) {
+        if (
+          state?.phase === "confirming" &&
+          decision === "yes" &&
+          !extraction &&
+          state.draft.intent !== "pickup"
+        ) {
           matchId = await findSameOccurrence(ctx, state.draft);
         }
       } catch (error) {
