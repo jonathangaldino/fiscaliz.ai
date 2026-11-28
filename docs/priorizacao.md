@@ -1,13 +1,13 @@
 # Priorização e previsão de atendimento
 
-Como o Fiscaliz.ai ordena a fila de um órgão e estima quando cada ocorrência pode ser atendida. Este documento reúne a pesquisa, os parâmetros adotados e as fontes. As decisões estão no [ADR 0011](./adr/0011-prioridade-por-criterios-objetivos.md) (prioridade) e no [ADR 0012](./adr/0012-previsao-por-orcamento-e-capacidade.md) (previsão).
+Como o Fiscaliz.ai ordena a fila de um órgão e estima quando cada ocorrência pode ser atendida. Este documento reúne a pesquisa, os parâmetros adotados e as fontes. As decisões estão no [ADR 0011](./adr/0011-prioridade-por-criterios-objetivos.md) (prioridade) e no [ADR 0012](./adr/0012-previsao-por-fila-e-capacidade.md) (previsão).
 
-> **Os números são um ponto de partida.** Pesos, notas por categoria e prazos de referência foram calibrados a partir das referências abaixo e ficam em `convex/lib/priority.ts`. Cada órgão deve revisá-los. Orçamentos e custos da demo são ilustrativos.
+> **Os números são um ponto de partida.** Pesos, notas por categoria e prazos de referência foram calibrados a partir das referências abaixo e ficam em `convex/lib/priority.ts`. Cada órgão deve revisá-los. A capacidade semanal usada na previsão é ilustrativa.
 
 ## Por que não ordenar só por apelo
 
 1. **Quantidade de relatos não mede necessidade.** Estudos com dados do 311 de Nova York mostram que bairros com problemas parecidos relatam em taxas diferentes, e que o sub-relato acompanha renda, escolaridade e raça. Quem atende só pelo volume de reclamações acaba negligenciando, de forma sistemática, os bairros que reclamam menos.
-2. **Um ranking de reclamações não ajuda quem precisa decidir.** Ele mostra onde há barulho, não o que é mais grave, o que piora mais rápido nem o que cabe na equipe e no orçamento. Para o órgão, vira só exposição.
+2. **Um ranking de reclamações não ajuda quem precisa decidir.** Ele mostra onde há barulho, não o que é mais grave, o que piora mais rápido nem o que a equipe consegue atender. Para o órgão, vira só exposição.
 3. **A lei já pede outra coisa.** O Código de Defesa do Usuário do Serviço Público (Lei 13.460/2017, art. 7º) manda a Carta de Serviços informar a previsão do prazo máximo de cada serviço, as prioridades de atendimento e a previsão de tempo de espera. Prioridade e previsão são compromissos do próprio poder público.
 
 O apelo continua valendo, como um dos fatores.
@@ -95,15 +95,9 @@ Por isso a classe é **deduzida do tipo de logradouro no endereço**:
 
 ## Previsão
 
-A previsão responde a duas perguntas: **isto cabe no orçamento deste ano?** e **quando a equipe chega nele?**
+A previsão responde a uma pergunta: **quando a equipe chega nesta ocorrência?**
 
-Cada órgão tem um plano com três números: orçamento do ano para zeladoria, valor já executado e capacidade mensal de execução. Cada categoria tem um custo típico por atendimento. A fila é percorrida em ordem de prioridade:
-
-1. O custo da ocorrência é somado ao acumulado.
-2. Se o acumulado passa do saldo do ano, a ocorrência fica **fora do orçamento do ano** e não entra na conta. As seguintes, mais baratas, ainda podem caber.
-3. Se cabe, a data esperada é hoje + acumulado ÷ capacidade mensal. Se essa data cai depois de 31 de dezembro, a ocorrência cabe no dinheiro mas não na equipe, e também fica para o ano seguinte.
-
-É o caso descrito pela regra "com X de orçamento resolvemos Y ocorrências; a Y+1 não entra neste ano".
+Cada órgão tem uma capacidade semanal: quantas ocorrências ele atende por semana. A fila é percorrida em ordem de prioridade, e a data esperada de cada ocorrência é hoje + posição na fila ÷ capacidade semanal. A 10ª ocorrência de um órgão que atende 5 por semana é esperada para daqui a duas semanas.
 
 ### A janela afina com a confiança
 
@@ -114,19 +108,18 @@ Quanto mais longe a data esperada, mais coisas podem mudar na fila. A previsão 
 | até 2 dias | dia | "até 30/11" |
 | até 14 dias | semana | "na semana de 07/12" |
 | até 60 dias | mês | "em dezembro de 2026" |
-| mais que isso, no ano | trimestre | "no 4º trimestre de 2026" |
-| fora do orçamento ou da capacidade | ano | "a partir de 2027" |
+| mais que isso | trimestre | "no 1º trimestre de 2027" |
 
 ### Quem vê o quê
 
-- **O órgão sempre vê a estimativa**, na fila, com o resumo do orçamento.
-- **O cidadão só vê a previsão depois que o órgão a assume.** A partir daí ela aparece na página pública da ocorrência e o bot avisa quem relatou. Uma ocorrência fora do orçamento não pode ser assumida.
+- **O órgão sempre vê a estimativa**, em cada linha da fila.
+- **O cidadão só vê a previsão depois que o órgão a assume.** A partir daí ela aparece na página pública da ocorrência e o bot avisa quem relatou.
 
 Na demo, sem login, o botão de assumir fica aberto e marcado como demonstração, igual ao de iniciar a verificação.
 
 ### Valores da demo
 
-Orçamento, valor executado, capacidade e custo por categoria são **ilustrativos** (`convex/lib/forecast.ts`), na linha da regra 9 do regulamento (dados sintéticos). Os valores reais viriam da Lei Orçamentária Anual e do Quadro de Detalhamento da Despesa de cada órgão, e os custos, das atas de registro de preços e dos contratos de manutenção.
+A capacidade semanal de cada órgão é **ilustrativa** (`convex/lib/forecast.ts`), na linha da regra 9 do regulamento (dados sintéticos). A real sai do histórico de atendimento do próprio órgão.
 
 ## Próximos passos
 
@@ -134,7 +127,8 @@ Orçamento, valor executado, capacidade e custo por categoria são **ilustrativo
 - **Proximidade de equipamentos sensíveis** (escola, unidade de saúde) como fator, também pelo CNEFE.
 - **Gravidade do caso, não só da categoria**: a IA já lê a descrição e pode estimar o tamanho do problema; a foto pode entrar depois.
 - **Correção do sub-relato por bairro**, comparando relatos com população do Censo.
-- **Plano editável pelo órgão**, com login, e histórico de execução real para calibrar custo e capacidade.
+- **Capacidade editável pelo órgão**, com login, e medida pelo histórico de execução, por categoria.
+- **Orçamento.** Com o orçamento de zeladoria e o custo típico por categoria, a fila pode mostrar o que cabe no ano e o que fica para o seguinte ("com X de orçamento resolvemos Y ocorrências; a Y+1 não entra neste ano"). Chegou a ser implementado com valores ilustrativos e foi retirado por ora; os números reais viriam da Lei Orçamentária Anual e das atas de registro de preços.
 - **Janela em horas**, quando houver ordem de serviço com equipe a caminho.
 - **Roteirização** das ocorrências financiadas (#55).
 

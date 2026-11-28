@@ -51,7 +51,6 @@ async function setup() {
     const all = await ctx.db.query("occurrences").collect();
     return {
       occurrenceId,
-      ruralRoadId: all.find((o) => o.category === "rural_roads")!._id,
       otherId: all.find((o) => o.category === "other")!._id,
     };
   });
@@ -62,22 +61,17 @@ describe("forecast.estimate", () => {
   it("places the occurrence in its agency queue and gives a window", async () => {
     const { t, occurrenceId } = await setup();
     const estimate = await t.query(api.forecast.estimate, { id: occurrenceId });
-    // Old pothole on an avenue with high appeal: first in line. R$ 1,200 of
-    // R$ 15,000 a month is 2.4 days of work, so the answer is a week.
-    expect(estimate).toMatchObject({
-      status: "funded",
-      fiscalYear: 2026,
+    // Old pothole on an avenue with high appeal: first in line. At 5 a week
+    // that is 1.4 days away, close enough to name the day (Sunday the 29th).
+    expect(estimate).toEqual({
       position: 1,
       queueSize: 11,
-      window: { precision: "week", start: Date.parse("2026-11-30T00:00:00-03:00") },
+      window: {
+        precision: "day",
+        start: Date.parse("2026-11-29T00:00:00-03:00"),
+        end: Date.parse("2026-11-30T00:00:00-03:00"),
+      },
     });
-  });
-
-  it("gives no window to what does not fit this year's budget", async () => {
-    const { t, ruralRoadId } = await setup();
-    const estimate = await t.query(api.forecast.estimate, { id: ruralRoadId });
-    expect(estimate?.status).toBe("over_budget");
-    expect(estimate?.window).toBeUndefined();
   });
 
   it("returns null without an agency or for an unknown id", async () => {
@@ -101,7 +95,7 @@ describe("forecast.commit", () => {
 
     const occurrence = await t.query(api.occurrences.get, { id: occurrenceId });
     expect(occurrence?.forecast).toMatchObject({
-      precision: "week",
+      precision: "day",
       committedAt: expect.any(Number),
     });
 
@@ -112,7 +106,7 @@ describe("forecast.commit", () => {
         .collect(),
     );
     expect(sent).toHaveLength(1);
-    expect(sent[0].text).toContain("Previsão de atendimento: na semana de 30/11.");
+    expect(sent[0].text).toContain("Previsão de atendimento: até 29/11.");
     expect(sent[0].text).toContain("https://fiscaliza.test/ocorrencias/");
   });
 
@@ -127,17 +121,17 @@ describe("forecast.commit", () => {
     );
   });
 
-  it("refuses a second commit, an unfunded occurrence and a closed one", async () => {
-    const { t, occurrenceId, ruralRoadId } = await setup();
+  it("refuses a second commit, an occurrence without agency and a closed one", async () => {
+    const { t, occurrenceId, otherId } = await setup();
     await t.mutation(api.forecast.commit, { id: occurrenceId });
     await expect(t.mutation(api.forecast.commit, { id: occurrenceId })).rejects.toThrow(
       /já tem uma previsão/,
     );
-    await expect(t.mutation(api.forecast.commit, { id: ruralRoadId })).rejects.toThrow(
-      /não cabe no orçamento/,
+    await expect(t.mutation(api.forecast.commit, { id: otherId })).rejects.toThrow(
+      /Não há estimativa/,
     );
-    await t.run((ctx) => ctx.db.patch(ruralRoadId, { status: "resolved", resolvedAt: NOW }));
-    await expect(t.mutation(api.forecast.commit, { id: ruralRoadId })).rejects.toThrow(
+    await t.run((ctx) => ctx.db.patch(otherId, { status: "resolved", resolvedAt: NOW }));
+    await expect(t.mutation(api.forecast.commit, { id: otherId })).rejects.toThrow(
       /aberta/,
     );
   });

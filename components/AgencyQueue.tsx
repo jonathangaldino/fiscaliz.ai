@@ -11,19 +11,13 @@ import {
   type AgencyInfo,
 } from "@/convex/lib/categories";
 import {
-  AGENCY_PLANS,
+  WEEKLY_CAPACITY,
   describeWindow,
   planQueue,
-  type QueuePlan,
   type QueueRow,
 } from "@/convex/lib/forecast";
 import { computePriority, type Priority } from "@/convex/lib/priority";
-import {
-  formatAge,
-  formatAppeal,
-  formatBRL,
-  formatDays,
-} from "@/lib/format";
+import { formatAge, formatAppeal, formatDays } from "@/lib/format";
 import { useNow } from "@/lib/useNow";
 import { AgencyContact } from "./AgencyContact";
 import { OccurrenceRow } from "./OccurrenceRow";
@@ -73,13 +67,13 @@ export function AgencyQueueView({
 }) {
   const [sort, setSort] = useState<Sort>("priority");
 
-  const plan = useMemo(
-    () => planQueue(queue?.occurrences ?? [], AGENCY_PLANS[agency.slug], now),
+  const planned = useMemo(
+    () => planQueue(queue?.occurrences ?? [], WEEKLY_CAPACITY[agency.slug], now),
     [queue, agency.slug, now],
   );
   const rows = useMemo(() => {
     // planQueue returns the rows by priority, oldest first on a tie.
-    const list = plan.rows.map((row) => ({
+    const list = planned.map((row) => ({
       ...row,
       priority: computePriority(row.item, now),
     }));
@@ -89,7 +83,7 @@ export function AgencyQueueView({
     return list.sort((a, b) =>
       sort === "appeal" ? b.item.appeal - a.item.appeal || oldest(a, b) : oldest(a, b),
     );
-  }, [plan, now, sort]);
+  }, [planned, now, sort]);
   const overdueCount = rows.filter((row) => row.priority.overdue).length;
 
   return (
@@ -111,8 +105,6 @@ export function AgencyQueueView({
           </dl>
         )}
       </div>
-
-      {queue && rows.length > 0 && <PlanSummary plan={plan} rows={rows} />}
 
       {queue === undefined ? (
         <Notice>Carregando…</Notice>
@@ -157,8 +149,9 @@ export function AgencyQueueView({
           {sort === "priority" && (
             <p className="px-3 pb-3 text-xs text-subtle">
               A prioridade soma gravidade, tempo em aberto, movimento do local,
-              apelo e tendência de piora. Abra uma ocorrência para ver os
-              pontos de cada fator.
+              apelo e tendência de piora. A estimativa vem da posição na fila e
+              de uma capacidade semanal ilustrativa; quem relatou só é avisado
+              quando a previsão é assumida, na página da ocorrência.
             </p>
           )}
           {rows.length === 0 ? (
@@ -170,7 +163,6 @@ export function AgencyQueueView({
                   key={row.item._id}
                   row={row}
                   rank={index + 1}
-                  fiscalYear={plan.fiscalYear}
                 />
               ))}
             </ol>
@@ -186,15 +178,7 @@ type Row = QueueRow<PublicOccurrence> & { priority: Priority };
 const pill =
   "rounded-full border border-line px-2 py-0.5 text-xs font-medium text-muted";
 
-function QueueItem({
-  row,
-  rank,
-  fiscalYear,
-}: {
-  row: Row;
-  rank: number;
-  fiscalYear: number;
-}) {
+function QueueItem({ row, rank }: { row: Row; rank: number }) {
   const { item: o, priority } = row;
   return (
     <OccurrenceRow
@@ -216,26 +200,15 @@ function QueueItem({
             <span className="rounded-full bg-(--status-resolved-tint) px-2 py-0.5 text-xs font-semibold text-(--status-resolved)">
               Previsão assumida: {describeWindow(o.forecast)}
             </span>
-          ) : row.window ? (
-            <span
-              className={pill}
-              title="Estimativa pela posição na fila, pelo orçamento e pela capacidade. Ainda não informada ao cidadão."
-            >
-              Estimativa: {describeWindow(row.window)}
-            </span>
           ) : (
-            <span
-              className={pill}
-              title={
-                row.status === "over_budget"
-                  ? `O custo estimado não cabe no saldo de ${fiscalYear}.`
-                  : `A equipe só chegaria nesta ocorrência depois do fim de ${fiscalYear}.`
-              }
-            >
-              {row.status === "over_budget"
-                ? `Fora do orçamento de ${fiscalYear}`
-                : `Fora da capacidade de ${fiscalYear}`}
-            </span>
+            row.window && (
+              <span
+                className={pill}
+                title="Estimativa pela posição na fila e pela capacidade semanal do órgão. Ainda não informada ao cidadão."
+              >
+                Estimativa: {describeWindow(row.window)}
+              </span>
+            )
           )}
         </>
       }
@@ -257,74 +230,6 @@ function QueueItem({
         </span>
       }
     />
-  );
-}
-
-/** What this year's budget covers, and what is left for the next one. */
-function PlanSummary({
-  plan,
-  rows,
-}: {
-  plan: QueuePlan<PublicOccurrence>;
-  rows: Row[];
-}) {
-  const urgentDeferred = rows.filter(
-    (row) =>
-      row.status !== "funded" &&
-      (row.priority.level === "critical" || row.priority.level === "high"),
-  ).length;
-  return (
-    <Card className="space-y-3">
-      <div className="flex flex-wrap items-baseline justify-between gap-2">
-        <h2 className="text-base font-semibold">
-          Plano de {plan.fiscalYear}
-        </h2>
-        <span className={pill}>Valores ilustrativos</span>
-      </div>
-      <dl className="grid grid-cols-1 gap-2 sm:grid-cols-3">
-        <PlanFact label={`Saldo de ${plan.fiscalYear}`}>
-          {formatBRL(plan.remaining)}
-        </PlanFact>
-        <PlanFact label="Cabem no orçamento">
-          {plan.fundedCount} de {rows.length} · {formatBRL(plan.fundedCost)}
-        </PlanFact>
-        <PlanFact label={`Ficam para ${plan.fiscalYear + 1}`}>
-          {plan.deferredCount === 0
-            ? "Nenhuma"
-            : `${plan.deferredCount} · ${formatBRL(plan.deferredCost)}`}
-        </PlanFact>
-      </dl>
-      {urgentDeferred > 0 && (
-        <p className="text-sm text-fg">
-          {urgentDeferred === 1
-            ? "1 ocorrência de prioridade alta ou crítica não cabe"
-            : `${urgentDeferred} ocorrências de prioridade alta ou crítica não cabem`}{" "}
-          no plano de {plan.fiscalYear}. É o caso para crédito suplementar ou
-          para o orçamento de {plan.fiscalYear + 1}.
-        </p>
-      )}
-      <p className="text-xs text-subtle">
-        A fila é percorrida por prioridade: cada ocorrência soma seu custo
-        típico até o saldo acabar, e a data vem da capacidade mensal da equipe.
-        A estimativa é do órgão; quem relatou só é avisado quando a previsão é
-        assumida, na página da ocorrência.
-      </p>
-    </Card>
-  );
-}
-
-function PlanFact({
-  label,
-  children,
-}: {
-  label: string;
-  children: React.ReactNode;
-}) {
-  return (
-    <div className="rounded-control border border-line bg-surface/60 px-3 py-2.5">
-      <dt className="text-xs text-subtle">{label}</dt>
-      <dd className="mt-0.5 text-sm font-semibold tabular-nums">{children}</dd>
-    </div>
   );
 }
 

@@ -1,6 +1,6 @@
 /**
  * Forecast of an occurrence (ADR 0012). The estimate comes from the agency's
- * queue, budget and capacity (lib/forecast) and is for the agency. Citizens
+ * queue and weekly capacity (lib/forecast) and is for the agency. Citizens
  * only see a forecast after the agency commits to it: the window is stored on
  * the occurrence and the bot tells everyone with a report there.
  *
@@ -19,10 +19,9 @@ import * as messages from "./bot/messages";
 import { sendTelegram } from "./bot/channels/telegram";
 import { CATEGORIES } from "./lib/categories";
 import {
-  AGENCY_PLANS,
+  WEEKLY_CAPACITY,
   describeWindow,
   planQueue,
-  type ForecastStatus,
   type ForecastWindow,
 } from "./lib/forecast";
 import { forecastWindowValidator } from "./validators";
@@ -31,15 +30,13 @@ import { forecastWindowValidator } from "./validators";
 const QUEUE_LIMIT = 1000;
 
 type Estimate = {
-  status: ForecastStatus;
-  window?: ForecastWindow;
-  fiscalYear: number;
+  window: ForecastWindow;
   /** 1-based position in the agency queue, by priority. */
   position: number;
   queueSize: number;
 };
 
-/** Where the occurrence stands in its agency's plan, or null if it has none. */
+/** Where the occurrence stands in its agency's queue, or null if it has none. */
 async function estimateFor(
   ctx: QueryCtx,
   occurrence: Doc<"occurrences">,
@@ -59,17 +56,11 @@ async function estimateFor(
         .take(QUEUE_LIMIT),
     ),
   );
-  const queue = planQueue(byStatus.flat(), AGENCY_PLANS[slug], now);
-  const index = queue.rows.findIndex((row) => row.item._id === occurrence._id);
-  if (index < 0) return null;
-  const { status, window } = queue.rows[index];
-  return {
-    status,
-    window,
-    fiscalYear: queue.fiscalYear,
-    position: index + 1,
-    queueSize: queue.rows.length,
-  };
+  const rows = planQueue(byStatus.flat(), WEEKLY_CAPACITY[slug], now);
+  const index = rows.findIndex((row) => row.item._id === occurrence._id);
+  const window = rows[index]?.window;
+  if (!window) return null;
+  return { window, position: index + 1, queueSize: rows.length };
 }
 
 /** The agency-side estimate shown next to the "commit" button. */
@@ -78,13 +69,7 @@ export const estimate = query({
   returns: v.union(
     v.null(),
     v.object({
-      status: v.union(
-        v.literal("funded"),
-        v.literal("over_budget"),
-        v.literal("over_capacity"),
-      ),
-      window: v.optional(forecastWindowValidator),
-      fiscalYear: v.number(),
+      window: forecastWindowValidator,
       position: v.number(),
       queueSize: v.number(),
     }),
@@ -112,10 +97,8 @@ export const commit = mutation({
     }
     const now = Date.now();
     const current = await estimateFor(ctx, occurrence, now);
-    if (!current?.window) {
-      throw new ConvexError(
-        "Esta ocorrência não cabe no orçamento deste ano. Não há previsão para assumir.",
-      );
+    if (!current) {
+      throw new ConvexError("Não há estimativa para esta ocorrência.");
     }
 
     await ctx.db.patch(occurrence._id, {
