@@ -119,6 +119,8 @@ describe("houseNumber", () => {
     ["Rua 13 de Maio, 250", "RUA 13 DE MAIO", 250],
     ["Rua 13 de Maio", "RUA 13 DE MAIO", undefined],
     ["Rua X, 40, 86800-350", "RUA X", 40],
+    ["Rua X, 60, apto 300", "RUA X", 60],
+    ["Rua X 60 ap. 500 bloco 2", "RUA X", 60],
   ])("%s → %s", (address, street, number) => {
     expect(houseNumber(address, street)).toBe(number);
   });

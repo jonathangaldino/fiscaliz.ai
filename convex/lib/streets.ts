@@ -121,7 +121,12 @@ export function matchStreet<T extends IndexedStreet>(
 /** The last number of the address that is neither the CEP nor part of the street name ("Rua 13 de Maio"). */
 export function houseNumber(address: string, streetName: string): number | undefined {
   const inName = new Set(words(streetName));
-  const numbers = address.replace(/\b\d{5}-?\d{3}\b/g, "").match(/\b\d{1,5}\b/g) ?? [];
+  const numbers =
+    address
+      .replace(/\b\d{5}-?\d{3}\b/g, "")
+      // "60, apto 300": the complement's number is not the house number.
+      .replace(/\b(ap(to|t|artamento)?|bl(oco)?|sala|casa|fundos|loja)\.?\s*\d+\w*/gi, "")
+      .match(/\b\d{1,5}\b/g) ?? [];
   const number = numbers.filter((n) => !inName.has(String(Number(n)))).at(-1);
   return number ? Number(number) : undefined;
 }
