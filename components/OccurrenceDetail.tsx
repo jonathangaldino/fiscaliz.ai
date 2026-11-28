@@ -11,6 +11,7 @@ import { computePriority } from "@/convex/lib/priority";
 import { playSound } from "@/lib/sound";
 import { useNow } from "@/lib/useNow";
 import { AgencyContact } from "./AgencyContact";
+import { ForecastCard } from "./ForecastCard";
 import { PriorityBreakdown } from "./PriorityBreakdown";
 import { Button, buttonClass } from "./ui/Button";
 import { CategoryIcon } from "./ui/CategoryIcon";
@@ -112,6 +113,8 @@ export function OccurrenceDetail({ id }: { id: string }) {
           appeal={occurrence.appeal}
         />
       )}
+
+      <ForecastCard occurrence={occurrence} now={now} />
 
       <Verification id={occurrence._id} status={occurrence.status} />
 
