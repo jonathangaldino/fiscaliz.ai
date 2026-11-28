@@ -32,6 +32,18 @@ _Avoid_: Tipo de rua, movimento
 Dias em que uma ocorrência de certa categoria, em certa classe de via, deveria ser atendida. É parâmetro da prioridade, não promessa ao cidadão.
 _Avoid_: SLA, prazo legal, previsão
 
+**Plano do órgão**:
+Orçamento anual de zeladoria, valor já executado e capacidade mensal de execução de um órgão. Na demo, valores ilustrativos.
+_Avoid_: Verba, caixa
+
+**Previsão**:
+Janela de tempo em que uma ocorrência deve ser atendida: um dia, uma semana, um mês ou um trimestre, conforme a confiança. O órgão sempre vê a estimativa; o cidadão só vê a previsão que o órgão assumiu.
+_Avoid_: Prazo (é o prazo de referência), promessa, data de entrega
+
+**Fora do orçamento**:
+Ocorrência que não cabe no saldo do ano ou na capacidade da equipe até 31 de dezembro. Fica para o ano seguinte.
+_Avoid_: Recusada, descartada, sem solução
+
 **Verificação**:
 Consulta aos cidadãos de uma ocorrência sobre se o problema foi corrigido. A ocorrência só é dada como resolvida quando ao menos 30% deles confirmam.
 _Avoid_: Validação, fechamento, votação
@@ -72,6 +84,9 @@ O código é só em inglês. Cada termo acima tem um único nome no código:
 | Prioridade | `priority` |
 | Classe da via | `roadClass` |
 | Prazo de referência | `targetDays` |
+| Plano do órgão | `plan` |
+| Previsão | `forecast` |
+| Fora do orçamento | `over_budget` / `over_capacity` |
 | Verificação | `verification` |
 | Aberta / Verificando / Resolvida | `open` / `verifying` / `resolved` |
 | Fora de escopo | `out_of_scope` |
