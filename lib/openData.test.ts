@@ -52,6 +52,40 @@ describe("serializers", () => {
     );
   });
 
+  it("exports the priority of open occurrences only", () => {
+    const now = 20 * 24 * 60 * 60 * 1000;
+    const open = toGeoJSON([occurrence], "https://x.test", now).features[0]
+      .properties;
+    expect(open.priorityLevel).toBe("high");
+    expect(open.roadClass).toBe("local");
+    expect(open.targetDays).toBe(10);
+    const resolved = { ...occurrence, status: "resolved" } as PublicOccurrence;
+    const closed = toGeoJSON([resolved], "https://x.test", now).features[0]
+      .properties;
+    expect(closed.priority).toBeNull();
+    expect(toCsv([occurrence], "https://x.test", now).split("\r\n")[0]).toContain(
+      "appeal,priority,priorityLevel,roadClass,targetDays,lat",
+    );
+  });
+
+  it("exports only the forecast the agency committed to", () => {
+    const start = Date.parse("2026-11-30T03:00:00Z");
+    const committed = {
+      ...occurrence,
+      forecast: { precision: "week", start, end: start + 7 * 864e5, committedAt: 0 },
+    } as PublicOccurrence;
+    const [open, withForecast] = toGeoJSON(
+      [occurrence, committed],
+      "https://x.test",
+    ).features.map((feature) => feature.properties);
+    expect(open.forecastStart).toBeNull();
+    expect(withForecast).toMatchObject({
+      forecastPrecision: "week",
+      forecastStart: "2026-11-30T03:00:00.000Z",
+      forecastEnd: "2026-12-07T03:00:00.000Z",
+    });
+  });
+
   it("quotes CSV cells with commas, quotes and newlines", () => {
     const [header, line] = toCsv([occurrence], "https://x.test").split("\r\n");
     expect(header.startsWith("id,category,")).toBe(true);

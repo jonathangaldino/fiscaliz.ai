@@ -1,5 +1,6 @@
 import { v } from "convex/values";
 import { CATEGORY_KEYS } from "./lib/categories";
+import { FORECAST_PRECISIONS } from "./lib/forecast";
 
 const literals = <T extends string>(values: readonly T[]) =>
   values.map((value) => v.literal(value)) as unknown as [
@@ -45,6 +46,19 @@ export const occurrencePhotoValidator = v.union(
   v.object({ status: v.literal("processing") }),
   v.object({ status: v.literal("ready"), storageId: v.id("_storage") }),
 );
+
+/** A forecast window (lib/forecast): start inclusive, end exclusive. */
+export const forecastWindowValidator = v.object({
+  precision: v.union(...literals(FORECAST_PRECISIONS)),
+  start: v.number(),
+  end: v.number(),
+});
+
+/** The window the agency committed to in public (ADR 0012). */
+export const committedForecastValidator = v.object({
+  ...forecastWindowValidator.fields,
+  committedAt: v.number(),
+});
 
 /** What the conversation has gathered so far. Every field is optional. */
 export const draftValidator = v.object({

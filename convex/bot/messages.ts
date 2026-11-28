@@ -219,3 +219,23 @@ export const verificationReopened = (link: string) =>
 
 export const verificationClosed = () =>
   text("Essa verificação já terminou. Obrigado por responder!");
+
+/** The agency committed to a forecast: tell every citizen with a report there. */
+export function forecastCommitted(
+  occurrence: { summary: string; address: string },
+  window: string,
+  link: string,
+): OutgoingMessage {
+  return text(
+    [
+      "Novidade sobre um problema que você relatou em Apucarana pelo Fiscaliz.ai:",
+      "",
+      occurrence.summary,
+      `Local: ${occurrence.address}`,
+      "",
+      `Previsão de atendimento: ${window}.`,
+      "É uma previsão do órgão responsável, não uma garantia.",
+      `Ver ocorrência: ${link}`,
+    ].join("\n"),
+  );
+}

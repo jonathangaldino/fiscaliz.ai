@@ -65,6 +65,7 @@ describe("public queries never expose personal data", () => {
       t.query(api.occurrences.listResolved, {}),
       t.query(api.occurrences.get, { id: occurrenceId }),
       t.query(api.verification.availability, { id: occurrenceId }),
+      t.query(api.forecast.estimate, { id: occurrenceId }),
       t.query(api.occurrences.listByAgency, { slug: "servicos-publicos" }),
       t.query(api.agencies.list, {}),
       t.query(api.agencies.getBySlug, { slug: "servicos-publicos" }),

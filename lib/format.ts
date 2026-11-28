@@ -22,3 +22,23 @@ export function formatDateTime(ms: number): string {
 export function formatAppeal(appeal: number): string {
   return appeal === 1 ? "1 pessoa" : `${appeal} pessoas`;
 }
+
+export function formatDays(days: number): string {
+  return days === 1 ? "1 dia" : `${days} dias`;
+}
+
+/** "hoje", "há 1 dia", "há 12 dias". */
+export function formatAge(days: number): string {
+  return days < 1 ? "hoje" : `há ${formatDays(days)}`;
+}
+
+const brl = new Intl.NumberFormat("pt-BR", {
+  style: "currency",
+  currency: "BRL",
+  maximumFractionDigits: 0,
+});
+
+/** "R$ 11.500": whole reais, enough for a budget summary. */
+export function formatBRL(value: number): string {
+  return brl.format(value);
+}

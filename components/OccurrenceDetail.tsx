@@ -7,8 +7,12 @@ import Link from "next/link";
 import { api } from "@/convex/_generated/api";
 import { AGENCIES, CATEGORIES, type AgencySlug } from "@/convex/lib/categories";
 import { formatAppeal, formatDateTime } from "@/lib/format";
+import { computePriority } from "@/convex/lib/priority";
 import { playSound } from "@/lib/sound";
+import { useNow } from "@/lib/useNow";
 import { AgencyContact } from "./AgencyContact";
+import { ForecastCard } from "./ForecastCard";
+import { PriorityBreakdown } from "./PriorityBreakdown";
 import { Button, buttonClass } from "./ui/Button";
 import { CategoryIcon } from "./ui/CategoryIcon";
 import { Glyph } from "./ui/Glyph";
@@ -17,6 +21,7 @@ import { StatusBadge } from "./ui/StatusBadge";
 
 export function OccurrenceDetail({ id }: { id: string }) {
   const occurrence = useQuery(api.occurrences.get, { id });
+  const now = useNow();
 
   if (occurrence === undefined) {
     return (
@@ -100,6 +105,16 @@ export function OccurrenceDetail({ id }: { id: string }) {
           )}
         </dl>
       </Card>
+
+      {occurrence.status !== "resolved" && (
+        <PriorityBreakdown
+          priority={computePriority(occurrence, now)}
+          category={occurrence.category}
+          appeal={occurrence.appeal}
+        />
+      )}
+
+      <ForecastCard occurrence={occurrence} now={now} />
 
       <Verification id={occurrence._id} status={occurrence.status} />
 

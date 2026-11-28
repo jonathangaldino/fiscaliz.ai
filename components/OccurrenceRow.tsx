@@ -10,6 +10,7 @@ export function OccurrenceRow({
   occurrence: o,
   meta,
   rank,
+  badges,
   aside,
 }: {
   occurrence: PublicOccurrence;
@@ -17,6 +18,8 @@ export function OccurrenceRow({
   meta: string;
   /** Position in a ranked list. */
   rank?: number;
+  /** Pills next to the category name. */
+  badges?: React.ReactNode;
   /** Right column (appeal, date). */
   aside?: React.ReactNode;
 }) {
@@ -31,7 +34,12 @@ export function OccurrenceRow({
             {rank}
           </span>
         )}
-        <span className="flex size-12 shrink-0 items-center justify-center rounded-control border border-line bg-surface/70">
+        <span
+          className={`size-12 shrink-0 items-center justify-center rounded-control border border-line bg-surface/70 ${
+            // A row with pills needs the width on a phone.
+            badges ? "hidden min-[420px]:flex" : "flex"
+          }`}
+        >
           <CategoryIcon
             category={o.category}
             size={34}
@@ -49,12 +57,19 @@ export function OccurrenceRow({
           <span className="mt-0.5 block truncate text-xs text-subtle">
             {meta}
           </span>
+          {badges && (
+            <span className="mt-1.5 flex flex-wrap items-center gap-1.5 whitespace-nowrap">
+              {badges}
+            </span>
+          )}
         </span>
         {aside}
         <Glyph
           name="chevronRight"
           size={18}
-          className="text-subtle transition-transform duration-(--dur) group-hover:translate-x-0.5"
+          className={`text-subtle transition-transform duration-(--dur) group-hover:translate-x-0.5 ${
+            badges ? "hidden sm:block" : ""
+          }`}
         />
       </Link>
     </li>

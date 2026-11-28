@@ -4,6 +4,7 @@ import {
   buttonValidator,
   categoryValidator,
   channelValidator,
+  committedForecastValidator,
   conversationStateValidator,
   geocodeAttemptValidator,
   geocodeOutcomeValidator,
@@ -42,6 +43,8 @@ export default defineSchema({
     source: sourceValidator,
     // Public photo with faces and plates blurred (ADR 0010).
     photo: v.optional(occurrencePhotoValidator),
+    // Set only when the agency commits to a forecast; public from then on.
+    forecast: v.optional(committedForecastValidator),
   })
     .index("by_category_status", ["category", "status"])
     .index("by_status_appeal", ["status", "appeal"])
