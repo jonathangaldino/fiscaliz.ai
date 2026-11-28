@@ -91,6 +91,7 @@ convex/
   lib/
     categories.ts             # fonte única de categorias → órgão (de COMPETENCIAS.md)
     priority.ts               # prioridade de 0 a 100 por fatores objetivos (ADR 0011)
+    forecast.ts               # previsão por orçamento e capacidade do órgão (ADR 0012)
     geo.ts                    # haversine, point-in-polygon
     apucarana.geo.json        # limite do município (IBGE 4101408)
 evals/
