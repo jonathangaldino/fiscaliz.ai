@@ -58,6 +58,7 @@ flowchart LR
 4. **De-duplicação:** ocorrências abertas da mesma categoria num raio de 50 m (150 m sem número da rua) são candidatas; a IA confirma se é o mesmo problema. Se for, o apelo sobe.
 5. **Foto:** o cidadão pode mandar 1 foto. No SIM ela passa por um worker no Modal que borra rostos e placas; só a cópia borrada vai para a página da ocorrência, e a original é apagada ([ADR 0010](./docs/adr/0010-fotos-anonimizadas.md)).
 6. **Painel:** mapa e lista por apelo, filtros por categoria e órgão, página de cada ocorrência e fila por órgão.
+7. **Prioridade:** a fila do órgão é ordenada por critérios objetivos (gravidade, tempo em aberto, classe da via, apelo e tendência de piora), e cada ocorrência mostra de onde vieram os pontos. Ver [docs/priorizacao.md](./docs/priorizacao.md).
 
 A IA só preenche dados; quem decide o fluxo é uma máquina de estados em código, testada caso a caso ([ADR 0004](./docs/adr/0004-por-que-nao-langgraph.md)). Detalhes em [docs/arquitetura.md](./docs/arquitetura.md) e nas [ADRs](./docs/adr/).
 
@@ -142,7 +143,7 @@ curl "https://<site>/api/ocorrencias.geojson?categoria=pavement&status=open" -o 
 curl "https://<site>/api/ocorrencias.csv?orgao=servicos-publicos" -o servicos-publicos.csv
 ```
 
-Campos: `id`, `category`, `categoryLabel`, `agency`, `status`, `address`, `summary`, `appeal`, `lat`, `lng`, `openedAt`, `resolvedAt` (ISO 8601) e `url` da ocorrência. Ordem por apelo, no máximo 1000 itens; resposta em cache por 1 minuto. Valor de filtro inválido responde 400. A fila de cada órgão tem o link **Baixar dados** com o CSV já filtrado.
+Campos: `id`, `category`, `categoryLabel`, `agency`, `status`, `address`, `summary`, `appeal`, `priority` (0 a 100), `priorityLevel` (`critical`, `high`, `medium`, `low`), `roadClass`, `targetDays`, `lat`, `lng`, `openedAt`, `resolvedAt` (ISO 8601) e `url` da ocorrência. Os quatro campos de prioridade vêm vazios nas resolvidas; o cálculo está em [docs/priorizacao.md](./docs/priorizacao.md). Ordem por apelo, no máximo 1000 itens; resposta em cache por 1 minuto. Valor de filtro inválido responde 400. A fila de cada órgão tem o link **Baixar dados** com o CSV já filtrado.
 
 ## Privacidade
 
