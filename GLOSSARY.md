@@ -47,6 +47,22 @@ _Avoid_: Tipo, tag, assunto
 Secretaria ou autarquia municipal a quem cabe resolver as ocorrências de uma categoria.
 _Avoid_: Departamento, setor, responsável (sozinho)
 
+**Pedido de recolhimento**:
+Pedido de um cidadão para a Secretaria de Serviços Públicos recolher na calçada móveis, colchões, sofás, eletrodomésticos ou eletroeletrônicos que ele mesmo descarta. Não é relato: não aponta um problema e não conta apelo. Móvel largado por terceiros na rua continua sendo relato.
+_Avoid_: Cata-móveis, chamado, agendamento, relato (para o pedido)
+
+**Ponto de recolhimento**:
+Endereço (logradouro e número, sem complemento) que agrupa os pedidos de recolhimento ainda não recolhidos. É o que aparece no mapa; números diferentes na mesma rua são pontos diferentes.
+_Avoid_: Lixeira, coleta, ocorrência (para o ponto)
+
+**Aguardando / Recolhido / Expirado**:
+Estados de um ponto de recolhimento: esperando o caminhão; recolhimento confirmado por ao menos um solicitante; 15 dias sem confirmação. Recolhido e expirado saem do mapa.
+_Avoid_: Aberta, resolvida, pendente (para o ponto)
+
+**Protocolo**:
+Número que o Fiscaliz.ai dá a cada pedido de recolhimento, no formato número/ano. Fica só na conversa com o cidadão, nunca no mapa, e não é um protocolo oficial da Prefeitura.
+_Avoid_: Ticket, código, número do chamado
+
 ## Nomes no código
 
 O código é só em inglês. Cada termo acima tem um único nome no código:
@@ -64,4 +80,8 @@ O código é só em inglês. Cada termo acima tem um único nome no código:
 | Foto do relato | `photo` |
 | Categoria | `category` |
 | Órgão responsável | `agency` |
+| Pedido de recolhimento | `pickup_request` |
+| Ponto de recolhimento | `pickup_point` |
+| Aguardando / Recolhido / Expirado | `waiting` / `collected` / `expired` |
+| Protocolo | `protocol` |
 | Conversa | `conversation` |

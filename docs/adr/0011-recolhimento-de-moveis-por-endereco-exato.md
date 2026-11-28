@@ -1,0 +1,7 @@
+# Recolhimento de móveis: dedup por endereço exato, sem apelo e sem dado pessoal
+
+A Secretaria de Serviços Públicos de Apucarana já recolhe na calçada, de graça, móveis, colchões, sofás, eletrodomésticos e eletroeletrônicos: o cidadão manda mensagem por WhatsApp, envia nome, CPF e endereço e recebe um protocolo. Trazemos esse fluxo real para o Fiscaliz.ai como **pedido de recolhimento**, um conceito separado do relato. O pedido não aponta um problema: é o próprio cidadão quem descarta. Por isso não conta apelo e não passa pela verificação de 30%.
+
+Os pedidos se agrupam em um **ponto de recolhimento** pelo logradouro e pelo número exatos, ignorando o complemento, e não pelo raio de 50/150 m das ocorrências. Dois apartamentos do mesmo prédio (nº 60, apto 300 e apto 500) usam a mesma calçada e viram um ponto só, com dois protocolos. Já os números 90 e 100 da mesma rua, a uns 10 m um do outro, são duas calçadas e duas paradas do caminhão: o raio os fundiria e esconderia uma parada. Sem número, o bot pede o pin e usa o raio de 50 m. Depois que o ponto é recolhido, um pedido novo no mesmo endereço abre outro ponto.
+
+O ponto sai do mapa quando o primeiro solicitante confirma que os móveis foram recolhidos, ou expira em 15 dias sem confirmação. Não coletamos nome, CPF nem celular: o Fiscaliz.ai não repassa o pedido ao sistema da Prefeitura, então esses dados seriam risco de LGPD sem uso. O protocolo é do Fiscaliz.ai (número/ano), não o oficial da Prefeitura, e fica só na conversa, nunca no mapa.
