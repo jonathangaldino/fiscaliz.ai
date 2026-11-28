@@ -2,7 +2,8 @@ import { v } from "convex/values";
 import { internalMutation, type MutationCtx } from "./_generated/server";
 import type { Id } from "./_generated/dataModel";
 import { AGENCIES, CATEGORIES, type AgencySlug } from "./lib/categories";
-import { SEED_OCCURRENCES } from "./seedData";
+import { pickupAddressKey } from "./lib/pickup";
+import { SEED_OCCURRENCES, SEED_PICKUP_POINTS } from "./seedData";
 
 const DAY_MS = 24 * 60 * 60 * 1000;
 
@@ -56,6 +57,7 @@ export const run = internalMutation({
   returns: v.object({ agencies: v.number(), occurrences: v.number() }),
   handler: async (ctx) => {
     const agencyIds = await upsertAgencies(ctx);
+    await seedPickupPoints(ctx);
 
     const alreadySeeded = await ctx.db
       .query("occurrences")
@@ -87,3 +89,22 @@ export const run = internalMutation({
     };
   },
 });
+
+/** Idempotent: only when no seed pickup point exists yet. */
+async function seedPickupPoints(ctx: MutationCtx) {
+  const seeded = await ctx.db
+    .query("pickupPoints")
+    .filter((q) => q.eq(q.field("source"), "seed"))
+    .first();
+  if (seeded) return;
+  const now = Date.now();
+  for (const { daysAgo, ...point } of SEED_PICKUP_POINTS) {
+    await ctx.db.insert("pickupPoints", {
+      ...point,
+      status: "waiting",
+      addressKey: pickupAddressKey(point.address),
+      openedAt: now - daysAgo * DAY_MS,
+      source: "seed",
+    });
+  }
+}
