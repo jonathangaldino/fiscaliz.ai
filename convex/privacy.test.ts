@@ -70,6 +70,7 @@ describe("public queries never expose personal data", () => {
       t.query(api.agencies.getBySlug, { slug: "servicos-publicos" }),
       t.query(api.addressMetrics.summary, {}),
       t.query(api.metrics.summary, {}),
+      t.query(api.pickups.listWaiting, {}),
     ]);
     const serialized = JSON.stringify(results);
 

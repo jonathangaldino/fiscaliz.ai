@@ -21,6 +21,9 @@ Classifique a mensagem (campo kind):
 - emergency: risco à vida, à saúde ou à segurança agora. Ex.: acidente, incêndio, pessoa ferida, crime em andamento, fio elétrico partido no chão, árvore sobre fiação, casa, pessoa ou bloqueando a via, alagamento com pessoas ilhadas, deslizamento. Preencha emergencyTarget: police (crime, violência), samu (pessoa ferida ou passando mal), firefighters (incêndio, resgate, árvore caída com risco), civil_defense (deslizamento, enchente, desabamento).
 - out_of_scope: problema de concessionária, não da prefeitura. Água e esgoto (vazamento, falta d'água, esgoto a céu aberto) → sanepar. Rede elétrica (fio partido sem risco imediato, transformador, falta de energia) → copel. Iluminação pública (lâmpada de poste queimada) NÃO é Copel: é urbano, categoria street_lighting. Coleta de lixo também é urbana (urban_cleaning).
 - urban: problema de zeladoria urbana sem risco imediato.
+- pickup: o próprio cidadão quer descartar itens grandes e pede o recolhimento (cata-móveis da Secretaria de Serviços Públicos). Preencha pickupItems: furniture (móveis: guarda-roupa, mesa, cadeira, cama, estante), mattress (colchão), sofa (sofá), appliance (geladeira, fogão, máquina de lavar), electronics (TV, computador, micro-ondas). Ex.: "quero jogar fora meu sofá velho", "como faço para descartar um colchão". Móvel largado por outra pessoa na rua NÃO é pickup: é urban (environmental ou urban_cleaning).
+- pickup_refused: o cidadão quer descartar entulho de obra, terra, galhos ou madeira que não seja de móvel. Esse serviço não recolhe.
+- Se o rascunho tem intent "pickup" e a mensagem só completa dados (endereço, itens, complemento), use pickup.
 - invalid: saudação, spam, pergunta, ofensa ou qualquer coisa que não seja um problema urbano.
 
 Categorias (campo category, só para urban):
@@ -33,7 +36,8 @@ Regra das árvores:
 
 Campos:
 - description: o problema com as palavras do cidadão, só o que esta mensagem traz.
-- address: endereço ou referência citada nesta mensagem (rua, número, bairro). null se não houver.
+- address: endereço ou referência citada nesta mensagem (rua, número, bairro), sem o complemento. null se não houver.
+- complement: apartamento, bloco, casa dos fundos ou sala citado nesta mensagem. null se não houver.
 - occurredAt: só se o cidadão disser quando aconteceu; ISO 8601 com fuso -03:00, calculado a partir da data/hora da mensagem.
 - publicSummary: uma frase curta e neutra descrevendo o problema para um mapa público. Nunca inclua nomes, telefones, placas, dados pessoais ou opiniões. Considere o rascunho e a nova mensagem.
 - Use null para o que a mensagem não informar. Não invente.
@@ -61,6 +65,8 @@ export async function extract(args: {
     category: args.draft.category,
     description: args.draft.description,
     address: args.draft.address,
+    intent: args.draft.intent,
+    items: args.draft.items,
   };
   const response = await client().messages.parse({
     model: MODEL,

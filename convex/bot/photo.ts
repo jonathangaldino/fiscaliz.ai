@@ -16,7 +16,6 @@ import {
 import { draftPhotoValidator } from "../validators";
 import { send } from "./channels";
 import * as messages from "./messages";
-import type { RegisterResult } from "./register";
 import { downloadTelegramFile } from "./transcribe";
 import type { DraftPhoto } from "./types";
 
@@ -39,26 +38,32 @@ export async function discardPhotos(
   }
 }
 
+/** An occurrence or a pickup point (ADR 0011): both show one anonymized photo. */
+export const photoTargetValidator = v.union(v.id("occurrences"), v.id("pickupPoints"));
+type PhotoTarget = Id<"occurrences"> | Id<"pickupPoints">;
+
 /**
- * Called on SIM. The occurrence shows only its first photo (ADR 0010): if it
- * already has one, or one is being processed, this photo is dropped.
- * Returns whether the photo went to anonymization.
+ * Called on SIM. The target shows only its first photo (ADR 0010): if it
+ * already has one, or one is being processed, or there is no target (the
+ * citizen had already reported), this photo is dropped. `link` is where the
+ * citizen sees the result. Returns whether the photo went to anonymization.
  */
 export async function claimPhoto(
   ctx: MutationCtx,
-  result: RegisterResult,
+  targetId: PhotoTarget | null,
+  link: string,
   photo: DraftPhoto,
   citizenId: Id<"citizens">,
 ): Promise<boolean> {
-  const occurrence =
-    result.kind === "already_reported" ? null : await ctx.db.get(result.occurrenceId);
-  if (!occurrence || occurrence.photo) {
+  const target = targetId ? await ctx.db.get(targetId) : null;
+  if (!target || target.photo) {
     await discardPhotos(ctx, [photo]);
     return false;
   }
-  await ctx.db.patch(occurrence._id, { photo: { status: "processing" } });
+  await ctx.db.patch(target._id, { photo: { status: "processing" } });
   await ctx.scheduler.runAfter(0, internal.bot.photo.anonymize, {
-    occurrenceId: occurrence._id,
+    targetId: target._id,
+    link,
     citizenId,
     photo,
   });
@@ -77,12 +82,13 @@ export const discard = internalMutation({
 
 export const anonymize = internalAction({
   args: {
-    occurrenceId: v.id("occurrences"),
+    targetId: photoTargetValidator,
+    link: v.string(),
     citizenId: v.id("citizens"),
     photo: draftPhotoValidator,
   },
   returns: v.null(),
-  handler: async (ctx, { occurrenceId, citizenId, photo }) => {
+  handler: async (ctx, { targetId, link, citizenId, photo }) => {
     let originalId: Id<"_storage"> | null = null;
     let blurredId: Id<"_storage"> | null = null;
     try {
@@ -103,12 +109,11 @@ export const anonymize = internalAction({
     }
 
     const published = await ctx.runMutation(internal.bot.photo.finish, {
-      occurrenceId,
+      targetId,
       storageId: blurredId,
     });
     const recipient = await ctx.runQuery(internal.bot.photo.recipient, { citizenId });
     if (!recipient) return null;
-    const link = messages.occurrenceLink(process.env.PUBLIC_APP_URL ?? "", occurrenceId);
     await send(ctx, recipient, [
       published ? messages.photoPublished(link) : messages.photoFailed(),
     ]);
@@ -165,20 +170,20 @@ async function blur(ctx: ActionCtx, originalId: Id<"_storage">): Promise<Id<"_st
  */
 export const finish = internalMutation({
   args: {
-    occurrenceId: v.id("occurrences"),
+    targetId: photoTargetValidator,
     storageId: v.union(v.id("_storage"), v.null()),
   },
   returns: v.boolean(),
-  handler: async (ctx, { occurrenceId, storageId }) => {
-    const occurrence = await ctx.db.get(occurrenceId);
+  handler: async (ctx, { targetId, storageId }) => {
+    const target = await ctx.db.get(targetId);
     const file = storageId ? await ctx.db.system.get(storageId) : null;
     const isImage = file?.contentType?.startsWith("image/") ?? false;
-    if (occurrence?.photo?.status === "processing" && file && isImage) {
-      await ctx.db.patch(occurrenceId, { photo: { status: "ready", storageId: file._id } });
+    if (target?.photo?.status === "processing" && file && isImage) {
+      await ctx.db.patch(targetId, { photo: { status: "ready", storageId: file._id } });
       return true;
     }
-    if (occurrence?.photo?.status === "processing") {
-      await ctx.db.patch(occurrenceId, { photo: undefined });
+    if (target?.photo?.status === "processing") {
+      await ctx.db.patch(targetId, { photo: undefined });
     }
     if (file) await ctx.storage.delete(file._id);
     return false;

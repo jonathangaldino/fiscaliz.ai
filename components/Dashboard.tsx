@@ -21,6 +21,8 @@ import { CategoryBar } from "./CategoryBar";
 import { AgencyFilter } from "./Filters";
 import { OccurrenceCard } from "./OccurrenceCard";
 import { OccurrenceList } from "./OccurrenceList";
+import { PickupCard } from "./PickupCard";
+import { Chip } from "./ui/Chip";
 import { SearchField } from "./SearchField";
 import { Glyph } from "./ui/Glyph";
 
@@ -63,6 +65,8 @@ function focusAfterClose(closedId: string, desktop: boolean) {
 
 export function Dashboard() {
   const all = useQuery(api.occurrences.listActive);
+  const allPickups = useQuery(api.pickups.listWaiting);
+  const [showPickups, setShowPickups] = useState(true);
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [search, setSearch] = useState("");
   const [sheetOpen, setSheetOpen] = useState(false);
@@ -142,15 +146,31 @@ export function Dashboard() {
     setFilters({ category: next, agency });
   }
 
+  // Pickup points are Serviços Públicos' and no category (ADR 0011).
+  const pickupsInScope =
+    !category && (!agency || agency === "servicos-publicos") ? (allPickups ?? []) : [];
+  const pickups = showPickups ? pickupsInScope : [];
+
   const selected = occurrences?.find((o) => o._id === selectedId) ?? null;
-  const card = selected && (
+  const selectedPickup = pickups.find((p) => p._id === selectedId) ?? null;
+  const card = selected ? (
     <OccurrenceCard
       occurrence={selected}
       onClose={() => select(null)}
       autoFocus={!desktop}
       className="w-[min(380px,calc(100vw-1.5rem))]"
     />
+  ) : (
+    selectedPickup && (
+      <PickupCard
+        point={selectedPickup}
+        onClose={() => select(null)}
+        autoFocus={!desktop}
+        className="w-[min(380px,calc(100vw-1.5rem))]"
+      />
+    )
   );
+  const selectedPoint = selected ?? selectedPickup;
 
   const filtered = Boolean(category || agency || search.trim());
   const count = occurrences?.length;
@@ -176,7 +196,7 @@ export function Dashboard() {
       {/* Panel: floating column on desktop, bottom sheet on the phone. */}
       <aside
         aria-label="Ocorrências"
-        hidden={!desktop && Boolean(selected)}
+        hidden={!desktop && Boolean(selectedPoint)}
         className={`glass-strong absolute inset-x-0 bottom-0 z-20 flex flex-col overflow-hidden rounded-t-panel transition-[height] duration-(--dur-slow) ease-out md:top-20 md:right-auto md:bottom-3 md:left-3 md:h-auto md:w-[380px] md:rounded-panel ${
           sheetOpen ? "h-[72dvh]" : "h-auto"
         }`}
@@ -235,6 +255,19 @@ export function Dashboard() {
               setFilters({ category, agency: next });
             }}
           />
+          {pickupsInScope.length > 0 && (
+            <Chip
+              selected={showPickups}
+              onClick={() => {
+                playSound(showPickups ? "toggleOff" : "toggleOn");
+                setShowPickups(!showPickups);
+                if (selectedPickup) setSelectedId(null);
+              }}
+              className="mt-2"
+            >
+              Recolhimento de móveis ({pickupsInScope.length})
+            </Chip>
+          )}
         </div>
 
         <div
@@ -283,10 +316,12 @@ export function Dashboard() {
           occurrences={occurrences ?? []}
           selectedId={selectedId}
           onSelect={select}
+          pickups={pickups}
+          onSelectPickup={select}
           onMapClick={() => selectedId && select(null)}
           popup={
-            desktop && selected
-              ? { lat: selected.lat, lng: selected.lng, content: card }
+            desktop && selectedPoint
+              ? { lat: selectedPoint.lat, lng: selectedPoint.lng, content: card }
               : null
           }
           padding={
@@ -298,7 +333,7 @@ export function Dashboard() {
       </div>
 
       {/* Phone: the card takes the place of the sheet. */}
-      {!desktop && selected && (
+      {!desktop && selectedPoint && (
         <div className="absolute inset-x-3 bottom-[max(0.75rem,env(safe-area-inset-bottom))] z-30 flex justify-center">
           {card}
         </div>

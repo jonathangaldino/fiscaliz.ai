@@ -25,6 +25,18 @@ Mapeamento de ocorrências de zeladoria urbana (não urgentes) para o órgão re
 | Cemitérios | Manutenção de cemitério ou capela mortuária | Aserfa |
 | Área rural | Questões agropecuárias | Agricultura |
 
+## Serviços sob pedido
+
+Não são categorias de ocorrência: o cidadão pede o serviço para si (ver [ADR 0011](./docs/adr/0011-recolhimento-de-moveis-por-endereco-exato.md)).
+
+| Serviço | Órgão responsável | Recolhe | Não recolhe |
+|---|---|---|---|
+| Recolhimento de móveis | Serviços Públicos | Móveis, colchões, sofás, eletrodomésticos e eletroeletrônicos, deixados na calçada | Madeira que não seja de móvel e qualquer outro entulho |
+
+Gratuito. O caminhão passa a qualquer momento depois do pedido e pode atrasar com chuva. Fonte: mensagem padrão do setor de Protocolos/Serviços da Secretaria de Serviços Públicos no WhatsApp, recebida por um cidadão em 2026.
+
+Móvel abandonado por terceiros na rua não é pedido: é ocorrência de Ambiental (descarte irregular) ou Limpeza urbana (entulho na via).
+
 ## Fora do escopo da Prefeitura (concessionárias)
 
 - **Água e esgoto** (vazamento, falta d'água): Sanepar

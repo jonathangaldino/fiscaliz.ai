@@ -1,4 +1,5 @@
 import type { CategoryKey } from "./lib/categories";
+import type { PickupItem } from "./lib/pickup";
 
 /**
  * Synthetic occurrences for the demo (rule 9 of the Hack Brasil rules):
@@ -216,6 +217,45 @@ export const SEED_OCCURRENCES: SeedOccurrence[] = [
     lng: -51.459313,
     summary: "Lixeira pública arrancada.",
     appeal: 1,
+    daysAgo: 2,
+  },
+];
+
+/**
+ * Demo pickup points (ADR 0011) on a real street, CNEFE coordinates. Number 60
+ * has two requests (apartments 300 and 500, one sidewalk); 90 and 100 stay
+ * two points a few meters apart. 90 is interpolated between 72 and 100.
+ */
+export const SEED_PICKUP_POINTS: {
+  address: string;
+  lat: number;
+  lng: number;
+  items: PickupItem[];
+  requests: number;
+  daysAgo: number;
+}[] = [
+  {
+    address: "Rua Galdino Gluck Junior, 60",
+    lat: -23.54891,
+    lng: -51.456435,
+    items: ["furniture", "mattress"],
+    requests: 2,
+    daysAgo: 1,
+  },
+  {
+    address: "Rua Galdino Gluck Junior, 90",
+    lat: -23.549119,
+    lng: -51.456489,
+    items: ["sofa"],
+    requests: 1,
+    daysAgo: 0,
+  },
+  {
+    address: "Rua Galdino Gluck Junior, 100",
+    lat: -23.549134,
+    lng: -51.456465,
+    items: ["appliance"],
+    requests: 1,
     daysAgo: 2,
   },
 ];

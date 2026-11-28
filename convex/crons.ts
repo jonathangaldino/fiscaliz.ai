@@ -10,4 +10,6 @@ crons.interval(
   {},
 );
 
+crons.interval("pickup questions and expiry", { hours: 1 }, internal.pickups.sweep, {});
+
 export default crons;

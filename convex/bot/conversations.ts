@@ -17,6 +17,7 @@ import { closeOpenAttempts } from "./geocodeAttempts";
 import * as messages from "./messages";
 import { claimPhoto, discardPhotos } from "./photo";
 import { registerReport } from "./register";
+import { registerPickup } from "../pickups";
 import { DAILY_REPORT_LIMIT, nextStep } from "./stateMachine";
 import { extractionSchema, type ResolvedLocation } from "./types";
 
@@ -91,6 +92,7 @@ export const applyStep = internalMutation({
         lng: v.number(),
         address: v.string(),
         precise: v.boolean(),
+        addressKey: v.optional(v.string()),
       }),
       v.null(),
     ),
@@ -140,7 +142,7 @@ export const applyStep = internalMutation({
     await discardPhotos(
       ctx,
       [conversation?.state.draft.photo, args.photo],
-      step.type === "register" ? step.draft.photo : step.state?.draft.photo,
+      step.type === "reply" ? step.state?.draft.photo : step.draft.photo,
     );
 
     // A new address or a pin replaces the one shown before (issue #37).
@@ -158,6 +160,37 @@ export const applyStep = internalMutation({
       await closeOpenAttempts(ctx, args.citizenId, "corrected_pin", args.location);
     }
 
+    if (step.type === "register_pickup") {
+      const result = await registerPickup(ctx, {
+        citizenId: args.citizenId,
+        draft: step.draft,
+        source: args.channel,
+        now,
+      });
+      const link = messages.mapLink(process.env.PUBLIC_APP_URL ?? "");
+      const photoPending = step.draft.photo
+        ? await claimPhoto(
+            ctx,
+            result.kind === "already_requested" ? null : result.pointId,
+            link,
+            step.draft.photo,
+            args.citizenId,
+          )
+        : false;
+      await closeOpenAttempts(ctx, args.citizenId, "confirmed");
+      if (conversation) await ctx.db.delete(conversation._id);
+      return {
+        ok: true as const,
+        messages: [
+          messages.pickupRegistered(
+            result.protocol,
+            result.kind === "already_requested",
+            photoPending,
+          ),
+        ],
+      };
+    }
+
     if (step.type === "register") {
       const result = await registerReport(ctx, {
         citizenId: args.citizenId,
@@ -167,16 +200,22 @@ export const applyStep = internalMutation({
         matchId: args.matchId ?? null,
         startedAt: conversation?._creationTime,
       });
-      const photoPending = step.draft.photo
-        ? await claimPhoto(ctx, result, step.draft.photo, args.citizenId)
-        : false;
-      // The conversation ends here.
-      await closeOpenAttempts(ctx, args.citizenId, "confirmed");
-      if (conversation) await ctx.db.delete(conversation._id);
       const link = messages.occurrenceLink(
         process.env.PUBLIC_APP_URL ?? "",
         result.occurrenceId,
       );
+      const photoPending = step.draft.photo
+        ? await claimPhoto(
+            ctx,
+            result.kind === "already_reported" ? null : result.occurrenceId,
+            link,
+            step.draft.photo,
+            args.citizenId,
+          )
+        : false;
+      // The conversation ends here.
+      await closeOpenAttempts(ctx, args.citizenId, "confirmed");
+      if (conversation) await ctx.db.delete(conversation._id);
       const reply =
         result.kind === "created"
           ? messages.registered(

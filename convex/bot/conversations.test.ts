@@ -15,6 +15,8 @@ const problem: Extraction = {
   kind: "urban",
   emergencyTarget: null,
   outOfScopeTarget: null,
+  pickupItems: null,
+  complement: null,
   category: "street_lighting",
   description: "O poste da frente de casa está apagado faz uma semana",
   address: null,

@@ -1,6 +1,7 @@
 import type { Infer } from "convex/values";
 import { z } from "zod/v4";
 import { CATEGORY_KEYS } from "../lib/categories";
+import { PICKUP_ITEMS, type PickupItem } from "../lib/pickup";
 import type {
   conversationStateValidator,
   draftPhotoValidator,
@@ -18,7 +19,20 @@ export type GeocodeSource = Infer<typeof geocodeSourceValidator>;
 export type DraftPhoto = Infer<typeof draftPhotoValidator>;
 
 /** A draft with everything needed to register a report. The photo is optional. */
-export type CompleteDraft = Required<Omit<Draft, "photo">> & Pick<Draft, "photo">;
+export type CompleteDraft = Required<
+  Omit<Draft, "photo" | "intent" | "items" | "complement" | "addressKey">
+> &
+  Pick<Draft, "photo">;
+
+/** A draft with everything needed to register a pickup request (ADR 0011). */
+export type CompletePickupDraft = Draft & {
+  intent: "pickup";
+  items: PickupItem[];
+  description: string;
+  address: string;
+  lat: number;
+  lng: number;
+};
 
 export const EMERGENCY_TARGETS = [
   "police",
@@ -37,9 +51,9 @@ export type OutOfScopeTarget = (typeof OUT_OF_SCOPE_TARGETS)[number];
  */
 export const extractionSchema = z.object({
   kind: z
-    .enum(["urban", "emergency", "out_of_scope", "invalid"])
+    .enum(["urban", "pickup", "pickup_refused", "emergency", "out_of_scope", "invalid"])
     .describe(
-      "urban: problema de zeladoria urbana; emergency: risco à vida, saúde ou segurança; out_of_scope: água/esgoto (Sanepar) ou rede elétrica (Copel); invalid: não é problema urbano",
+      "urban: problema de zeladoria urbana; pickup: o próprio cidadão quer descartar móveis, colchões, sofás, eletrodomésticos ou eletroeletrônicos; pickup_refused: quer descartar entulho ou madeira que não seja de móvel; emergency: risco à vida, saúde ou segurança; out_of_scope: água/esgoto (Sanepar) ou rede elétrica (Copel); invalid: não é problema urbano",
     ),
   emergencyTarget: z.enum(EMERGENCY_TARGETS).nullable(),
   outOfScopeTarget: z.enum(OUT_OF_SCOPE_TARGETS).nullable(),
@@ -52,6 +66,14 @@ export const extractionSchema = z.object({
     .string()
     .nullable()
     .describe("Endereço citado na mensagem: rua, número, bairro ou referência"),
+  pickupItems: z
+    .array(z.enum(PICKUP_ITEMS))
+    .nullable()
+    .describe("Só para pickup: tipos de item que o cidadão vai descartar"),
+  complement: z
+    .string()
+    .nullable()
+    .describe("Complemento do endereço (apartamento, bloco, casa dos fundos), separado da rua e do número"),
   occurredAt: z
     .string()
     .nullable()
@@ -74,6 +96,8 @@ export type ResolvedLocation = {
   lng: number;
   address: string;
   precise: boolean;
+  /** Street + number of a typed address (ADR 0011); absent for a pin. */
+  addressKey?: string;
 };
 
 export type StepInput = {
@@ -91,7 +115,8 @@ export type StepInput = {
 
 export type AnonymousCounter =
   | { kind: "emergency"; target: EmergencyTarget | "unknown" }
-  | { kind: "out_of_scope"; target: OutOfScopeTarget | "unknown" };
+  | { kind: "out_of_scope"; target: OutOfScopeTarget | "unknown" }
+  | { kind: "pickup_refused"; target: "debris" };
 
 export type Step =
   /** Keep talking: save the new state (or drop it, when null) and reply. */
@@ -103,4 +128,6 @@ export type Step =
       counter?: AnonymousCounter;
     }
   /** The citizen confirmed: register the report. */
-  | { type: "register"; draft: CompleteDraft };
+  | { type: "register"; draft: CompleteDraft }
+  /** The citizen confirmed a pickup request. */
+  | { type: "register_pickup"; draft: CompletePickupDraft };
